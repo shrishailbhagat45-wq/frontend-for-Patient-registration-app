@@ -1,0 +1,42 @@
+import axios, { HttpStatusCode } from "axios";
+import config from '../config';
+import js from "@eslint/js";
+
+export async function createPatient(patientData) {
+
+    const data = {
+        name:patientData.name,
+        gender: patientData.gender,
+        age: parseInt(patientData.age),
+        phoneNumber: patientData.phoneNumber,
+        weight: parseInt(patientData.weight),
+    }
+    let response= null;
+    try {
+         response = await axios.post(`${config.url}/patient/create`, JSON.stringify(data) , {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }  
+        });
+        if (response.status !== 201) {
+            console.log("Response status:", response.status);
+            throw new Error('Failed to create patient', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error creating patient:', error);
+        throw error;
+    }
+    console.log("Response data:", response);
+
+    return response.data;
+    
+}
+
+export async function getPatients(name) {
+    const data = { name: name.trim() };
+        const response = await axios.post(`${config.url}/patient/getPatient`,data);
+        console.log("Response data:", response);
+        return response.data;
+        
+}
