@@ -1,5 +1,5 @@
 const config={
-    url:'http://localhost:3000'
+    url:'https://patient-registration-app-backend-300ihavkw.vercel.app/'
 }
 
 export default config
