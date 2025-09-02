@@ -70,7 +70,7 @@ export default function PatientInfo() {
       <div className="flex justify-center gap-4  space-y-6">
 
         {listOfPrescriptions.length==0?<LoadingList/> :listOfPrescriptions.map((prescription, idx) => (
-         <ListPrescription />
+         <ListPrescription  prescription={prescription} idx={idx}/>
         ))}
       </div>
       <div>
