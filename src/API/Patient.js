@@ -36,7 +36,57 @@ export async function createPatient(patientData) {
 export async function getPatients(name) {
     const data = { name: name.trim() };
         const response = await axios.post(`${config.url}/patient/getPatient`,data);
-        console.log("Response data:", response);
         return response.data;
         
+}
+
+export async function getPatientById(id) {
+    let response= null;
+    try {
+         response = await axios.get(`${config.url}/patient/${id}`);
+        if (response.status !== 200) {
+            console.log("Response status:", response.status);
+            throw new Error('Failed to fetch patient', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error fetching patient:', error);
+        throw error;
+    }
+    console.log("Response data:", response);
+
+    return response.data;
+    
+}   
+
+export async function getPrescriptionsByPatientId(id) {
+    let response= null; 
+    try {
+         response = await axios.get(`${config.url}/prescriptions/${id}`);
+        if (response.status !== 200) {
+            console.log("Response status:", response.status);
+            throw new Error('Failed to fetch prescriptions', response.statusText);
+        }   
+    } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+        throw error;
+    }
+    return response.data;
+}
+
+export async function backendIsInitialized() {
+    let response= null;
+    try {
+         response = await axios.get(`${config.url}`);
+        if (response.status !== 200) {
+            console.log("Response status:", response.status);
+            throw new Error('Failed to fetch status', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error fetching status:', error);
+        throw error;
+    }
+    console.log("Response data:", response);
+
+    return response.status;
+    
 }

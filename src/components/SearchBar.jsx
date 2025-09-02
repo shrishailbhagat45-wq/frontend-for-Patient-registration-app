@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getPatients } from '../API/Patient';
+import { Link } from 'react-router';
 
 const SearchBar = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -13,7 +14,6 @@ const SearchBar = () => {
         if (value.trim() === '') {
             setFilteredPatients([]);
         } else {
-            console.log("Searching for patients with term:", value);
             const matches = await getPatients(value);
             console.log("Search matches:", matches);
             setFilteredPatients(matches.data);
@@ -42,23 +42,16 @@ const SearchBar = () => {
             {filteredPatients.length > 0 && (
                 <ul className="absolute left-0 right-0 bg-white border border-gray-300 rounded mt-1 z-10 max-h-60 overflow-y-auto text-black">
                     {filteredPatients.map(patient => (
+                        <Link to={`/patient/${patient.id}`} className='decoration-none '>
                         <li
                             key={patient.id}
                             className="px-4 py-2 cursor-pointer hover:bg-blue-100"
                             onClick={() => handleSelectPatient(patient)}
                         >
-                            {console.log("Rendering patient:", patient.name)}
-                            {patient.name
-                            }
-                        </li>))}
+                            {patient.name}
+                        </li>
+                        </Link>))}
                 </ul>
-            )}
-            {selectedPatient && (
-                <div className="mt-4 p-4 border rounded bg-gray-100 text-black">
-                    <h3 className="font-bold text-lg">{selectedPatient.name}</h3>
-                    <p>Age: {selectedPatient.age}</p>
-                    <p>Info: {selectedPatient.info}</p>
-                </div>
             )}
         </div>
     );
