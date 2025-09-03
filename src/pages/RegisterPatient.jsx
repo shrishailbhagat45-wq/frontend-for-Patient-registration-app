@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { createPatient,getPatients } from "../API/Patient";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router";
 
 const RegisterPatient = () => {
     const [form, setForm] = useState({
@@ -9,6 +11,8 @@ const RegisterPatient = () => {
         phoneNumber: "",
         weight: "",
     });
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -22,7 +26,12 @@ const RegisterPatient = () => {
         e.preventDefault();
         // Handle form submission logic here
         const response=await createPatient(form);
-        console.log(response);
+        navigate("/");
+        if(response.status===201){
+            toast.success("Patient Registered Successfully");
+        }else{
+            toast.error("Error in registering patient");
+        }
     };
 
     return (
