@@ -31,16 +31,16 @@ export default function CreatePrescription({ showModal, setShowModal }) {
 
   const handleSavePreview = () => {
     setShowPreview(true);
+    console.log("Current drugs:", drugs);
   };
 
   const handlePrint = () => {
     const printContents = previewRef.current.innerHTML;
+    console.log("Printing contents:", printContents);
     const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Prescription Preview</title>');
-    printWindow.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">');
-    printWindow.document.write('</head><body>');
+    
     printWindow.document.write(printContents);
-    printWindow.document.write('</body></html>');
+    
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
@@ -48,8 +48,8 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   };
 
   return (
-    <div className="fixed inset-0 text-black bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 shadow-2xl min-w-[500px] max-w-[95vw] max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 text-black bg-gray-950/60 bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-8 shadow-2xl min-w-[360px] max-w-[95vw] max-h-[80vh] overflow-y-auto">
         <h3 className="text-2xl font-bold mb-6 text-center">
           Create Prescription
         </h3>
@@ -139,6 +139,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
           </button>
         </div>
         {showPreview && (
+          <div>
           <div className="mt-8" ref={previewRef}>
             <h4 className="text-lg font-bold mb-4 text-center">
               Prescription Preview
@@ -165,7 +166,9 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 </div>
               </div>
             ))}
-            <button
+            
+          </div>
+          <button
               className="bg-black text-white px-4 py-2 rounded shadow hover:bg-gray-800 transition block mx-auto mt-4"
               onClick={handlePrint}
             >
