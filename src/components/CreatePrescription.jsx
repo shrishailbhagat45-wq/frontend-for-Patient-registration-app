@@ -17,14 +17,14 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   const addNewDrug = () => {
     setDrugs([
       ...drugs,
-      { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+      { name: "", strength: "", quantity: "", frequency: "" },
     ]);
   };
 
   const handleClose = () => {
     setShowModal(false);
     setDrugs([
-      { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+      { name: "", strength: "", quantity: "", frequency: ""},
     ]);
     setShowPreview(false);
   };
@@ -105,7 +105,10 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 />
               </div>
             </div>
-            <div className="mt-2">
+            
+          </div>
+        ))}
+        <div className="mt-2">
               <label className="text-sm font-semibold mb-1">Remarks</label>
               <textarea
                 value={drug.remarks}
@@ -115,9 +118,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 className="border px-3 py-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
                 placeholder="Remarks"
               />
-            </div>
-          </div>
-        ))}
+        </div>
         <div className="flex gap-4 mt-6">
           <button
             className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition"

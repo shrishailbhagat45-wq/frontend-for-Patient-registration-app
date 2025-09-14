@@ -42,9 +42,9 @@ const SearchBar = () => {
             {filteredPatients.length > 0 && (
                 <ul className="absolute left-0 right-0 bg-white border border-gray-300 rounded mt-1 z-10 max-h-60 overflow-y-auto text-black">
                     {filteredPatients.map(patient => (
-                        <Link to={`/patient/${patient.id}`} className='decoration-none '>
+                        <Link to={`/patient/${patient._id}`} className='decoration-none '>
                         <li
-                            key={patient.id}
+                            key={patient._id}
                             className="px-4 py-2 cursor-pointer hover:bg-blue-100"
                             onClick={() => handleSelectPatient(patient)}
                         >

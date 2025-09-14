@@ -2,6 +2,8 @@ import axios, { HttpStatusCode } from "axios";
 import config from '../config';
 import js from "@eslint/js";
 
+
+// Crate a new patient
 export async function createPatient(patientData) {
 
     const data = {
@@ -33,9 +35,12 @@ export async function createPatient(patientData) {
     
 }
 
+
+// Get patients by name (search)
 export async function getPatients(name) {
     const data = { name: name.trim() };
         const response = await axios.post(`${config.url}/patient/getPatient`,data);
+        console.log("Response data:", response);
         return response.data;
         
 }
