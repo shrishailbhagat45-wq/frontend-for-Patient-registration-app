@@ -1,10 +1,12 @@
 import React, { useState, useRef } from "react";
+import { createPrescription } from "../API/Patient";
 
 export default function CreatePrescription({ showModal, setShowModal }) {
   const [drugs, setDrugs] = useState([
     { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
   ]);
   const [showPreview, setShowPreview] = useState(false);
+  const [remarks, setRemarks] = useState("");
   const previewRef = useRef(null);
 
   const handleDrugChange = (idx, field, value) => {
@@ -32,6 +34,8 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   const handleSavePreview = () => {
     setShowPreview(true);
     console.log("Current drugs:", drugs);
+    const prescriptionData = { drugs, remarks };
+    createPrescription(prescriptionData);
   };
 
   const handlePrint = () => {
@@ -111,9 +115,10 @@ export default function CreatePrescription({ showModal, setShowModal }) {
         <div className="mt-2">
               <label className="text-sm font-semibold mb-1">Remarks</label>
               <textarea
-                value={drug.remarks}
-                onChange={(e) =>
-                  handleDrugChange(idx, "remarks", e.target.value)
+                value={remarks}
+                onChange={(e) =>{
+                  setRemarks(e.target.value);
+                }
                 }
                 className="border px-3 py-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
                 placeholder="Remarks"
@@ -163,7 +168,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                   {drug.frequency}
                 </div>
                 <div>
-                  <span className="font-semibold">Remarks:</span> {drug.remarks}
+                  <span className="font-semibold">Remarks:</span> {remarks}
                 </div>
               </div>
             ))}

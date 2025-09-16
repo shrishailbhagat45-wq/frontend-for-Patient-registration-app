@@ -29,9 +29,8 @@ export default function PatientInfo() {
     // Fetch and set prescriptions related to the patient here
     const id = window.location.pathname.split("/").pop();
     const listOfPrescriptions=await getPrescriptionsByPatientId(id);
+    console.log("Fetched prescriptions:", listOfPrescriptions.data);
     setListOfPrescriptions(listOfPrescriptions.data);
-   
-    console.log("Fetched prescriptions:", listOfPrescriptions);
   }
 
   return (

@@ -40,7 +40,6 @@ export async function createPatient(patientData) {
 export async function getPatients(name) {
     const data = { name: name.trim() };
         const response = await axios.post(`${config.url}/patient/getPatient`,data);
-        console.log("Response data:", response);
         return response.data;
         
 }
@@ -50,7 +49,7 @@ export async function getPatientById(id) {
     try {
          response = await axios.get(`${config.url}/patient/${id}`);
         if (response.status !== 200) {
-            console.log("Response status:", response.status);
+
             throw new Error('Failed to fetch patient', response.statusText);
         }
     } catch (error) {
@@ -68,7 +67,7 @@ export async function getPrescriptionsByPatientId(id) {
     try {
          response = await axios.get(`${config.url}/prescriptions/${id}`);
         if (response.status !== 200) {
-            console.log("Response status:", response.status);
+           
             throw new Error('Failed to fetch prescriptions', response.statusText);
         }   
     } catch (error) {
@@ -76,6 +75,12 @@ export async function getPrescriptionsByPatientId(id) {
         throw error;
     }
     return response.data;
+}
+
+
+export async function createPrescription(prescriptionData) {
+    console.log("Creating prescription with data:", prescriptionData);
+
 }
 
 export async function backendIsInitialized() {
