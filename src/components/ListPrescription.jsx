@@ -4,7 +4,7 @@ export default function ListPrescription({prescription, idx}) {
   return (
      <div
             key={idx}
-            className="bg-gray-300 rounded-2xl h-50  items-center px-6 text-black relative"
+            className="bg-gray-300 rounded-2xl h-50  items-center px-6 text-black relative "
           >
             {console.log("list:",prescription.drug)}
             <div className='flex gap-8 justify-between w-full'>

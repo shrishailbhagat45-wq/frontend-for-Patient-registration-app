@@ -14,7 +14,7 @@ export default function PatientInfo() {
   useEffect(() => {
     getDataRelatedToPatient(); 
     fetchPrescriptions();
-  }, []);
+  }, [showModal]);
 
   
 
@@ -48,7 +48,7 @@ export default function PatientInfo() {
       </div>
       <h2 className="text-3xl text-black font-bold text-center mb-8">Pervious Prescriptions</h2>
       {/* Placeholder for previous prescriptions */}
-      <div className="flex flex-col md:flex-row  md:flex  justify-center gap-4 space-y-6 ">
+      <div className="flex flex-col md:flex-row  md:flex flex-wrap0 justify-center gap-4 space-y-6 ">
 
         {listOfPrescriptions.length==0?<><LoadingList /><LoadingList /><LoadingList/></> :listOfPrescriptions.map((prescription, idx) => (
          <ListPrescription  prescription={prescription} idx={idx}/>

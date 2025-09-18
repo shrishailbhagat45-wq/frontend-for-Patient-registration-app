@@ -78,9 +78,21 @@ export async function getPrescriptionsByPatientId(id) {
 }
 
 
-export async function createPrescription(prescriptionData) {
+export async function createPrescription(id,prescriptionData) {
     console.log("Creating prescription with data:", prescriptionData);
-
+    let response= null;
+    try {
+         response = await axios.post(`${config.url}/prescriptions/add/${id}`, {...prescriptionData} );
+         if (response.status !== 201) {
+           
+            throw new Error('Failed to fetch prescriptions', response.statusText);
+        }   
+    } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+        throw error;
+    }
+    console.log("Response data:", response.data);
+    return response.data;
 }
 
 export async function backendIsInitialized() {

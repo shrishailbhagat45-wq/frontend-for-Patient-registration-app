@@ -1,5 +1,8 @@
 import React, { useState, useRef } from "react";
 import { createPrescription } from "../API/Patient";
+import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
+
 
 export default function CreatePrescription({ showModal, setShowModal }) {
   const [drugs, setDrugs] = useState([
@@ -31,11 +34,19 @@ export default function CreatePrescription({ showModal, setShowModal }) {
     setShowPreview(false);
   };
 
-  const handleSavePreview = () => {
+  const handleSavePreview = async () => {
     setShowPreview(true);
     console.log("Current drugs:", drugs);
-    const prescriptionData = { drugs, remarks };
-    createPrescription(prescriptionData);
+    const prescriptionData = { "drug": drugs, "remarks": remarks };
+    const id = window.location.pathname.split("/").pop();
+    const response= await createPrescription(id,prescriptionData);
+    if(response.status===201){
+        toast.success("Prescription is save Successfully");
+        
+        
+    }else{
+        toast.error("Error in saving prescription");
+    }
   };
 
   const handlePrint = () => {
@@ -49,6 +60,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
     printWindow.focus();
     printWindow.print();
     printWindow.close();
+    setShowModal(false);
   };
 
   return (
