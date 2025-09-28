@@ -29,7 +29,7 @@ export default function DetailPrescription() {
   }
 
  return (
-    <div className="pt-8 pr-[10%] pl-[10%] min-h-screen min-w-screen font-semibold">
+    <div className="pt-8 px-[10%] lg:px-[20%]  min-h-screen min-w-screen font-semibold">
         <div className="mb-10 pl-4 relative">
             <div className="pt-2 pb-0.5 text-2xl">Doctor's Name</div>
             <div>Specialty </div>
@@ -38,16 +38,16 @@ export default function DetailPrescription() {
         <div className=" border-2 border-blue-500 border-solid "></div>
         <div>
             <div className="mt-4 mb-4 flex gap-6">
-              <div>Patient's Name: <input type="text" className=" border-2 border-white border-b-black w-xl md:w-70 text-lg pl-2" value={patientData.name} disabled readOnly />
+              <div>Patient's Name: <input type="text" className=" border-2 border-white border-b-black w-60  lg:w-xl text-lg pl-2" value={patientData.name} disabled readOnly />
               </div>
-              <div className="">Date: <input type="text" className=" border-2 border-white border-b-black md:w-30 text-lg pl-2 " value={prescriptionData.createdAt
+              <div className="">Date: <input type="text" className=" border-2 border-white border-b-black w-30 md:w-40 text-lg pl-2 " value={prescriptionData.createdAt
                     ? prescriptionData.createdAt.toString().split("T")[0]
                     : ""}  disabled readOnly /></div>
             </div>
             <div className="mb-4 flex gap-10">
-                <div >Age <input type="text" className=" border-2 border-white border-b-black w-60 md:w-30 text-lg pl-2" readOnly value={patientData.age} /></div>
-                <div >Gender <input type="text" className=" border-2 border-white border-b-black w-60 md:w-30 text-lg pl-2" value={patientData.gender} disabled readOnly /></div>
-                <div >Weight <input type="text" className=" border-2 border-white border-b-black w-60 md:w-30 text-lg pl-2" value={patientData.weight} disabled readOnly/></div>
+                <div >Age <input type="text" className=" border-2 border-white border-b-black lg:w-50 w-30 text-lg pl-2" disabled readOnl value={patientData.age} /></div>
+                <div >Gender <input type="text" className=" border-2 border-white border-b-black lg:w-50 w-30 text-lg pl-2" value={patientData.gender} disabled readOnly /></div>
+                <div >Weight <input type="text" className=" border-2 border-white border-b-black lg:w-50 w-30 text-lg pl-2" value={patientData.weight} disabled readOnly/></div>
             </div>
             <div className="mb-4">
                 <div className="">Diagnosis: <input type="text" className=" border-2 border-white border-b-black w-[80%] text-lg pl-2" disabled readOnly /></div>
@@ -74,7 +74,7 @@ export default function DetailPrescription() {
             </div>
 
             <div className=" border-2 border-blue-500 border-solid "></div>
-            <div> Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sunt aspernatur voluptatem, excepturi quidem, molestias amet debitis autem esse deserunt ad corporis ea exercitationem, necessitatibus eius quia aliquid quo odio est?</div>
+            <div className="p-10 flex"><p className="font-bold">Address:</p> <p className="px-2">Jivaji Mandir, Near, Kolhapur Road, Jawaharnagar, Ichalkaranji, Maharashtra 416115</p> </div>
         </div>
     </div>
   )
