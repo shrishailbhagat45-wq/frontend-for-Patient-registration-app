@@ -1,15 +1,16 @@
 import React, { useState, useRef } from "react";
 import { createPrescription } from "../API/Patient";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router";
 
 
 export default function CreatePrescription({ showModal, setShowModal }) {
   const [drugs, setDrugs] = useState([
     { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
   ]);
-  const [showPreview, setShowPreview] = useState(false);
+
   const [remarks, setRemarks] = useState("");
-  const previewRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleDrugChange = (idx, field, value) => {
     const updated = drugs.map((drug, i) =>
@@ -30,37 +31,22 @@ export default function CreatePrescription({ showModal, setShowModal }) {
     setDrugs([
       { name: "", strength: "", quantity: "", frequency: ""},
     ]);
-    setShowPreview(false);
   };
 
   const handleSavePreview = async () => {
-    setShowPreview(true);
     console.log("Current drugs:", drugs);
     const prescriptionData = { "drug": drugs, "remarks": remarks };
     const id = window.location.pathname.split("/").pop();
     const response= await createPrescription(id,prescriptionData);
+    console.log("prescription response:",response);
     if(response.status===201){
         toast.success("Prescription is save Successfully");
-        
-        
+        navigate("/print-prescription",{state:{prescriptionData:response.data,patientData:response.data.patientData}});
     }else{
         toast.error("Error in saving prescription");
     }
   };
 
-  const handlePrint = () => {
-    const printContents = previewRef.current.innerHTML;
-    console.log("Printing contents:", printContents);
-    const printWindow = window.open('', '', 'height=600,width=800');
-    
-    printWindow.document.write(printContents);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-    setShowModal(false);
-  };
 
   return (
     <div className="fixed inset-0 text-black bg-gray-950/60 bg-opacity-40 flex items-center justify-center z-50">
@@ -155,44 +141,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
             Close
           </button>
         </div>
-        {showPreview && (
-          <div>
-          <div className="mt-8" ref={previewRef}>
-            <h4 className="text-lg font-bold mb-4 text-center">
-              Prescription Preview
-            </h4>
-            {drugs.map((drug, idx) => (
-              <div key={idx} className="mb-4 p-4 bg-gray-200 rounded">
-                <div>
-                  <span className="font-semibold">Drug Name:</span> {drug.name}
-                </div>
-                <div>
-                  <span className="font-semibold">Strength:</span>{" "}
-                  {drug.strength}
-                </div>
-                <div>
-                  <span className="font-semibold">Quantity:</span>{" "}
-                  {drug.quantity}
-                </div>
-                <div>
-                  <span className="font-semibold">Frequency:</span>{" "}
-                  {drug.frequency}
-                </div>
-                <div>
-                  <span className="font-semibold">Remarks:</span> {remarks}
-                </div>
-              </div>
-            ))}
-            
-          </div>
-          <button
-              className="bg-black text-white px-4 py-2 rounded shadow hover:bg-gray-800 transition block mx-auto mt-4"
-              onClick={handlePrint}
-            >
-              Print
-            </button>
-          </div>
-        )}
+       
       </div>
     </div>
   );
