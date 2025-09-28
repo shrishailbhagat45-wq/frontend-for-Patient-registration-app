@@ -1,5 +1,5 @@
 const config={
-    url:'https://patient-registration-app-backend.onrender.com'
+    url:'http://localhost:3000'
 }
 
 export default config

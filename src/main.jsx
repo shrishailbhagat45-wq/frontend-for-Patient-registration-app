@@ -4,11 +4,13 @@ import RegisterPatient from './pages/RegisterPatient.jsx'
 import './index.css'
 import App from './App.jsx'
 import PatientInfo from './pages/PatientInfo.jsx'
+import DetailPrescription from './pages/DetailPrescription.jsx'
 
 const router = createBrowserRouter([
   { path: '/', element: <App /> },
   {path: '/register', element: <RegisterPatient />},
   {path: '/patient/:id', element: <PatientInfo />}, // Assuming you want to use the same component for patient info
+  {path: '/prescription/:patientId/:prescriptionId', element: <DetailPrescription />}, // Assuming you want to use the same component for patient info
 ]);
 
 createRoot(document.getElementById('root')).render(

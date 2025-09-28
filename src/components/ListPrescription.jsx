@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router'
 
 export default function ListPrescription({prescription, idx}) {
   return (
@@ -24,7 +25,7 @@ export default function ListPrescription({prescription, idx}) {
                 </div>
               ))}
             
-            <button className='bg-black text-white py-1 px-4 rounded-md absolute bottom-4 left-1/2 transform -translate-x-1/2'>Read More</button>
+            <Link to={`/prescription/${prescription.patient}/${prescription._id}`}> <button className='bg-black text-white py-1 px-4 rounded-md absolute bottom-4 left-1/2 transform -translate-x-1/2'>Read More</button></Link>
     </div>
   )
 }

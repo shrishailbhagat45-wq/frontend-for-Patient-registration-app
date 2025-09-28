@@ -56,16 +56,31 @@ export async function getPatientById(id) {
         console.error('Error fetching patient:', error);
         throw error;
     }
-    console.log("Response data:", response);
 
     return response.data;
     
 }   
 
+export async function getPrescriptionById(id) {
+    let response= null;
+    try {
+            response = await axios.get(`${config.url}/prescriptions/${id}`);
+        if (response.status !== 200) {
+            throw new Error('Failed to fetch prescription', response.statusText);
+        }
+    }
+    catch (error) {
+        console.error('Error fetching prescription:', error);
+        throw error;
+    }
+    return response.data;
+}
+
 export async function getPrescriptionsByPatientId(id) {
     let response= null; 
     try {
-         response = await axios.get(`${config.url}/prescriptions/${id}`);
+         response = await axios.get(`${config.url}/prescriptions/patient/${id}`);
+         console.log("Fetched prescriptions response:", response);
         if (response.status !== 200) {
            
             throw new Error('Failed to fetch prescriptions', response.statusText);
@@ -83,6 +98,7 @@ export async function createPrescription(id,prescriptionData) {
     let response= null;
     try {
          response = await axios.post(`${config.url}/prescriptions/add/${id}`, {...prescriptionData} );
+         
          if (response.status !== 201) {
            
             throw new Error('Failed to fetch prescriptions', response.statusText);
