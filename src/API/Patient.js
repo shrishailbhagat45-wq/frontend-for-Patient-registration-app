@@ -1,6 +1,9 @@
 import axios, { HttpStatusCode } from "axios";
 import config from '../config';
-import js from "@eslint/js";
+
+import axiosRetry from 'axios-retry';
+
+axiosRetry(axios, { retries: 30 });
 
 
 // Crate a new patient
