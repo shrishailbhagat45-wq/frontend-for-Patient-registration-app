@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { TfiAlignJustify } from "react-icons/tfi";
+import { Link } from 'react-router';
 
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
@@ -22,9 +23,9 @@ export default function Navbar() {
       {showMenu && (
         <div className="fixed top-16 left-0 w-64 h-full bg-white shadow-lg z-50 p-6 transition-all">
           <ul className="space-y-4">
-            <li><a href="#" className="text-black hover:underline">Home</a></li>
-            <li><a href="#" className="text-black hover:underline">Patients Lists</a></li>
-            <li><a href="#" className="text-black hover:underline">Get Documents</a></li>
+            <li><Link to={'/home'} className="text-black hover:underline">Home</Link></li>
+            <li><Link to={'/'} className="text-black hover:underline">Get Documents</Link></li>
+            <li><Link to={''} className="text-black hover:underline">Patients Lists</Link></li>
           </ul>
         </div>
       )}

@@ -3,6 +3,7 @@ import { getPatientById, getPrescriptionsByPatientId } from '../API/Patient';
 import LoadingList from '../components/LoadingList';
 import ListPrescription from '../components/ListPrescription';
 import CreatePrescription from '../components/CreatePrescription';
+import Navbar from '../components/Navbar';
 
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
@@ -34,10 +35,10 @@ export default function PatientInfo() {
 
   return (
     <div className="p-8 min-h-screen min-w-screen bg-white">
-      {console.log()}
+      <Navbar />
       {/* Top bar and prescription list */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="font-bold text-black text-lg">{patientData.name}</div>
+      <div className="flex justify-between items-center mt-12 mb-8">
+        <div className="font-bold text-black text-lg font-mono underline">{(patientData.name)? (patientData.name).toUpperCase():""}'s Reports</div>
         <button
           className="bg-black text-white px-6 py-2 rounded-md  font-semibold shadow"
           onClick={() => setShowModal(true)}
@@ -46,6 +47,7 @@ export default function PatientInfo() {
         </button>
       </div>
       <h2 className="text-3xl text-black font-bold text-center mb-8">Pervious Prescriptions</h2>
+
       {/* Placeholder for previous prescriptions */}
       <div className="flex flex-col md:flex-row  md:flex flex-wrap justify-center gap-4 space-y-6 ">
 

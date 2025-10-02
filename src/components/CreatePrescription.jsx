@@ -57,7 +57,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
         {drugs.map((drug, idx) => (
           <div key={idx} className="mb-8 bg-gray-100 rounded-xl p-4 shadow">
             <div className="flex gap-4 mb-2">
-              <div className="flex flex-col w-1/4">
+              <div className="flex flex-col w-[60%]">
                 <label className="text-sm font-semibold mb-1">Drug Name</label>
                 <input
                   type="text"
@@ -69,7 +69,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                   placeholder="Drug Name"
                 />
               </div>
-              <div className="flex flex-col w-1/5">
+              <div className="flex flex-col w-[10%]">
                 <label className="text-sm font-semibold mb-1">Strength</label>
                 <input
                   type="text"
@@ -81,7 +81,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                   placeholder="50mg"
                 />
               </div>
-              <div className="flex flex-col w-1/5">
+              <div className="flex flex-col w-[10%]">
                 <label className="text-sm font-semibold mb-1">Quantity</label>
                 <input
                   type="text"
@@ -93,24 +93,26 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                   placeholder="9"
                 />
               </div>
-              <div className="flex flex-col w-1/5">
+              <div className="flex flex-col w-[20%]">
                 <label className="text-sm font-semibold mb-1">Frequency</label>
-                <input
-                  type="text"
-                  value={drug.frequency}
+                <select value={drug.frequency}
                   onChange={(e) =>
                     handleDrugChange(idx, "frequency", e.target.value)
                   }
                   className="border px-3 py-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-300"
                   placeholder="1-1-1"
-                />
+                >
+                  <option value="1-0-1">1-0-1</option>
+                  <option value="1-0-0">1-0-0</option>
+                  <option value="0-0-1">0-0-1</option>
+                </select>
               </div>
             </div>
             
           </div>
         ))}
         <div className="mt-2">
-              <label className="text-sm font-semibold mb-1">Remarks</label>
+              <label className="text-sm font-semibold mb-1">Diagnosis</label>
               <textarea
                 value={remarks}
                 onChange={(e) =>{

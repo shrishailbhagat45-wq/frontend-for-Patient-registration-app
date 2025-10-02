@@ -3,7 +3,7 @@ import config from '../config';
 
 import axiosRetry from 'axios-retry';
 
-axiosRetry(axios, { retries: 30 });
+axiosRetry(axios, { retries: 60 });
 
 
 // Crate a new patient
