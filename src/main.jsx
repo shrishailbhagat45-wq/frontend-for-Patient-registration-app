@@ -6,6 +6,9 @@ import App from './App.jsx'
 import PatientInfo from './pages/PatientInfo.jsx'
 import DetailPrescription from './pages/DetailPrescription.jsx'
 import PrintPrescription from './pages/PrintPrescription.jsx'
+import Login from './pages/Login.jsx'
+import Home from './pages/Home.jsx'
+import BillingDashBoard from './pages/BillingDashBoard.jsx'
 
 const router = createBrowserRouter([
   { path: '/', element: <App /> },
@@ -13,6 +16,9 @@ const router = createBrowserRouter([
   {path: '/patient/:id', element: <PatientInfo />}, 
   {path: '/prescription/:prescriptionId', element: <DetailPrescription />}, 
   {path: '/print-prescription', element: <PrintPrescription />},
+  {path: '/login', element: <Login />},
+  {path:'/home',element:<Home />},
+  {path:'/billing-dashboard',element:<BillingDashBoard />}
 ]);
 
 createRoot(document.getElementById('root')).render(
