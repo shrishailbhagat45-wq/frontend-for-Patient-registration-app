@@ -114,6 +114,35 @@ export async function createPrescription(id,prescriptionData) {
     return response.data;
 }
 
+
+// Billing api's
+
+export async function getBillingItems() {
+    const res= await axios.get(`${config.url}/billing`);
+    console.log("Billing items response:", res);
+    return res.data;
+}
+
+export async function addItem(item) {
+    const res = await axios.post(`${config.url}/billing`,item);
+    if(res.status!==201){
+        throw new Error('Failed to add item', res.statusText);
+    }
+    return res.data;
+}
+
+export async function updateItem(id,item){
+    const res=await axios.put(`${config.url}/billing/${id}`,item)
+    if(res.status!==200){
+        throw new Error('Failed to add item', res.statusText);
+    }
+    return res.data;
+}
+
+export async function deleteItem(id) {
+    await axios.delete(`${config.url}/billing/${id}`);
+}
+
 export async function backendIsInitialized() {
     let response= null;
     try {

@@ -12,7 +12,7 @@ export default function ListPrescription({prescription, idx}) {
               <h2>Name: {  (prescription.patientName).toUpperCase()}</h2>
               <h2>Date: {prescription.createdAt.toString().split("T")[0]}</h2> 
             </div>
-            <div>
+            <div className='flex justify-center '>
                <table className="table-fixed ">
                 <thead className=" border-b border-gray-400">
                   <tr className=''>

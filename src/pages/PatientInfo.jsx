@@ -34,7 +34,7 @@ export default function PatientInfo() {
   }
 
   return (
-    <div className="p-8 min-h-screen min-w-screen bg-white">
+    <div className="pt-8 px-4 min-h-screen min-w-screen bg-white">
       <Navbar />
       {/* Top bar and prescription list */}
       <div className="flex justify-between items-center mt-12 mb-8">
@@ -49,7 +49,7 @@ export default function PatientInfo() {
       <h2 className="text-3xl text-black font-bold text-center mb-8">Pervious Prescriptions</h2>
 
       {/* Placeholder for previous prescriptions */}
-      <div className="flex flex-col md:flex-row  md:flex flex-wrap justify-center gap-4 space-y-6 ">
+      <div className="flex flex-col md:flex-row  md:flex flex-wrap justify-center gap-4 px-4 ">
 
         {listOfPrescriptions.length==0?<><LoadingList /><LoadingList /><LoadingList/></> :listOfPrescriptions.map((prescription, idx) => (
          <ListPrescription  prescription={prescription} idx={idx}/>

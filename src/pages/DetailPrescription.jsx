@@ -26,7 +26,11 @@ export default function DetailPrescription() {
   }
 
  return (
-    <PrescriptionComponent patientData={patientData} prescriptionData={prescriptionData}/>
+    <div>
+      
+      <PrescriptionComponent patientData={patientData} prescriptionData={prescriptionData}/>
+    </div>
+    
 
   )
 }
