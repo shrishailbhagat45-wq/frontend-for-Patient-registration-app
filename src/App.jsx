@@ -10,17 +10,16 @@ import 'react-toastify/dist/ReactToastify.css';
 function App() {
   const [loading, setLoading] = useState(true);
 
-  useEffect(async () => {
-    
-    console.log("Checking backend status...",loading);
+  useEffect(() => {
+    initialized()
+  }, []); 
+
+  async function initialized() {
     const status=await backendIsInitialized();
     if(status===200){
       setLoading(false);
     }
-    
-  }, []); 
-
-  
+  }
 
   return (
     <>

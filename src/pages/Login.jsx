@@ -1,22 +1,27 @@
 import React, { useState } from 'react'
+import { login } from '../API/Patient';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router';
 
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const navigate=useNavigate()
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     // Dummy authentication logic
-    if (form.username === "admin" && form.password === "admin") {
-      // Redirect or set auth state here
-      alert("Login successful!");
-    } else {
-      setError("Invalid username or password");
+    const res=await login(form.username,form.password)
+    if (res) {
+      
+      navigate('/home')
+      toast.success("Login successful!");
+      
     }
   };
 

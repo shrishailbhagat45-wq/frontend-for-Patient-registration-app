@@ -2,6 +2,7 @@ import axios, { HttpStatusCode } from "axios";
 import config from '../config';
 
 import axiosRetry from 'axios-retry';
+import { toast } from "react-toastify";
 
 axiosRetry(axios, { retries: 60 });
 
@@ -112,6 +113,18 @@ export async function createPrescription(id,prescriptionData) {
     }
     console.log("Response data:", response.data);
     return response.data;
+}
+//Login
+
+export async function login(email,password) {
+    try{
+        const res=await axios.post(`${config.url}/auth/login`,{email,password});
+        return res.data;
+    }
+    catch{
+        toast.error("Invalid credential")
+    }
+    
 }
 
 
