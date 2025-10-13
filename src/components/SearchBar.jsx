@@ -35,17 +35,17 @@ const SearchBar = () => {
                     placeholder="Search for existing patients..."
                     value={searchTerm}
                     onChange={handleSearchChange}
-                    className="min-w-full px-4 py-2 text-lg border border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 text-black bg-gray-300"
+                    className="min-w-full px-4 py-2 text-lg border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-gray-400 text-black bg-gray-300 shadow-lg"
                     autoComplete="off"
                 />
             </form>
             {filteredPatients.length > 0 && (
-                <ul className="absolute left-0 right-0 bg-white border border-gray-300 rounded mt-1 z-10 max-h-60 overflow-y-auto text-black">
+                <ul className="absolute left-0 right-0 bg-white border border-gray-300 shadow-lg rounded mt-1 z-10 max-h-60 overflow-y-auto text-black">
                     {filteredPatients.map(patient => (
                         <Link to={`/patient/${patient._id}`} className='decoration-none '>
                         <li
                             key={patient._id}
-                            className="px-4 py-2 cursor-pointer hover:bg-blue-100"
+                            className="px-4 py-2 cursor-pointer hover:bg-fuchsia-100 border-b border-gray-200"
                             onClick={() => handleSelectPatient(patient)}
                         >
                             {patient.name}

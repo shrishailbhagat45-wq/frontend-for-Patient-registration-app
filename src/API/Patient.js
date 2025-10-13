@@ -6,6 +6,11 @@ import { toast } from "react-toastify";
 
 axiosRetry(axios, { retries: 60 });
 
+const token="Bearer "+localStorage.getItem("token");
+const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': token
+      }
 
 // Crate a new patient
 export async function createPatient(patientData) {
@@ -20,10 +25,7 @@ export async function createPatient(patientData) {
     let response= null;
     try {
          response = await axios.post(`${config.url}/patient/create`, JSON.stringify(data) , {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }  
+            headers: headers
         });
         if (response.status !== 201) {
             console.log("Response status:", response.status);
@@ -43,7 +45,11 @@ export async function createPatient(patientData) {
 // Get patients by name (search)
 export async function getPatients(name) {
     const data = { name: name.trim() };
-        const response = await axios.post(`${config.url}/patient/getPatient`,data);
+        const response = await axios.post(`${config.url}/patient/getPatient`,data,{headers:{
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': token
+        }});
         return response.data;
         
 }
@@ -51,7 +57,12 @@ export async function getPatients(name) {
 export async function getPatientById(id) {
     let response= null;
     try {
-         response = await axios.get(`${config.url}/patient/${id}`);
+         response = await axios.get(`${config.url}/patient/${id}`,{headers:{
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': token
+        }});
+         console.log("Fetched patient response:", response);
         if (response.status !== 200) {
 
             throw new Error('Failed to fetch patient', response.statusText);

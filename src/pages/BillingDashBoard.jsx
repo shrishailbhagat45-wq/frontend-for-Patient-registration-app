@@ -5,14 +5,9 @@ import  { addItem } from "../API/Patient";
 import { updateItem } from "../API/Patient";
 import Navbar from "../components/Navbar";
 import { toast } from "react-toastify";
-
-// Replace these with your actual API endpoints
-const API_BASE = "https://your-api-url.com";
-
-
-
-
-
+import { FaPen } from "react-icons/fa";
+import { RiDeleteBinFill } from "react-icons/ri";
+import { MdCancel } from "react-icons/md";
 
 
 
@@ -70,7 +65,7 @@ export default function BillingDashBoard() {
             <Navbar/>
 
         <div className="max-w-2xl mx-auto mt-24 p-4 bg-white rounded-xl shadow-lg ">
-            <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">Billing Dashboard</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center text-blue-700 text-shadow-sm ">Billing Dashboard</h2>
             <form
                 onSubmit={handleAdd}
                 className="flex flex-col sm:flex-row gap-3 mb-6 items-center"
@@ -91,7 +86,7 @@ export default function BillingDashBoard() {
                 />
                 <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                    className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
                 >
                     Add Item
                 </button>
@@ -141,10 +136,7 @@ export default function BillingDashBoard() {
                                             className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 transition"
                                             title="Cancel"
                                         >
-                                            {/* Cancel Icon */}
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                            <MdCancel />
                                         </button>
                                     </td>
                                 </tr>
@@ -155,23 +147,17 @@ export default function BillingDashBoard() {
                                     <td className="py-2 px-2 flex gap-2 justify-center">
                                         <button
                                             onClick={() => handleEdit(item)}
-                                            className="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500 transition"
+                                            className="text-white bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-yellow-300 dark:focus:ring-yellow-700 shadow-lg shadow-yellow-500/50 dark:shadow-lg dark:shadow-yellow-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
                                             title="Edit"
                                         >
-                                            {/* Edit Icon */}
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2l-6 6m-2 2h2v2h2v-2h2v-2h-2v-2h-2v2H9v2z" />
-                                            </svg>
+                                            <FaPen />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(item._id)}
-                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                                            className="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
                                             title="Delete"
                                         >
-                                            {/* Delete Icon */}
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                            <RiDeleteBinFill />
                                         </button>
                                     </td>
                                 </tr>

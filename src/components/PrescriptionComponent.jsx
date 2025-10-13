@@ -4,14 +4,15 @@ import { FaPrescription } from "react-icons/fa";
 import Navbar from "./Navbar";
 import PrintButton from '../components/PrintButton';
 
+
 export default function ({patientData,prescriptionData}) {
   return (
     <div> 
       <Navbar  />
-      <div className='mt-20 px-4 '>
+      <div className='mt-20 mr-2'>
               <PrintButton />
        </div>
-    <div className="print-container pt-2 px-[10%] lg:px-[20%]  min-h-screen min-w-screen font-semibold">
+    <div className="print-container pt-2 px-[10%] lg:px-[20%]  min-h-screen min-w-full font-semibold">
         <div className="mb-4 pl-4 relative">
             <div className="pt-2 pb-0.5 text-2xl">Doctor's Name</div>
             <div>Specialty </div>

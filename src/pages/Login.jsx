@@ -18,7 +18,7 @@ export default function Login() {
     // Dummy authentication logic
     const res=await login(form.username,form.password)
     if (res) {
-      
+      localStorage.setItem("token",res.token)
       navigate('/home')
       toast.success("Login successful!");
       

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getPatientById, getPrescriptionsByPatientId } from '../API/Patient';
+import { useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom'
 import LoadingList from '../components/LoadingList';
 import ListPrescription from '../components/ListPrescription';
 import CreatePrescription from '../components/CreatePrescription';
@@ -7,6 +9,7 @@ import Navbar from '../components/Navbar';
 
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
+  const{id} =useParams();
   
   const [patientData, setPatientData] = useState({});
   const [listOfPrescriptions, setListOfPrescriptions] = useState([]);
@@ -28,19 +31,20 @@ export default function PatientInfo() {
 
   async function fetchPrescriptions() {
     // Fetch and set prescriptions related to the patient here
-    const id = window.location.pathname.split("/").pop();
     const listOfPrescriptions=await getPrescriptionsByPatientId(id);
     setListOfPrescriptions(listOfPrescriptions.data);
   }
 
   return (
-    <div className="pt-8 px-4 min-h-screen min-w-screen bg-white">
+    <div>
       <Navbar />
+    <div className="pt-8 px-4 min-h-screen min-w-full bg-white">
+      
       {/* Top bar and prescription list */}
       <div className="flex justify-between items-center mt-12 mb-8">
         <div className="font-bold text-black text-lg font-mono underline">{(patientData.name)? (patientData.name).toUpperCase():""}'s Reports</div>
         <button
-          className="bg-black text-white px-6 py-2 rounded-md  font-semibold shadow"
+          className="text-white bg-gradient-to-r from-indigo-400 via-indigo-500 to-indigo-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-indigo-300 dark:focus:ring-indigo-800 shadow-lg shadow-indigo-500/50 dark:shadow-lg dark:shadow-indigo-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
           onClick={() => setShowModal(true)}
         >
           New prescription
@@ -59,9 +63,11 @@ export default function PatientInfo() {
 
       <div className="flex justify-center mt-8">
         <div className="flex justify-center items-center">
-          <button className="bg-black text-white font-semibold px-6 py-2 rounded-md shadow inset-0 m-auto">
-            Load more
+          <Link to={`/billing/${id}`}>
+          <button className="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 shadow-lg shadow-teal-500/50 dark:shadow-lg dark:shadow-teal-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 inset-0 m-auto">
+            Create Bill
           </button>
+          </Link>
         </div>
       </div>
 
@@ -71,5 +77,7 @@ export default function PatientInfo() {
         <CreatePrescription showModal={showModal} setShowModal={setShowModal}/>
       )}
     </div>
+    </div>
   );
+  
 }
