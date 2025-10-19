@@ -39,6 +39,7 @@ export default function Navbar() {
   const toggleProfile = () => setShowProfile((s) => !s);
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("id");
   }
 
   return (
@@ -64,7 +65,7 @@ export default function Navbar() {
               <Link to="/profile" className="block px-4 py-2 text-black hover:bg-gray-100">
                 Profile
               </Link>
-              <Link to="/login" className="block px-4 py-2 text-black hover:bg-gray-100" onClick={logout}>
+              <Link to="/" className="block px-4 py-2 text-black hover:bg-gray-100" onClick={logout}>
                 Logout
               </Link>
             </div>
@@ -110,13 +111,13 @@ export default function Navbar() {
                 </Link>
               </li>
               <li >
-                <Link to="/" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
+                <Link to="/home" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
                 <GrDocumentPdf />
                 <div className="pl-2"> Get Documents</div>
                 </Link>
               </li>
               <li className="bg-gray-100 block">
-                <Link to="" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
+                <Link to="/management-dashboard" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
                 <MdManageAccounts />
                 <div className="pl-2">Management Dashboard</div>
                 </Link>

@@ -10,6 +10,7 @@ import Login from './pages/Login.jsx'
 import Home from './pages/Home.jsx'
 import BillingDashBoard from './pages/BillingDashBoard.jsx'
 import Billing from './pages/Billing.jsx'
+import ManagementDashboard from './pages/ManagementDashboard.jsx'
 
 const router = createBrowserRouter([
   { path: '/', element: <App /> },
@@ -20,7 +21,8 @@ const router = createBrowserRouter([
   {path: '/prescription/:prescriptionId', element: <DetailPrescription />}, 
   {path: '/print-prescription', element: <PrintPrescription />},
   {path:'/billing-dashboard',element:<BillingDashBoard />},
-  {path:'/billing/:patientId', element:<Billing/>}
+  {path:'/billing/:patientId', element:<Billing/>},
+  {path:'/management-dashboard',element:<ManagementDashboard/>}
 ]);
 
 createRoot(document.getElementById('root')).render(

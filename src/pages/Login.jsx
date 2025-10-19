@@ -19,9 +19,9 @@ export default function Login() {
     const res=await login(form.username,form.password)
     if (res) {
       localStorage.setItem("token",res.token)
+      localStorage.setItem("id",JSON.stringify(res.id))
       navigate('/home')
       toast.success("Login successful!");
-      
     }
   };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getBillingItems, getPatientById } from "../API/Patient";
+import { getBillingItems, getPatientById, createBill } from "../API/Patient";
 import Navbar from "../components/Navbar";
 
 export default function Billing() {
@@ -60,6 +60,11 @@ export default function Billing() {
     });
   }
 
+  function messageClose() {
+    setMessage(null);
+  }
+  
+  
   function updateQty(itemId, qty) {
     const q = Math.max(0, Math.floor(Number(qty) || 0));
     setBillItems((prev) =>
@@ -88,40 +93,27 @@ export default function Billing() {
       setMessage({ type: "error", text: "Add at least one billing item." });
       return;
     }
+    
+
 
     const payload = {
       patientId: patientId,
-      items: billItems.map((it) => ({ id: it.id, qty: it.qty, price: it.price })),
-      subtotal,
+      items: billItems.map((it) => ({ item: it.id, quantity: it.qty, price: it.price })),
       taxPercent: Number(taxPercent) || 0,
-      taxAmount,
-      total,
-      notes,
-      createdAt: new Date().toISOString(),
+      taxAmount: Number(taxAmount) || 0,
+      totalAmount: total,
+      billNotes: notes,
     };
 
-    try {
-      setLoading(true);
-      const res = await fetch("/api/bills", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Failed to create bill");
-      await res.json();
-      setMessage({ type: "success", text: "Bill created." });
-      // reset bill-only fields (keep patient)
-      setSelectedItemId("");
+    const res = await createBill(payload);
+    if (res && (res?.data || res)) {
+      setMessage({ type: "success", text: "Bill created successfully." });
       setBillItems([]);
-      setNotes("");
-      setTaxPercent(0);
-    } catch (err) {
-      console.error(err);
+    } else {
       setMessage({ type: "error", text: "Failed to create bill." });
-    } finally {
-      setLoading(false);
     }
   }
+  
 
   return (
     <div>
@@ -130,12 +122,13 @@ export default function Billing() {
       <h2 className="text-2xl font-semibold mb-4">Create Patient Bill</h2>
 
       {message && (
-        <div
-          className={`mb-4 p-3 rounded ${
+        <div className={`mb-4 p-3 rounded relative ${
             message.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"
-          }`}
+          } `}
         >
+          <button className=" absolute right-0 px-4" onClick={()=>messageClose()}>X</button>
           {message.text}
+          
         </div>
       )}
 
@@ -145,11 +138,11 @@ export default function Billing() {
             <label className="block text-sm font-medium mb-1">Patient</label>
             <div className="w-full border rounded px-3 py-2 bg-gray-50">
               {selectedPatient ? (
-                <div className="text-sm text-gray-800">
+                <div className="text-lg font-medium text-gray-800">
                   <div><strong>{selectedPatient.name}</strong></div>
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">Loading patient...</div>
+                <div className="text-sm font-medium text-gray-500">Loading patient...</div>
               )}
             </div>
           </div>
@@ -160,7 +153,7 @@ export default function Billing() {
               <select
                 value={selectedItemId}
                 onChange={(e) => setSelectedItemId(e.target.value)}
-                className="flex-1 border rounded px-3 py-2"
+                className="flex-1 border rounded px-2 py-2"
               >
                 <option value="">-- select item --</option>
                 {items.map((it) => (
@@ -172,7 +165,7 @@ export default function Billing() {
               <button
                 type="button"
                 onClick={addItemToBill}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
               >
                 Add
               </button>
@@ -241,7 +234,7 @@ export default function Billing() {
           <div className="w-full md:w-72 border rounded p-4 bg-white shadow">
             <div className="flex justify-between mb-2">
               <div className="text-sm text-gray-600">Subtotal</div>
-              <div className="font-medium">${subtotal.toFixed(2)}</div>
+              <div className="font-medium">₹{subtotal.toFixed(2)}</div>
             </div>
 
             <div className="flex items-center gap-3 mb-2">
@@ -252,13 +245,13 @@ export default function Billing() {
                 className="w-20 border rounded px-2 py-1"
               />
               <div className="text-sm text-gray-600">Tax %</div>
-              <div className="ml-auto text-right">${taxAmount.toFixed(2)}</div>
+              <div className="ml-auto text-right">₹{taxAmount.toFixed(2)}</div>
             </div>
 
             <hr className="my-2" />
             <div className="flex justify-between font-semibold">
               <div>Total</div>
-              <div>${total.toFixed(2)}</div>
+              <div>₹{total.toFixed(2)}</div>
             </div>
           </div>
         </div>
@@ -267,7 +260,7 @@ export default function Billing() {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-emerald-600 text-white rounded disabled:opacity-60"
+            className="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
           >
             {loading ? "Creating..." : "Create Bill"}
           </button>
