@@ -4,7 +4,7 @@ import { getPatients } from "../API/Patient";
 import { addPatientToQueue,getQueuedPatients,removeFromQueueById } from "../API/Patient";
 
 
-export default function SearchBar({ onQueueChange } = {}) {
+export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);

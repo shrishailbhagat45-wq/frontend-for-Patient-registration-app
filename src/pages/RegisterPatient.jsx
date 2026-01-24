@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPatient,getPatients } from "../API/Patient";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
+import Navbar from "../components/Navbar";
 
 const RegisterPatient = () => {
     const [form, setForm] = useState({
@@ -26,7 +27,7 @@ const RegisterPatient = () => {
         e.preventDefault();
         // Handle form submission logic here
         const response=await createPatient(form);
-        navigate("/");
+        navigate("/home");
         if(response.status===201){
             toast.success("Patient Registered Successfully");
         }else{
@@ -35,7 +36,11 @@ const RegisterPatient = () => {
     };
 
     return (
-        <div className="min-h-screen min-w-screen flex items-center justify-center bg-gray-100">
+        <>
+        <div>
+            <Navbar/>
+        </div>
+        <div className="min-h-screen bg-gray-100 mt-10 flex items-center justify-center p-4">
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
                     Register Patient
@@ -130,6 +135,7 @@ const RegisterPatient = () => {
                 </form>
             </div>
         </div>
+    </>
     );
 };
 

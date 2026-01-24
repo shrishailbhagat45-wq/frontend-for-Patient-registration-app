@@ -19,6 +19,7 @@ export async function createPatient(patientData) {
         age: parseInt(patientData.age),
         phoneNumber: patientData.phoneNumber,
         weight: parseInt(patientData.weight),
+        userId: localStorage.getItem("id")
     }
     let response= null;
     try {
@@ -192,6 +193,30 @@ export async function getQueuedPatients(){
 
 export async function removeFromQueueById(id){
     const res= await axios.delete(`${url}/patient-queue/${id}`);
+    return res.data;
+}
+
+//Receptionist api's
+
+export async function addReceptionist(receptionistData) {
+    const data = {
+        ...receptionistData,
+        doctorId: localStorage.getItem("id")
+    }
+    const res= await axios.post(`${url}/user/addReceptionist`,data,{
+            headers: headers
+        });
+    if(res.status!==201){
+        throw new Error('Failed to add user', res.statusText);
+    }
+    return res.data;;
+}
+
+export async function getReceptionist(){
+    const doctorId= localStorage.getItem("id");
+    const res= await axios.get(`${url}/user/receptionists/${doctorId}`,{
+            headers: headers
+        });
     return res.data;
 }
 

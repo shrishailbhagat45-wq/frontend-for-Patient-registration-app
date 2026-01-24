@@ -1,35 +1,34 @@
 import React, { useEffect, useState } from "react";
-
-const STORAGE_KEY = "receptionists";
+import { addReceptionist,getReceptionist } from "../API/Patient";
 
 export default function RegisterReceptionist() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "Receptionist",
-  });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "Receptionist" });
   const [receptionists, setReceptionists] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // load users from API on mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      setReceptionists(raw ? JSON.parse(raw) : []);
-    } catch {
-      setReceptionists([]);
-    }
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getReceptionist();
+        const data = res?.data ?? res ?? [];
+        if (mounted) setReceptionists(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load users", err);
+        if (mounted) setError("Failed to load users");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => (mounted = false);
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(receptionists));
-    } catch (err) {
-      console.error("Failed to save receptionists", err);
-    }
-  }, [receptionists]);
-
-  const handleChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const validate = () => {
     if (!form.name.trim()) return "Name is required.";
@@ -40,25 +39,46 @@ export default function RegisterReceptionist() {
     return null;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const err = validate();
-    if (err) {
-      alert(err);
+    const errMsg = validate();
+    if (errMsg) {
+      alert(errMsg);
       return;
     }
-    const newRec = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      email: form.email.trim(),
-      role: form.role,
-    };
-    setReceptionists((prev) => [newRec, ...prev]);
-    setForm({ name: "", email: "", password: "", role: "Receptionist" });
+
+    setLoading(true);
+    setError(null);
+    try {
+      const payload = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role,
+      };
+
+      const res = await addReceptionist(payload);
+      const created = res?.data ?? res ?? null;
+
+      // refresh user list after successful add
+      const refresh = await getReceptionist();
+      const list = refresh?.data ?? refresh ?? [];
+      setReceptionists(Array.isArray(list) ? list : []);
+
+      // reset form
+      setForm({ name: "", email: "", password: "", role: "Receptionist" });
+    } catch (err) {
+      console.error("Failed to add receptionist", err);
+      setError("Failed to add receptionist");
+      alert("Failed to add receptionist. See console for details.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = (id) => {
     if (!window.confirm("Delete this receptionist?")) return;
+    // note: delete on UI only — implement server-side delete if API available
     setReceptionists((prev) => prev.filter((r) => r.id !== id));
   };
 

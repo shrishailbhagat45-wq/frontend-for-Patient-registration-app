@@ -17,9 +17,10 @@ export default function Login() {
     e.preventDefault();
     // Dummy authentication logic
     const res=await login(form.username,form.password)
+    console.log("Login response:", res);
     if (res) {
       localStorage.setItem("token",res.token)
-      localStorage.setItem("id",JSON.stringify(res.id))
+      localStorage.setItem("id",res.id)
       navigate('/home')
       toast.success("Login successful!");
     }

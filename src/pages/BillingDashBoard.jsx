@@ -8,15 +8,44 @@ import { toast } from "react-toastify";
 import { FaPen } from "react-icons/fa";
 import { RiDeleteBinFill } from "react-icons/ri";
 import { MdCancel } from "react-icons/md";
+import { Bar } from "react-chartjs-2"
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 
 
 export default function BillingDashBoard() {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const Dates=["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"]
     const [iDelete,setIDelete]=useState(false)
     const [items, setItems] = useState([]);
     const [newItem, setNewItem] = useState({ name: "", price: "" });
     const [editingId, setEditingId] = useState(null);
     const [editItem, setEditItem] = useState({ name: "", price: "" });
+    const [labelForXAxis,setLabelForXAxis]=useState("This Year");
+    const [valueOfXAxisLabel, setValueOfXAxisLabel] = useState(months);
+
+
+    const chartData = {
+        labels: valueOfXAxisLabel,
+        datasets: [
+            {
+                label: 'Billing Data',
+                data: [12, 19, 3, 5, 2, 3, 4, 6, 8, 10, 11, 15],
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            },
+        ],
+    };
+    
 
     useEffect(() => {
         getBillingItems().then(setItems);
@@ -58,6 +87,23 @@ export default function BillingDashBoard() {
         setItems(items.map((item) => (item._id === id ? updated : item)));
         setEditingId(null);
         setEditItem({ name: "", price: "" });
+    };
+
+    const handleXAxisChange = (e) => {
+        const v = e.target.value;
+        setLabelForXAxis(v);
+
+        if (v === "This Year" || v === "Last Year") {
+            setValueOfXAxisLabel(months);
+        } else if (["Jan","Mar","May","Jul","Aug","Oct","Dec"].includes(v)) {
+            setValueOfXAxisLabel(Dates);
+        } else if (v === "Feb") {
+            setValueOfXAxisLabel(Dates.slice(0,28));
+        } else if (["Apr","Jun","Sep","Nov"].includes(v)) {
+            setValueOfXAxisLabel(Dates.slice(0,30));
+        } else {
+            setValueOfXAxisLabel([]);
+        }
     };
 
     return (
@@ -172,6 +218,24 @@ export default function BillingDashBoard() {
                         )}
                     </tbody>
                 </table>
+            </div>
+            <div></div>
+        </div>
+        <div className="px-4 py-4 max-w-3xl mx-auto mt-8 bg-white rounded-xl shadow-lg">
+            <div className=" relative">
+                <select name="" id="" value={labelForXAxis} onChange={handleXAxisChange} className="mb-4 px-2 border rounded-md">
+                    <option value="This Year">This Year</option>
+                    <option value="Last Year">Last Year</option>
+                    {months.map((month, index) => (
+                        <option key={index} value={month}>{month}</option>
+                    ))}
+                </select>
+            </div>
+            <div>
+                {
+                valueOfXAxisLabel.length!==0?
+                <Bar data={chartData} />: <div>Loading...</div>
+            }
             </div>
         </div>
     </div>
