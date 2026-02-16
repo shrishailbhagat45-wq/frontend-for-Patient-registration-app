@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getPatientById, getPrescriptionsByPatientId } from '../API/Patient';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom'
@@ -9,31 +10,27 @@ import Navbar from '../components/Navbar';
 
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
-  const{id} =useParams();
+  const { id } = useParams();
   
-  const [patientData, setPatientData] = useState({});
-  const [listOfPrescriptions, setListOfPrescriptions] = useState([]);
-  
+  // Fetch patient data
+  const { data: patientData = {} } = useQuery({
+    queryKey: ['patient', id],
+    queryFn: async () => {
+      const patient = await getPatientById(id);
+      return patient.data || {};
+    },
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    getDataRelatedToPatient(); 
-    fetchPrescriptions();
-  }, [showModal]);
-
-  
-
-  async function getDataRelatedToPatient() { 
-    // Fetch and set patient data here
-    const id = window.location.pathname.split("/").pop();
-    const patient = await getPatientById(id);
-    setPatientData(patient.data);
-  } 
-
-  async function fetchPrescriptions() {
-    // Fetch and set prescriptions related to the patient here
-    const listOfPrescriptions=await getPrescriptionsByPatientId(id);
-    setListOfPrescriptions(listOfPrescriptions.data);
-  }
+  // Fetch prescriptions with dependency on showModal to refresh
+  const { data: listOfPrescriptions = [] } = useQuery({
+    queryKey: ['prescriptions', id, showModal],
+    queryFn: async () => {
+      const prescriptions = await getPrescriptionsByPatientId(id);
+      return prescriptions.data || [];
+    },
+    enabled: !!id,
+  });
 
   return (
     <div>

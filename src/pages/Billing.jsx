@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { getBillingItems, getPatientById, createBill } from "../API/Patient";
 import Navbar from "../components/Navbar";
 
 export default function Billing() {
   const { patientId } = useParams(); // get single patient id from URL
-  const [selectedPatient, setSelectedPatient] = useState(null); // full patient data via getPatientById
-  const [items, setItems] = useState([]);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [billItems, setBillItems] = useState([]);
   const [taxPercent, setTaxPercent] = useState(0);
@@ -14,28 +13,30 @@ export default function Billing() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // load initial data: billing items and patient details
-  useEffect(() => {
-    async function load() {
-      try {
-        const itemsRes = await getBillingItems();
-        const itemsData = itemsRes?.data ?? itemsRes ?? [];
-        setItems(Array.isArray(itemsData) ? itemsData : []);
+  // Fetch billing items
+  const { data: items = [] } = useQuery({
+    queryKey: ['billingItems'],
+    queryFn: async () => {
+      const itemsRes = await getBillingItems();
+      const itemsData = itemsRes?.data ?? itemsRes ?? [];
+      return Array.isArray(itemsData) ? itemsData : [];
+    },
+  });
 
-        if (patientId) {
-          const patientRes = await getPatientById(patientId);
-          const patientData = patientRes?.data ?? patientRes ?? [];
-          setSelectedPatient(patientData);
-        } else {
-          setMessage({ type: "error", text: "Missing patient id in URL." });
-        }
-      } catch (err) {
-        console.error(err);
-        setMessage({ type: "error", text: "Failed to load data." });
+  // Fetch patient data
+  const { data: selectedPatient = null } = useQuery({
+    queryKey: ['patient', patientId],
+    queryFn: async () => {
+      if (!patientId) {
+        setMessage({ type: "error", text: "Missing patient id in URL." });
+        return null;
       }
-    }
-    load();
-  }, [patientId]);
+      const patientRes = await getPatientById(patientId);
+      const patientData = patientRes?.data ?? patientRes ?? [];
+      return patientData;
+    },
+    enabled: !!patientId,
+  });
 
   function addItemToBill() {
     if (!selectedItemId) return;

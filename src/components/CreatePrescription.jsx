@@ -7,6 +7,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   const [drugs, setDrugs] = useState([
     { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
   ]);
+  const [Diagnosis, setDiagnosis] = useState("");
   const [remarks, setRemarks] = useState("");
   const [suggestions, setSuggestions] = useState({}); // { idx: [suggestion, ...] }
   const [highlight, setHighlight] = useState({}); // { idx: highlightedIndex }
@@ -19,7 +20,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   };
 
   const addNewDrug = () => {
-    setDrugs((prev) => [...prev, { name: "", strength: "", quantity: "", frequency: "" }]);
+    setDrugs((prev) => [...prev, { name: "", strength: "", quantity: "", frequency: "", remarks: "" }]);
   };
 
   const removeDrug = (idx) => {
@@ -103,7 +104,7 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   };
 
   const handleSavePreview = async () => {
-    const prescriptionData = { drug: drugs, remarks };
+    const prescriptionData = { drug: drugs, Diagnosis };
     const id = window.location.pathname.split("/").pop();
     try {
       const response = await createPrescription(id, prescriptionData);
@@ -132,12 +133,13 @@ export default function CreatePrescription({ showModal, setShowModal }) {
         </div>
 
         <div className="p-6 space-y-6">
+
           {drugs.map((drug, idx) => (
             <div
               key={idx}
               className="bg-gray-50 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end relative"
             >
-              <div className="sm:col-span-6">
+              <div className="sm:col-span-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Drug Name</label>
                 <input
                   type="text"
@@ -166,14 +168,12 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                           }
                         >
                           <span>{label}</span>
-                          
                         </li>
                       );
                     })}
                   </ul>
                 )}
               </div>
-
 
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
@@ -202,6 +202,18 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 </select>
               </div>
 
+              {/* Per-drug remarks */}
+              <div className="sm:col-span-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                <input
+                  type="text"
+                  value={drug.remarks || ""}
+                  onChange={(e) => handleDrugChange(idx, "remarks", e.target.value)}
+                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  placeholder="Remarks for this medicine"
+                />
+              </div>
+
               <div className="sm:col-span-1 flex justify-end">
                 <button
                   type="button"
@@ -218,8 +230,8 @@ export default function CreatePrescription({ showModal, setShowModal }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Diagnosis / Remarks</label>
             <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
+              value={Diagnosis}
+              onChange={(e) => setDiagnosis(e.target.value)}
               rows={4}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
               placeholder="Enter diagnosis or remarks..."

@@ -1,36 +1,30 @@
-import { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from "react-router-dom";
-import {getPrescriptionById } from '../API/Patient';
+import { getPrescriptionById } from '../API/Patient';
 import PrescriptionComponent from "../components/PrescriptionComponent";
 
 export default function DetailPrescription() {
+  const { prescriptionId } = useParams();
 
-  const [prescriptionData, setPrescriptionData] = useState({});
-  const [patientData, setPatientData] = useState({});
+  // Fetch prescription data
+  const { data: prescriptionData = {}, isLoading, error } = useQuery({
+    queryKey: ['prescription', prescriptionId],
+    queryFn: async () => {
+      if (!prescriptionId) {
+        console.error("Missing prescription ID");
+        return {};
+      }
+      const prescription = await getPrescriptionById(prescriptionId);
+      return prescription.data || {};
+    },
+    enabled: !!prescriptionId,
+  });
 
-  useEffect(() => { 
-    fetchData();
-  }, []);
+  const patientData = prescriptionData.patientData || {};
 
-  const {prescriptionId } = useParams();
-  
-
-  async function fetchData() {
-    
-    const prescription = await getPrescriptionById(prescriptionId);
-    if (!prescription) {
-      console.error("Error fetching data");
-    }
-    setPrescriptionData(prescription.data);
-    setPatientData(prescription.data.patientData);
-  }
-
- return (
+  return (
     <div>
-      
-      <PrescriptionComponent patientData={patientData} prescriptionData={prescriptionData}/>
+      <PrescriptionComponent patientData={patientData} prescriptionData={prescriptionData} />
     </div>
-    
-
-  )
+  );
 }

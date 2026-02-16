@@ -1,25 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPatients } from "../API/Patient";
-import { addPatientToQueue,getQueuedPatients,removeFromQueueById } from "../API/Patient";
-
+import { addPatientToQueue, getQueuedPatients, removeFromQueueById } from "../API/Patient";
 
 export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [add, setAdd] = useState({});
-  const [queue, setQueue] = useState([]); // queued patients
+  const queryClient = useQueryClient();
 
-  useEffect( () => {
-    getQueueData();
-  }, [add]);
-
-  async function getQueueData () {
-    const res=await getQueuedPatients();
-    console.log("Fetched queued patients:", res);
-    if(res) setQueue(res);
-  }
+  // Fetch queued patients
+  const { data: queue = [] } = useQuery({
+    queryKey: ['queuedPatients'],
+    queryFn: async () => {
+      const res = await getQueuedPatients();
+      console.log("Fetched queued patients:", res);
+      return res || [];
+    },
+  });
 
   const handleSearchChange = async (event) => {
     const value = event.target.value;
@@ -45,24 +44,21 @@ export default function SearchBar() {
     setSearchTerm(patient.name);
     setFilteredPatients([]);
   };
-
-  const addToQueue =async (e, patient) => {
+  const addToQueue = async (e, patient) => {
     e.stopPropagation();
     e.preventDefault();
     console.log("Adding to queue:", patient);
     const res = await addPatientToQueue(patient);
     if (res) {
       setSearchTerm("");
-      setAdd(res);
       setFilteredPatients([]);
       setSelectedPatient(null);
+      queryClient.invalidateQueries(['queuedPatients']);
     }
   };
-
   const removeFromQueue = async (id) => {
-    const next =await removeFromQueueById(id);
-    setAdd(next);
-
+    await removeFromQueueById(id);
+    queryClient.invalidateQueries(['queuedPatients']);
   };
 
   return (
@@ -130,19 +126,19 @@ export default function SearchBar() {
                 </td>
               </tr>
             ) : (
-              queue.map((p, i=0) => (
+              queue.map((p, i = 0) => (
                 <tr key={p._id}>
                   <td className="px-4 py-3 text-sm">{i + 1}</td>
                   <td className="px-4 py-3 text-sm font-medium">{p.name}</td>
                   <td className="px-4 py-3 text-sm font-medium">{p.phoneNumber}</td>
                   <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={(e) => removeFromQueue(e.target.value)}
-                        className="text-xs px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100"
-                        value={p._id}
-                      >
-                        Remove
-                      </button>
+                    <button
+                      onClick={() => removeFromQueue(p._id)}
+                      className="text-xs px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100"
+                      value={p._id}
+                    >
+                      Remove
+                    </button>
                   </td>
                 </tr>
               ))
