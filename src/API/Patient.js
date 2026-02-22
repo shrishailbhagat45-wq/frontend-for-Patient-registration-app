@@ -19,7 +19,7 @@ export async function createPatient(patientData) {
         age: parseInt(patientData.age),
         phoneNumber: patientData.phoneNumber,
         weight: parseInt(patientData.weight),
-        userId: localStorage.getItem("id")
+        doctorId: localStorage.getItem("id")
     }
     let response= null;
     try {
@@ -43,12 +43,11 @@ export async function createPatient(patientData) {
 
 // Get patients by name (search)
 export async function getPatients(name) {
-    const data = { name: name.trim() };
+    const data = { name: name.trim(), doctorId: localStorage.getItem("id") };
         const response = await axios.post(`${url}/patient/getPatient`,data,{
             headers: headers
         });
         return response.data;
-        
 }
 
 export async function getPatientById(id) {

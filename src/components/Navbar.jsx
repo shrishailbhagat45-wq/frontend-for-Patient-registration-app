@@ -7,15 +7,14 @@ import { GrDocumentPdf } from "react-icons/gr";
 import { MdManageAccounts } from "react-icons/md";
 import { FaUserDoctor } from "react-icons/fa6";
 
-export default function Navbar() {
-  const [showMenu, setShowMenu] = useState(false);
+export default function Navbar() {  const [showMenu, setShowMenu] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [isMdUp, setIsMdUp] = useState(false);
+  const [isXlUp, setIsXlUp] = useState(false);
 
-  // tailwind 'md' breakpoint = 768px
+  // tailwind 'xl' breakpoint = 1280px (larger desktops only)
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024Px)");
-    const onChange = (e) => setIsMdUp(e.matches);
+    const mq = window.matchMedia("(min-width: 1280px)");
+    const onChange = (e) => setIsXlUp(e.matches);
     onChange(mq); // initial
     mq.addEventListener?.("change", onChange);
     return () => mq.removeEventListener?.("change", onChange);
@@ -23,7 +22,7 @@ export default function Navbar() {
 
   // add/remove body padding-left on desktop so content shifts (uses Tailwind utility)
   useEffect(() => {
-    if (isMdUp) {
+    if (isXlUp) {
       document.body.classList.add("pl-64");
       // ensure sidebar visible on desktop without needing toggle
       setShowMenu(true);
@@ -33,7 +32,7 @@ export default function Navbar() {
       setShowMenu(false);
     }
     return () => document.body.classList.remove("pl-64");
-  }, [isMdUp]);
+  }, [isXlUp]);
 
   const toggleMenu = () => setShowMenu((s) => !s);
   const toggleProfile = () => setShowProfile((s) => !s);
@@ -41,85 +40,80 @@ export default function Navbar() {
     localStorage.removeItem("token");
     localStorage.removeItem("id");
   }
-
   return (
     <div className="navBar">
-      {/* top navbar */}
-      <header className=" bg-gray-100 flex items-center justify-between h-16 w-full shadow-md p-4 fixed top-0 left-0 right-0 z-50">
+      {/* top navbar - Clean white with subtle border */}      <header className="bg-white flex items-center justify-between h-14 w-full border-b border-slate-200 px-4 fixed top-0 left-0 right-0 z-50">
         <button
-          className="text-black text-2xl focus:outline-none lg:hidden"
+          className="text-slate-600 text-xl focus:outline-none xl:hidden hover:text-slate-900 transition-colors"
           onClick={toggleMenu}
           aria-label="Toggle menu"
         >
           <TfiAlignJustify />
-        </button>
+        </button><div className="text-xl font-bold">
+          <Link to="/home" className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 transition-all">
+            HealSync360
+          </Link>
+        </div>
 
-        <div className="text-lg font-semibold text-fuchsia-800"><Link to="/home">HealSync360</Link></div>
-
-        <div>
-          <button className="text-3xl bg-gray-300 rounded-full p-2" onClick={toggleProfile}>
+        <div className="relative">
+          <button 
+            className="text-xl text-slate-600 hover:text-slate-900 rounded-full p-1.5 hover:bg-slate-100 transition-all" 
+            onClick={toggleProfile}
+          >
             <FaUserDoctor />
           </button>
           {showProfile && (
-            <div className="absolute top-16 right-4 bg-white border border-gray-300 rounded shadow-lg w-48 z-50">
-              <Link to="/profile" className="block px-4 py-2 text-black hover:bg-gray-100">
+            <div className="absolute top-12 right-0 bg-white border border-slate-200 rounded-lg shadow-lg w-44 z-50 overflow-hidden">
+              <Link to="/profile" className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                 Profile
               </Link>
-              <Link to="/" className="block px-4 py-2 text-black hover:bg-gray-100" onClick={logout}>
+              <Link to="/" className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100" onClick={logout}>
                 Logout
               </Link>
             </div>
           )}
         </div>
-      </header>
-
-      {/* backdrop for mobile when sidebar open */}
-      {!isMdUp && showMenu && (
+      </header>      {/* backdrop for mobile when sidebar open */}
+      {!isXlUp && showMenu && (
         <div
           onClick={() => setShowMenu(false)}
           className="fixed inset-0 bg-black/40 z-40"
           aria-hidden
         />
-      )}
-
-      {/* sidebar: visible when showMenu OR on desktop (isMdUp) */}
-      {(showMenu || isMdUp) && (
+      )}      {/* sidebar: visible when showMenu OR on desktop (isXlUp) */}
+      {(showMenu || isXlUp) && (
         <aside
           className={
-            "bg-white shadow-lg  transition-transform z-50 " +
-            (isMdUp
-              ? "fixed top-16 left-0 w-64 h-[calc(100vh-4rem)]" 
-              : "fixed top-16 left-0 w-64 h-full")            
+            "bg-white shadow-sm border-r border-slate-200 transition-transform z-50 " +
+            (isXlUp
+              ? "fixed top-14 left-0 w-64 h-[calc(100vh-3.5rem)]" 
+              : "fixed top-14 left-0 w-64 h-full")            
           }
-          aria-hidden={!showMenu && !isMdUp}
-        >
-          <nav>
-            <ul className="space-y-4 mt-6">
+          aria-hidden={!showMenu && !isXlUp}
+        ><nav>
+            <ul className="space-y-1 mt-4 px-3">
               <li>
-                
-                <Link to="/home" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded ">
-                <GoHomeFill />
-                <div className="pl-2">Home</div>
-                  
+                <Link to="/home" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
+                  <GoHomeFill className="text-xl" />
+                  <span>Home</span>
                 </Link>
               </li>
-              <li className="bg-gray-100 block">
-                <Link to="/billing-dashboard" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
-                <RiBillFill />
-                <div className="pl-2">Billing Dashboard</div>
-                  
+              <li>
+                <Link to="/billing-dashboard" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
+                  <RiBillFill className="text-xl" />
+                  <span>Billing Items</span>
                 </Link>
               </li>
-              <li >
-                <Link to="/home" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
-                <GrDocumentPdf />
-                <div className="pl-2"> Get Documents</div>
+              <li>
+                <Link to="/home" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
+                  <GrDocumentPdf className="text-xl" />
+                  <span>Get Documents</span>
                 </Link>
               </li>
-              <li className="bg-gray-100 block">
-                <Link to="/management-dashboard" className="text-black hover:bg-fuchsia-100 flex items-center px-4 py-2 rounded">
-                <MdManageAccounts />
-                <div className="pl-2">Management Dashboard</div>
+              <li>
+                <Link to="/management-dashboard" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
+                  <MdManageAccounts className="text-xl" />
+                  <span>Staff Management</span>
                 </Link>
               </li>
             </ul>

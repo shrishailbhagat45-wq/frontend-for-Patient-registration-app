@@ -162,46 +162,38 @@ export default function BillingDashBoard() {
                 }
             }
         }
-    };    
-
-    return (
-        <div className="min-h-screen bg-white">
+    };        return (
+        <div className="min-h-screen bg-slate-50">
             <Navbar/>
 
-            <div className="max-w-6xl mx-auto mt-20 px-4 py-8">
+            <div className="max-w-7xl mx-auto pt-20 px-4 md:px-8 lg:px-12 pb-8">
                 {/* Header Section */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
-                        <button
-                            onClick={() => navigate("/home")}
-                            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-3"
-                        >
-                            <IoArrowBack className="text-xl" />
-                            <span className="text-sm">Back to Home</span>
-                        </button>
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-white/20 rounded-lg">
-                                <FaMoneyBillWave className="text-white text-3xl" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-bold text-white">Billing Dashboard</h1>
-                                <p className="text-blue-100 mt-1">Manage billing items and view revenue analytics</p>
-                            </div>
+                <div className="mb-6">
+                    <button
+                        onClick={() => navigate("/home")}
+                        className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-4 text-sm"
+                    >
+                        <IoArrowBack className="text-lg" />
+                        <span>Back to Home</span>
+                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-blue-100 rounded-lg">
+                            <FaMoneyBillWave className="text-blue-600 text-2xl" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">Billing Dashboard</h1>
+                            <p className="text-sm text-slate-500 mt-1">Manage billing items and view revenue analytics</p>
                         </div>
                     </div>
-                </div>
-
-                {/* Add Item Section */}
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+                </div>                {/* Add Item Section */}
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <FaPlus className="text-blue-600 text-xl" />
-                        </div>
-                        <h2 className="text-xl font-semibold text-gray-800">Add New Billing Item</h2>
+                        <FaPlus className="text-blue-600 text-lg" />
+                        <h2 className="text-lg font-semibold text-slate-800">Add New Billing Item</h2>
                     </div>
-                    <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-4 items-end">
+                    <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1">
-                            <label className="block text-gray-700 font-medium mb-2 text-sm">
+                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
                                 Item Name <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -209,12 +201,12 @@ export default function BillingDashBoard() {
                                 placeholder="e.g., Consultation, Injection"
                                 value={newItem.name}
                                 onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
+                                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors"
                                 required
                             />
                         </div>
-                        <div className="w-full sm:w-40">
-                            <label className="block text-gray-700 font-medium mb-2 text-sm">
+                        <div className="flex-1 sm:flex-none sm:w-40">
+                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
                                 Price (₹) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -222,50 +214,49 @@ export default function BillingDashBoard() {
                                 placeholder="0.00"
                                 value={newItem.price}
                                 onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
+                                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors"
                                 required
                                 min="0"
                                 step="0.01"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isAdding}
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
-                        >
-                            {isAdding ? (
-                                <>
-                                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Adding...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <FaPlus />
-                                    <span>Add Item</span>
-                                </>
-                            )}
-                        </button>
+                        <div className="flex-1 sm:flex-none sm:w-auto sm:self-end">
+                            <button
+                                type="submit"
+                                disabled={isAdding}
+                                className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-md font-medium hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap text-sm"
+                            >
+                                {isAdding ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Adding...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <FaPlus />
+                                        <span>Add Item</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </form>
-                </div>
-
-                {/* Items Table Section */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-xl font-semibold text-gray-800">Billing Items</h2>
-                        <p className="text-sm text-gray-600 mt-1">
+                </div>{/* Items Table Section */}
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-6">
+                    <div className="px-6 py-4 border-b border-slate-200">
+                        <h2 className="text-lg font-semibold text-slate-800">Billing Items</h2>
+                        <p className="text-sm text-slate-500 mt-0.5">
                             {items.length} {items.length === 1 ? 'item' : 'items'} in total
                         </p>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead>
-                                <tr className="bg-blue-50 border-b border-blue-100">
-                                    <th className="py-4 px-6 text-left font-semibold text-gray-700">Item Name</th>
-                                    <th className="py-4 px-6 text-left font-semibold text-gray-700">Price (₹)</th>
-                                    <th className="py-4 px-6 text-center font-semibold text-gray-700">Actions</th>
+                        <table className="min-w-full">                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                    <th className="py-3 px-6 text-left text-sm font-semibold text-slate-700">Item Name</th>
+                                    <th className="py-3 px-6 text-left text-sm font-semibold text-slate-700">Price (₹)</th>
+                                    <th className="py-3 px-6 text-center text-sm font-semibold text-slate-700">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -280,28 +271,26 @@ export default function BillingDashBoard() {
                                                 <span className="text-gray-500">Loading billing items...</span>
                                             </div>
                                         </td>
-                                    </tr>
-                                ) : items.length === 0 ? (
+                                    </tr>                                ) : items.length === 0 ? (
                                     <tr>
                                         <td colSpan={3} className="text-center py-12">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="p-4 bg-gray-100 rounded-full">
-                                                    <FaMoneyBillWave className="text-gray-400 text-4xl" />
+                                                <div className="p-4 bg-slate-100 rounded-full">
+                                                    <FaMoneyBillWave className="text-slate-400 text-3xl" />
                                                 </div>
-                                                <p className="text-gray-500 font-medium">No billing items found</p>
-                                                <p className="text-sm text-gray-400">Add your first billing item above</p>
+                                                <p className="text-slate-600 font-medium text-sm">No billing items found</p>
+                                                <p className="text-xs text-slate-400">Add your first billing item above</p>
                                             </div>
                                         </td>
-                                    </tr>
-                                ) : items.map((item, index) =>
+                                    </tr>                                ) : items.map((item, index) =>
                                     editingId === item._id ? (
-                                        <tr key={item._id} className="bg-blue-50 border-b border-blue-100">
+                                        <tr key={item._id} className="bg-blue-50 border-b border-slate-200">
                                             <td className="py-3 px-6">
                                                 <input
                                                     type="text"
                                                     value={editItem.name}
                                                     onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                                                 />
                                             </td>
                                             <td className="py-3 px-6">
@@ -309,7 +298,7 @@ export default function BillingDashBoard() {
                                                     type="number"
                                                     value={editItem.price}
                                                     onChange={(e) => setEditItem({ ...editItem, price: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                                                     min="0"
                                                     step="0.01"
                                                 />
@@ -318,48 +307,48 @@ export default function BillingDashBoard() {
                                                 <div className="flex gap-2 justify-center">
                                                     <button
                                                         onClick={() => handleEditSave(item._id)}
-                                                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2 shadow-md"
+                                                        className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 transition flex items-center gap-1.5 shadow-sm text-sm"
                                                         title="Save"
                                                     >
-                                                        <MdSave className="text-lg" />
-                                                        <span className="text-sm font-medium">Save</span>
+                                                        <MdSave className="text-base" />
+                                                        <span className="font-medium">Save</span>
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingId(null)}
-                                                        className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition flex items-center gap-2 shadow-md"
+                                                        className="bg-slate-400 text-white px-3 py-1.5 rounded-md hover:bg-slate-500 transition flex items-center gap-1.5 shadow-sm text-sm"
                                                         title="Cancel"
                                                     >
-                                                        <MdCancel className="text-lg" />
-                                                        <span className="text-sm font-medium">Cancel</span>
+                                                        <MdCancel className="text-base" />
+                                                        <span className="font-medium">Cancel</span>
                                                     </button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ) : (
-                                        <tr key={item._id} className={`border-b border-gray-100 hover:bg-blue-50 transition ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                                            <td className="py-4 px-6 font-medium text-gray-800">{item.name}</td>
-                                            <td className="py-4 px-6 text-gray-700">
+                                        <tr key={item._id} className={`border-b border-slate-100 hover:bg-slate-50 transition`}>
+                                            <td className="py-3 px-6 font-medium text-slate-800 text-sm">{item.name}</td>
+                                            <td className="py-3 px-6 text-slate-700 text-sm">
                                                 <span className="inline-flex items-center gap-1 font-semibold">
                                                     ₹{Number(item.price).toFixed(2)}
                                                 </span>
                                             </td>
-                                            <td className="py-4 px-6">
+                                            <td className="py-3 px-6">
                                                 <div className="flex gap-2 justify-center">
                                                     <button
                                                         onClick={() => handleEdit(item)}
-                                                        className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-4 py-2 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition shadow-md flex items-center gap-2"
+                                                        className="bg-amber-500 text-white px-3 py-1.5 rounded-md hover:bg-amber-600 transition shadow-sm flex items-center gap-1.5 text-sm"
                                                         title="Edit"
                                                     >
-                                                        <FaPen className="text-sm" />
-                                                        <span className="text-sm font-medium">Edit</span>
+                                                        <FaPen className="text-xs" />
+                                                        <span className="font-medium">Edit</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(item._id)}
-                                                        className="bg-gradient-to-r from-red-400 to-red-500 text-white px-4 py-2 rounded-lg hover:from-red-500 hover:to-red-600 transition shadow-md flex items-center gap-2"
+                                                        className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition shadow-sm flex items-center gap-1.5 text-sm"
                                                         title="Delete"
                                                     >
-                                                        <RiDeleteBinFill className="text-sm" />
-                                                        <span className="text-sm font-medium">Delete</span>
+                                                        <RiDeleteBinFill className="text-xs" />
+                                                        <span className="font-medium">Delete</span>
                                                     </button>
                                                 </div>
                                             </td>
@@ -369,25 +358,23 @@ export default function BillingDashBoard() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                {/* Chart Section */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center justify-between mb-6">
+                </div>                {/* Chart Section */}
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-100 rounded-lg">
-                                <FaChartBar className="text-blue-600 text-xl" />
+                                <FaChartBar className="text-blue-600 text-lg" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-semibold text-gray-800">Revenue Analytics</h2>
-                                <p className="text-sm text-gray-600">Track your billing performance</p>
+                                <h2 className="text-lg font-semibold text-slate-800">Revenue Analytics</h2>
+                                <p className="text-sm text-slate-500">Track your billing performance</p>
                             </div>
                         </div>
                         <div>
                             <select
                                 value={labelForXAxis}
                                 onChange={handleXAxisChange}
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-medium text-gray-700 cursor-pointer transition-all"
+                                className="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-medium text-slate-700 cursor-pointer transition-colors"
                             >
                                 <option value="This Year">This Year</option>
                                 <option value="Last Year">Last Year</option>
@@ -397,7 +384,7 @@ export default function BillingDashBoard() {
                             </select>
                         </div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-slate-50 rounded-lg p-4">
                         {valueOfXAxisLabel.length !== 0 ? (
                             <Bar data={chartData} options={chartOptions} />
                         ) : (

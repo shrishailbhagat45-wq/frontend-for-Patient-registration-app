@@ -124,33 +124,44 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   };
 
   if (!showModal) return null;
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h3 className="text-xl sm:text-2xl font-semibold">Create Prescription</h3>
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-800">Create Prescription</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Add medications and diagnosis for the patient</p>
+          </div>
+          <button
+            onClick={handleClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="p-6 space-y-6">
-
-          {drugs.map((drug, idx) => (
+        <div className="p-6 space-y-4">          {drugs.map((drug, idx) => (
             <div
               key={idx}
-              className="bg-gray-50 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end relative"
+              className="bg-slate-50 rounded-lg p-4 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end relative"
             >
               <div className="sm:col-span-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Drug Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Drug Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={drug.name}
                   onChange={(e) => handleDrugNameInput(idx, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, idx)}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   placeholder="e.g. Paracetamol"
                 />
                 {suggestions[idx] && suggestions[idx].length > 0 && (
-                  <ul className="absolute left-0 right-0 bg-white border border-gray-200 shadow-lg rounded mt-1 z-30 max-h-44 overflow-y-auto text-black">
+                  <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-lg rounded-md mt-1 z-30 max-h-44 overflow-y-auto">
                     {suggestions[idx].map((sug, sidx) => {
                       const label = typeof sug === "string" ? sug : sug.name ?? "";
                       const isActive = (highlight[idx] ?? 0) === sidx;
@@ -163,8 +174,8 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                             selectSuggestion(idx, sug);
                           }}
                           className={
-                            "px-3 py-2 cursor-pointer flex justify-between items-center " +
-                            (isActive ? "bg-blue-600 text-white" : "hover:bg-gray-100")
+                            "px-3 py-2 cursor-pointer text-sm " +
+                            (isActive ? "bg-blue-600 text-white" : "hover:bg-slate-50 text-slate-800")
                           }
                         >
                           <span>{label}</span>
@@ -176,88 +187,102 @@ export default function CreatePrescription({ showModal, setShowModal }) {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Quantity <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="number"
                   min="1"
                   value={drug.quantity}
                   onChange={(e) => handleDrugChange(idx, "quantity", e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   placeholder="1"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Freq</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Frequency <span className="text-red-500">*</span>
+                </label>
                 <select
                   value={drug.frequency}
                   onChange={(e) => handleDrugChange(idx, "frequency", e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white cursor-pointer"
                 >
-                  <option value="">--</option>
+                  <option value="">Select</option>
                   <option value="1-1-1">1-1-1</option>
                   <option value="1-0-1">1-0-1</option>
                   <option value="1-0-0">1-0-0</option>
                   <option value="0-0-1">0-0-1</option>
+                  <option value="0-1-0">0-1-0</option>
                 </select>
               </div>
 
               {/* Per-drug remarks */}
-              <div className="sm:col-span-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+              <div className="sm:col-span-3">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Remarks</label>
                 <input
                   type="text"
                   value={drug.remarks || ""}
                   onChange={(e) => handleDrugChange(idx, "remarks", e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  placeholder="Remarks for this medicine"
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  placeholder="Optional notes"
                 />
               </div>
 
               <div className="sm:col-span-1 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => removeDrug(idx)}
-                  className="text-red-600 hover:bg-red-50 rounded-md px-2 py-1 text-sm"
-                  aria-label={`Remove drug ${idx + 1}`}
-                >
-                  Remove
-                </button>
+                {drugs.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeDrug(idx)}
+                    className="text-red-600 hover:bg-red-50 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                    aria-label={`Remove drug ${idx + 1}`}
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
             </div>
-          ))}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Diagnosis / Remarks</label>
+          ))}          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Diagnosis / Remarks</label>
             <textarea
               value={Diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
               rows={4}
-              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              placeholder="Enter diagnosis or remarks..."
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white resize-none"
+              placeholder="Enter diagnosis, symptoms, or additional remarks..."
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-            <button
-              onClick={handleSavePreview}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
-            >
-              Save & Preview
-            </button>
-
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
             <button
               onClick={addNewDrug}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-50 transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-colors font-medium text-sm"
             >
-              Add New Drug
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Another Drug
             </button>
+
+            <div className="flex-1"></div>
 
             <button
               onClick={handleClose}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-700 border border-red-100 rounded-md hover:bg-red-100 transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 border border-slate-200 rounded-md hover:bg-slate-200 transition-colors font-medium text-sm"
             >
               Cancel
+            </button>
+
+            <button
+              onClick={handleSavePreview}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors font-medium text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              Save & Preview
             </button>
           </div>
         </div>

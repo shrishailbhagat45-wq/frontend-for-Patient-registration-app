@@ -115,46 +115,46 @@ export default function Billing() {
     }
   }
   
-
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50">
         <Navbar />
-    <div className="max-w-4xl mx-auto p-4 mt-20">
-      <h2 className="text-2xl font-semibold mb-4">Create Patient Bill</h2>
-
-      {message && (
-        <div className={`mb-4 p-3 rounded relative ${
-            message.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"
-          } `}
+    <div className="max-w-5xl mx-auto px-4 pt-24 pb-8">
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-slate-800">Create Patient Bill</h2>
+        <p className="text-sm text-slate-500 mt-1">Generate a new bill for patient services</p>
+      </div>      {message && (
+        <div className={`mb-4 p-3 rounded-md relative border ${
+            message.type === "error" 
+              ? "bg-red-50 text-red-700 border-red-200" 
+              : "bg-green-50 text-green-700 border-green-200"
+          }`}
         >
-          <button className=" absolute right-0 px-4" onClick={()=>messageClose()}>X</button>
-          {message.text}
-          
+          <button className="absolute right-3 top-3 text-sm hover:opacity-70" onClick={()=>messageClose()}>✕</button>
+          <p className="text-sm font-medium pr-6">{message.text}</p>
         </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      )}      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Patient</label>
-            <div className="w-full border rounded px-3 py-2 bg-gray-50">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Patient</label>
+            <div className="w-full border border-slate-300 rounded-md px-3 py-2.5 bg-slate-50">
               {selectedPatient ? (
-                <div className="text-lg font-medium text-gray-800">
+                <div className="text-sm font-medium text-slate-800">
                   <div><strong>{selectedPatient.name}</strong></div>
                 </div>
               ) : (
-                <div className="text-sm font-medium text-gray-500">Loading patient...</div>
+                <div className="text-sm font-medium text-slate-500">Loading patient...</div>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Billing Item</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Billing Item</label>
             <div className="flex gap-2">
               <select
                 value={selectedItemId}
                 onChange={(e) => setSelectedItemId(e.target.value)}
-                className="flex-1 border rounded px-2 py-2"
+                className="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
                 <option value="">-- select item --</option>
                 {items.map((it) => (
@@ -166,50 +166,49 @@ export default function Billing() {
               <button
                 type="button"
                 onClick={addItemToBill}
-                className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
               >
                 Add
               </button>
             </div>
           </div>
         </div>
-
-        <div className="overflow-x-auto bg-white shadow rounded mt-10">
+        </div>        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
           <table className="min-w-[520px] w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="p-3 text-left">Item</th>
-                <th className="p-3 text-right w-28">Price</th>
-                <th className="p-3 text-center w-28">Qty</th>
-                <th className="p-3 text-right w-28">Total</th>
-                <th className="p-3 text-center w-20">Action</th>
+                <th className="py-3 px-4 text-left font-semibold text-slate-700">Item</th>
+                <th className="py-3 px-4 text-right w-28 font-semibold text-slate-700">Price</th>
+                <th className="py-3 px-4 text-center w-28 font-semibold text-slate-700">Qty</th>
+                <th className="py-3 px-4 text-right w-28 font-semibold text-slate-700">Total</th>
+                <th className="py-3 px-4 text-center w-20 font-semibold text-slate-700">Action</th>
               </tr>
             </thead>
             <tbody>
               {billItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-3 text-gray-500">No items added.</td>
+                  <td colSpan={5} className="py-8 text-center text-slate-500 text-sm">No items added yet</td>
                 </tr>
               ) : (
                 billItems.map((bi) => (
-                  <tr key={bi.id} className="border-t">
-                    <td className="p-3">{bi.name}</td>
-                    <td className="p-3 text-right">₹{bi.price.toFixed(2)}</td>
-                    <td className="p-3 text-center">
+                  <tr key={bi.id} className="border-t border-slate-100 hover:bg-slate-50 transition">
+                    <td className="py-3 px-4 text-slate-800 font-medium">{bi.name}</td>
+                    <td className="py-3 px-4 text-right text-slate-700">₹{bi.price.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-center">
                       <input
                         type="number"
                         min="1"
                         value={bi.qty}
                         onChange={(e) => updateQty(bi.id, e.target.value)}
-                        className="w-20 text-center border rounded px-2 py-1"
+                        className="w-20 text-center border border-slate-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </td>
-                    <td className="p-3 text-right">₹{(bi.price * bi.qty).toFixed(2)}</td>
-                    <td className="p-3 text-center">
+                    <td className="py-3 px-4 text-right text-slate-700 font-semibold">₹{(bi.price * bi.qty).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-center">
                       <button
                         type="button"
                         onClick={() => removeItem(bi.id)}
-                        className="text-sm text-red-600"
+                        className="text-sm text-red-600 hover:text-red-700 font-medium hover:underline"
                       >
                         Remove
                       </button>
@@ -219,40 +218,39 @@ export default function Billing() {
               )}
             </tbody>
           </table>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4 md:items-start">
-          <div className="flex-1">
-            <label className="block text-sm font-medium mb-1">Notes</label>
+        </div>        <div className="flex flex-col md:flex-row gap-4 md:items-start">
+          <div className="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full border rounded px-3 py-2"
+              placeholder="Add any additional notes or comments..."
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
           </div>
 
-          <div className="w-full md:w-72 border rounded p-4 bg-white shadow">
-            <div className="flex justify-between mb-2">
-              <div className="text-sm text-gray-600">Subtotal</div>
-              <div className="font-medium">₹{subtotal.toFixed(2)}</div>
+          <div className="w-full md:w-72 border border-slate-200 rounded-lg p-4 bg-white shadow-sm">
+            <div className="flex justify-between mb-3">
+              <div className="text-sm text-slate-600">Subtotal</div>
+              <div className="font-medium text-slate-800">₹{subtotal.toFixed(2)}</div>
             </div>
 
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <input
                 type="number"
                 value={taxPercent}
                 onChange={(e) => setTaxPercent(e.target.value)}
-                className="w-20 border rounded px-2 py-1"
+                className="w-20 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <div className="text-sm text-gray-600">Tax %</div>
-              <div className="ml-auto text-right">₹{taxAmount.toFixed(2)}</div>
+              <div className="text-sm text-slate-600">Tax %</div>
+              <div className="ml-auto text-right text-slate-700">₹{taxAmount.toFixed(2)}</div>
             </div>
 
-            <hr className="my-2" />
-            <div className="flex justify-between font-semibold">
+            <hr className="my-3 border-slate-200" />
+            <div className="flex justify-between font-semibold text-slate-800">
               <div>Total</div>
-              <div>₹{total.toFixed(2)}</div>
+              <div className="text-lg">₹{total.toFixed(2)}</div>
             </div>
           </div>
         </div>
@@ -261,7 +259,7 @@ export default function Billing() {
           <button
             type="submit"
             disabled={loading}
-            className="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+            className="bg-blue-600 text-white px-6 py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {loading ? "Creating..." : "Create Bill"}
           </button>

@@ -15,58 +15,77 @@ export default function Login() {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    // Dummy authentication logic
     const res=await login(form.username,form.password)
     console.log("Login response:", res);
     if (res) {
       localStorage.setItem("token",res.token)
       localStorage.setItem("id",res.id)
-      navigate('/home')
       toast.success("Login successful!");
+      navigate('/home')
     }
   };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-full max-w-sm"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        {error && (
-          <div className="mb-4 text-red-600 text-center">{error}</div>
-        )}
-        <div className="mb-4">
-          <label className="block mb-1 font-semibold">Email</label>
-          <input
-            type="text"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500"
-            autoComplete="username"
-            required
-          />
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="w-full max-w-md px-6">        {/* Brand Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500 mb-2">
+            HealSync360
+          </h1>
+          <p className="text-sm text-slate-500">Clinical Management System</p>
         </div>
-        <div className="mb-6">
-          <label className="block mb-1 font-semibold">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500"
-            autoComplete="current-password"
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition"
+
+        {/* Login Card */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded-lg shadow-sm border border-slate-200"
         >
-          Login
-        </button>
-      </form>
+          <h2 className="text-xl font-semibold text-slate-800 mb-5">Sign In</h2>
+          
+          {error && (
+            <div className="mb-4 px-3 py-2 bg-red-50 text-red-600 text-sm rounded-md border border-red-200">
+              {error}
+            </div>
+          )}
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Email
+            </label>
+            <input
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              autoComplete="username"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+            <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
+          >
+            Sign In
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
