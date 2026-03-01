@@ -18,7 +18,7 @@ export async function getBillingItems() {
 }
 
 export async function addItem(item) {
-    const res = await axios.post(`${url}/billing`,item);
+    const res = await axios.post(`${url}/billing/${localStorage.getItem("doctorId")}`,item);
     if(res.status!==201){
         throw new Error('Failed to add item', res.statusText);
     }
