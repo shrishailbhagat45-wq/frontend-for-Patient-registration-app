@@ -43,7 +43,7 @@ export async function createPatient(patientData) {
 
 // Get patients by name (search)
 export async function getPatients(name) {
-    const data = { name: name.trim(), doctorId: localStorage.getItem("id") };
+    const data = { name: name.trim(), doctorId: localStorage.getItem("doctorId") };
         const response = await axios.post(`${url}/patient/getPatient`,data,{
             headers: headers
         });
