@@ -16,13 +16,13 @@ import { IoArrowBack } from "react-icons/io5";
 const RegisterPatient = () => {  const [form, setForm] = useState({
     name: "",
     gender: "",
-    age: "",
+    birthDate: "",
     phoneNumber: "",
     weight: "",
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const navigate = useNavigate();  const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,12 +65,36 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
         navigate("/home");
       } else {
         toast.error("Error in registering patient");
+      }    } catch (error) {
+      // Show specific error message from backend if available
+      const errorMessage = error.response?.data?.message?.[0] || 
+                          error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          "Error in registering patient. Please check all fields.";
+      toast.error(errorMessage);
+      
+      // Parse backend validation errors and set field-specific errors
+      const backendMessages = error.response?.data?.message;
+      if (Array.isArray(backendMessages)) {
+        const errors = {};
+        backendMessages.forEach((msg) => {
+          const lowerMsg = msg.toLowerCase();
+          if (lowerMsg.includes("name")) errors.name = msg;
+          else if (lowerMsg.includes("gender")) errors.gender = msg;
+          else if (lowerMsg.includes("birthday") || lowerMsg.includes("birth")) errors.birthDate = msg;
+          else if (lowerMsg.includes("phone")) errors.phoneNumber = msg;
+          else if (lowerMsg.includes("weight")) errors.weight = msg;
+        });
+        setFieldErrors(errors);
+        // Clear field errors after 5 seconds
+        setTimeout(() => setFieldErrors({}), 5000);
       }
-    } catch (error) {
-      toast.error("Error in registering patient");
+      
+      console.error("Registration error:", error);
     } finally {
       setIsSubmitting(false);
-    }  };
+    }
+  };
   return (
     <>
       <div>
@@ -128,8 +152,7 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                     <FaInfoCircle className="text-sm" />
                     {nameError}
                   </p>
-                )}
-              </div>{/* Gender Field */}
+                )}              </div>{/* Gender Field */}
               <div>
                 <label
                   className="block text-sm font-medium text-slate-700 mb-1.5"
@@ -142,7 +165,11 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                     <FaVenusMars className="text-slate-400 text-sm" />
                   </div>
                   <select
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors appearance-none"
+                    className={`w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-slate-800 transition-colors appearance-none ${
+                      fieldErrors.gender
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                    }`}
                     id="gender"
                     name="gender"
                     value={form.gender}
@@ -155,36 +182,48 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                     <option value="Other">Other</option>
                   </select>
                 </div>
-              </div>              {/* Age and Weight Row */}
+                {fieldErrors.gender && (
+                  <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                    <FaInfoCircle className="text-sm" />
+                    {fieldErrors.gender}
+                  </p>
+                )}
+              </div>              {/* Birth Date and Weight Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Age Field */}
+                {/* Birth Date Field */}
                 <div>
                   <label
                     className="block text-sm font-medium text-slate-700 mb-1.5"
-                    htmlFor="age"
+                    htmlFor="birthDate"
                   >
-                    Age <span className="text-red-500">*</span>
+                    Date of Birth <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FaCalendarAlt className="text-slate-400 text-sm" />
                     </div>
                     <input
-                      className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors"
-                      type="number"
-                      id="age"
-                      name="age"
-                      value={form.age}
+                      className={`w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-slate-800 transition-colors ${
+                        fieldErrors.birthDate
+                          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                          : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                      }`}
+                      type="date"
+                      id="birthDate"
+                      name="birthDate"
+                      value={form.birthDate}
                       onChange={handleChange}
-                      placeholder="Age"
-                      min="1"
-                      max="120"
+                      max={new Date().toISOString().split("T")[0]}
                       required
                     />
                   </div>
-                </div>
-
-                {/* Weight Field */}
+                  {fieldErrors.birthDate && (
+                    <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                      <FaInfoCircle className="text-sm" />
+                      {fieldErrors.birthDate}
+                    </p>
+                  )}
+                </div>                {/* Weight Field */}
                 <div>
                   <label
                     className="block text-sm font-medium text-slate-700 mb-1.5"
@@ -197,7 +236,11 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                       <FaWeight className="text-slate-400 text-sm" />
                     </div>
                     <input
-                      className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors"
+                      className={`w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-slate-800 transition-colors ${
+                        fieldErrors.weight
+                          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                          : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                      }`}
                       type="number"
                       id="weight"
                       name="weight"
@@ -210,6 +253,12 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                       required
                     />
                   </div>
+                  {fieldErrors.weight && (
+                    <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                      <FaInfoCircle className="text-sm" />
+                      {fieldErrors.weight}
+                    </p>
+                  )}
                 </div>
               </div>              {/* Phone Number Field */}
               <div>
@@ -224,7 +273,11 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                     <FaPhone className="text-slate-400 text-sm" />
                   </div>
                   <input
-                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors"
+                    className={`w-full pl-9 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-slate-800 transition-colors ${
+                      fieldErrors.phoneNumber
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                    }`}
                     type="tel"
                     id="phoneNumber"
                     name="phoneNumber"
@@ -237,7 +290,13 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
                     pattern="[0-9]{10}"
                   />
                 </div>
-              </div>              {/* Submit Button */}
+                {fieldErrors.phoneNumber && (
+                  <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                    <FaInfoCircle className="text-sm" />
+                    {fieldErrors.phoneNumber}
+                  </p>
+                )}
+              </div>{/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSubmitting}

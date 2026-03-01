@@ -8,7 +8,20 @@ import LoadingList from '../components/LoadingList';
 import ListPrescription from '../components/ListPrescription';
 import CreatePrescription from '../components/CreatePrescription';
 import Navbar from '../components/Navbar';
-import { FiUser, FiPhone, FiFileText, FiPlus, FiDollarSign, FiArrowLeft } from 'react-icons/fi';
+import { FiUser, FiPhone, FiFileText, FiPlus, FiDollarSign, FiArrowLeft, FiCalendar } from 'react-icons/fi';
+
+// Helper function to calculate age from birthDate
+const calculateAge = (birthDate) => {
+  if (!birthDate) return null;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
 
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
@@ -61,12 +74,11 @@ export default function PatientInfo() {
               <div>
                 <h1 className="text-2xl font-semibold text-slate-800">
                   {patientData.name?.toUpperCase() || 'PATIENT'}
-                </h1>
-                <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-slate-600">
-                  {patientData.age && (
+                </h1>                <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-slate-600">
+                  {patientData.birthday && (
                     <span className="flex items-center gap-1">
                       <FiUser className="text-slate-400" />
-                      {patientData.age} years
+                      {calculateAge(patientData.birthday)} years
                     </span>
                   )}
                   {patientData.gender && (

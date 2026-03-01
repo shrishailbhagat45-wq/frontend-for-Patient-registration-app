@@ -12,11 +12,15 @@ const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 // Crate a new patient
 export async function createPatient(patientData) {
+    // Convert date to ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
+    const birthdayISO = patientData.birthDate 
+        ? new Date(patientData.birthDate).toISOString() 
+        : null;
 
     const data = {
-        name:patientData.name,
+        name: patientData.name,
         gender: patientData.gender,
-        age: parseInt(patientData.age),
+        birthday: birthdayISO,
         phoneNumber: patientData.phoneNumber,
         weight: parseInt(patientData.weight),
         doctorId: localStorage.getItem("doctorId")

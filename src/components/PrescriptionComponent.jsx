@@ -5,6 +5,19 @@ import Navbar from "./Navbar";
 import PrintButton from '../components/PrintButton';
 import { useNavigate } from "react-router-dom";
 
+// Helper function to calculate age from birthDate
+const calculateAge = (birthDate) => {
+  if (!birthDate) return null;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 export default function PrescriptionComponent({patientData, prescriptionData}) {
   const navigate = useNavigate();
   
@@ -77,14 +90,12 @@ export default function PrescriptionComponent({patientData, prescriptionData}) {
                   {formattedDate}
                 </div>
               </div>
-            </div>
-
-            {/* Patient Details Grid */}
+            </div>            {/* Patient Details Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Age</label>
                 <div className="text-sm font-semibold text-slate-800 border-b-2 border-slate-300 pb-1">
-                  {patientData.age || ""} years
+                  {patientData.birthday ? `${calculateAge(patientData.birthday)} years` : ""}
                 </div>
               </div>
               
