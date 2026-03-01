@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPatients } from "../API/Patient";
-import { addPatientToQueue, getQueuedPatients, removeFromQueueById } from "../API/Patient";
+import { getPatients, addPatientToQueue, getQueuedPatients, removeFromQueueById } from "../API/Patient";
 import { FiSearch, FiUser, FiPhone, FiClock } from "react-icons/fi";
 
 export default function SearchBar() {

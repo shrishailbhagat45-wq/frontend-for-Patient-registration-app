@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function LoadingList() {
   return (
     (<div className='mx-auto w-full max-w-sm rounded-md border border-gray-700 p-4'><div class="flex animate-pulse space-x-4">

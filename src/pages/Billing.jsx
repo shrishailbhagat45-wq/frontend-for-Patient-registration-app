@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getBillingItems, getPatientById, createBill } from "../API/Patient";
+import {  getPatientById, } from "../API/Patient";
+import { getBillingItems,createBill } from "../API/billing";
 import Navbar from "../components/Navbar";
 
 export default function Billing() {

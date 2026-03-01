@@ -19,7 +19,7 @@ export async function createPatient(patientData) {
         age: parseInt(patientData.age),
         phoneNumber: patientData.phoneNumber,
         weight: parseInt(patientData.weight),
-        doctorId: localStorage.getItem("id")
+        doctorId: localStorage.getItem("doctorId")
     }
     let response= null;
     try {
@@ -87,93 +87,6 @@ export async function getPrescriptionById(id) {
     return response.data;
 }
 
-export async function getPrescriptionsByPatientId(id) {
-    let response= null; 
-    try {
-         response = await axios.get(`${url}/prescriptions/patient/${id}`);
-         console.log("Fetched prescriptions response:", response);
-        if (response.status !== 200) {
-           
-            throw new Error('Failed to fetch prescriptions', response.statusText);
-        }   
-    } catch (error) {
-        console.error('Error fetching prescriptions:', error);
-        throw error;
-    }
-    return response.data;
-}
-
-
-export async function createPrescription(id,prescriptionData) {
-    console.log("Creating prescription with data:", prescriptionData);
-    let response= null;
-    try {
-         response = await axios.post(`${url}/prescriptions/add/${id}`, {...prescriptionData} );
-         
-         if (response.status !== 201) {
-           
-            throw new Error('Failed to fetch prescriptions', response.statusText);
-        }   
-    } catch (error) {
-        console.error('Error fetching prescriptions:', error);
-        throw error;
-    }
-    console.log("Response data:", response.data);
-    return response.data;
-}
-
-//Login
-export async function login(email,password) {
-    try{
-        const res=await axios.post(`${url}/auth/login`,{email,password});
-        return res.data;
-    }
-    catch{
-        toast.error("Invalid credential")
-    }
-    
-}
-
-
-// Billing api's
-
-export async function getBillingItems() {
-    const res= await axios.get(`${url}/billing`);
-    console.log("Billing items response:", res);
-    return res.data;
-}
-
-export async function addItem(item) {
-    const res = await axios.post(`${url}/billing`,item);
-    if(res.status!==201){
-        throw new Error('Failed to add item', res.statusText);
-    }
-    return res.data;
-}
-
-export async function updateItem(id,item){
-    const res=await axios.put(`${url}/billing/${id}`,item)
-    if(res.status!==200){
-        throw new Error('Failed to add item', res.statusText);
-    }
-    return res.data;
-}
-
-export async function deleteItem(id) {
-    await axios.delete(`${url}/billing/${id}`);
-}
-
-export async function createBill(billData) {
-    console.log("Creating bill with data:", billData);
-    const res= await axios.post(`${url}/patient-bills`,{billData});
-    if(res.status!==201){
-        throw new Error('Failed to create bill', res.statusText);
-    }
-    return res.data;
-}
-
-
-
 // patient queue api's
 
 export async function addPatientToQueue(patient){
@@ -192,36 +105,6 @@ export async function getQueuedPatients(){
 
 export async function removeFromQueueById(id){
     const res= await axios.delete(`${url}/patient-queue/${id}`);
-    return res.data;
-}
-
-//Receptionist api's
-
-export async function addReceptionist(receptionistData) {
-    const data = {
-        ...receptionistData,
-        doctorId: localStorage.getItem("id")
-    }
-    const res= await axios.post(`${url}/user/addReceptionist`,data,{
-            headers: headers
-        });
-    if(res.status!==201){
-        throw new Error('Failed to add user', res.statusText);
-    }
-    return res.data;;
-}
-
-export async function getReceptionist(){
-    const doctorId= localStorage.getItem("id");
-    const res= await axios.get(`${url}/user/receptionists/${doctorId}`,{
-            headers: headers
-        });
-    return res.data;
-}
-
-// get drug suggestions
-export async function getDrugSuggestions(name){
-    const res= await axios.post(`${url}/drugs`,{name});
     return res.data;
 }
 

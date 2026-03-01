@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getPatientById, getPrescriptionsByPatientId } from '../API/Patient';
+import { getPatientById } from '../API/Patient';
+import { getPrescriptionsByPatientId } from '../API/Prescriptions';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom'
 import LoadingList from '../components/LoadingList';
 import ListPrescription from '../components/ListPrescription';
 import CreatePrescription from '../components/CreatePrescription';
 import Navbar from '../components/Navbar';
-import { FiUser, FiCalendar, FiPhone, FiMapPin, FiFileText, FiPlus, FiDollarSign, FiArrowLeft } from 'react-icons/fi';
+import { FiUser, FiPhone, FiFileText, FiPlus, FiDollarSign, FiArrowLeft } from 'react-icons/fi';
 
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);

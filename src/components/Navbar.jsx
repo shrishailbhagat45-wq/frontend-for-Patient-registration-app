@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { TfiAlignJustify } from "react-icons/tfi";
 import { GoHomeFill } from "react-icons/go";
 import { Link } from "react-router-dom";
@@ -35,10 +35,9 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
   }, [isXlUp]);
 
   const toggleMenu = () => setShowMenu((s) => !s);
-  const toggleProfile = () => setShowProfile((s) => !s);
+  const toggleProfile = () => setShowProfile((s) => !s);  
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("id");
+    localStorage.clear();
   }
   return (
     <div className="navBar">

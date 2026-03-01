@@ -1,36 +1,48 @@
-import React, { useEffect, useState } from "react";
-import { addReceptionist,getReceptionist } from "../API/Patient";
+import { useState } from "react";
+import { addReceptionist, getReceptionist } from "../API/user";
 import { FiUserPlus, FiMail, FiLock, FiShield, FiUsers, FiTrash2 } from "react-icons/fi";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function RegisterReceptionist() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "Receptionist" });
-  const [receptionists, setReceptionists] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  // load users from API on mount
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getReceptionist();
-        const data = res?.data ?? res ?? [];
-        if (mounted) setReceptionists(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Failed to load users", err);
-        if (mounted) setError("Failed to load users");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    load();
-    return () => (mounted = false);
-  }, []);
+  // Fetch receptionists using useQuery
+  const { 
+    data: receptionists = [], 
+    isLoading: loading, 
+    error 
+  } = useQuery({
+    queryKey: ['receptionists'],
+    queryFn: async () => {
+      const res = await getReceptionist();
+      const data = res?.data ?? res ?? [];
+      return Array.isArray(data) ? data : [];
+    },
+    onError: (err) => {
+      console.error("Failed to load users", err);
+    }
+  });
+
+  // Add receptionist mutation
+  const addMutation = useMutation({
+    mutationFn: async (payload) => {
+      return await addReceptionist(payload);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch receptionists list
+      queryClient.invalidateQueries({ queryKey: ['receptionists'] });
+      // Reset form
+      setForm({ name: "", email: "", password: "", role: "Receptionist" });
+    },
+    onError: (err) => {
+      console.error("Failed to add receptionist", err);
+      alert("Failed to add receptionist. See console for details.");
+    }
+  });
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -42,7 +54,6 @@ export default function RegisterReceptionist() {
     if (!form.password) return "Password is required.";
     return null;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errMsg = validate();
@@ -51,39 +62,23 @@ export default function RegisterReceptionist() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        role: form.role,
-      };
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      role: form.role,
+    };
 
-      const res = await addReceptionist(payload);
-      const created = res?.data ?? res ?? null;
-
-      // refresh user list after successful add
-      const refresh = await getReceptionist();
-      const list = refresh?.data ?? refresh ?? [];
-      setReceptionists(Array.isArray(list) ? list : []);
-
-      // reset form
-      setForm({ name: "", email: "", password: "", role: "Receptionist" });
-    } catch (err) {
-      console.error("Failed to add receptionist", err);
-      setError("Failed to add receptionist");
-      alert("Failed to add receptionist. See console for details.");
-    } finally {
-      setLoading(false);
-    }
+    addMutation.mutate(payload);
   };
 
   const handleDelete = (id) => {
     if (!window.confirm("Delete this receptionist?")) return;
-    // note: delete on UI only — implement server-side delete if API available
-    setReceptionists((prev) => prev.filter((r) => r.id !== id));
+    // Update local state optimistically
+    queryClient.setQueryData(['receptionists'], (old) => 
+      old.filter((r) => r.id !== id)
+    );
+    
   };
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-8">
@@ -176,15 +171,14 @@ export default function RegisterReceptionist() {
               <option>Receptionist</option>
               <option>Manager</option>
             </select>
-          </label>
-
-          <div className="sm:col-span-2 flex justify-end">
+          </label>          <div className="sm:col-span-2 flex justify-end">
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm text-sm flex items-center gap-2"
+              disabled={addMutation.isPending}
+              className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiUserPlus className="text-base" />
-              Add Receptionist
+              {addMutation.isPending ? "Adding..." : "Add Receptionist"}
             </button>
           </div>
         </form>

@@ -2,7 +2,7 @@ import SearchBar from '../components/SearchBar';
 import Navbar from '../components/Navbar';
 import { useQuery } from '@tanstack/react-query';
 import { getQueuedPatients } from '../API/Patient';
-import { FiUsers, FiClock, FiUserPlus, FiActivity } from 'react-icons/fi';
+import { FiUsers, FiUserPlus, FiActivity } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {

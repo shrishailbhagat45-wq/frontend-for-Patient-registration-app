@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { createPrescription, getDrugSuggestions } from "../API/Patient";
+import { createPrescription, getDrugSuggestions } from "../API/Prescriptions";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 

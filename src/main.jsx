@@ -12,6 +12,7 @@ import Home from './pages/Home.jsx'
 import BillingDashBoard from './pages/BillingDashBoard.jsx'
 import Billing from './pages/Billing.jsx'
 import ManagementDashboard from './pages/ManagementDashboard.jsx'
+import Profile from './pages/Profile.jsx'
 
 const queryClient = new QueryClient()
 
@@ -25,7 +26,8 @@ const router = createBrowserRouter([
   {path: '/print-prescription', element: <PrintPrescription />},
   {path:'/billing-dashboard',element:<BillingDashBoard />},
   {path:'/billing/:patientId', element:<Billing/>},
-  {path:'/management-dashboard',element:<ManagementDashboard/>}
+  {path:'/management-dashboard',element:<ManagementDashboard/>},
+  {path:'/profile',element:<Profile/>}
 ]);
 
 createRoot(document.getElementById('root')).render(

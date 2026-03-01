@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { login } from '../API/Patient';
+import { login } from '../API/user';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
 
@@ -18,9 +18,17 @@ export default function Login() {
     const res=await login(form.username,form.password)
     console.log("Login response:", res);
     if (res) {
+      console.log("Login response:", res);
       localStorage.setItem("token",res.token)
-      localStorage.setItem("id",res.id)
+      if (res.role==="Receptionist") {
+        localStorage.setItem("doctorId",res.doctorId)
+        localStorage.setItem("Id",res.id)
+      } else {
+        localStorage.setItem("doctorId",res.id)
+        localStorage.setItem("Id",res.id)
+      }
       toast.success("Login successful!");
+      console.log(res)
       navigate('/home')
     }
   };
