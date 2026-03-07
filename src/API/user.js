@@ -49,9 +49,45 @@ export async function getReceptionist(){
 export async function getUserById(id) {
     let response= null;
     try {
-        response = await axios.get(`${url}/user/${id}`, { headers: headers });
+        response = await axios.get(`${url}/user/${id}`,{
+            headers: headers
+        });
+        return response.data;
     } catch (error) {
         console.error("Error fetching user by ID:", error);
     }
-    return response?.data;
+}
+
+export async function updateUser(userData) {
+    const id=localStorage.getItem("Id");
+    try {
+        const response = await axios.put(`${url}/user/${id}`, {name:userData.name,email:userData.email,phoneNumber:userData.phoneNumber}, {
+            headers: headers
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating user:", error);
+    }
+}
+
+export async function updatePassword(passwordData) {   
+    const id=localStorage.getItem("Id");
+    try {
+        const response = await axios.put(`${url}/user/password/${id}`, {oldPassword:passwordData.oldPassword,newPassword:passwordData.newPassword}, {
+            headers: headers
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating password:", error);
+    }
+}
+
+export async function deleteReceptionist(id) {
+    try {
+        await axios.delete(`${url}/user/${id}`, {
+            headers: headers
+        });
+    } catch (error) {
+        console.error("Error deleting receptionist:", error);
+    }
 }

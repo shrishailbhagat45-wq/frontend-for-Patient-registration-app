@@ -112,17 +112,19 @@ export default function BillingDashBoard() {
         price: Number(newItem.price),
         doctorId: localStorage.getItem("doctorId"),
       });
-      console.log("addItem response:", added);
-      if (added && added.id) {
+      console.log("addItem response:", added);  
+      if (added.data && (added.data._id || added.data.id)) {
         await queryClient.invalidateQueries({ queryKey: ["billingItems"] });
         await refetch();
         setNewItem({ name: "", price: "" });
         toast.success("Item added successfully");
       } else {
-        toast.error("Error in adding item");
+        toast.error((added.error) || "Failed to add item");
       }
     } catch (error) {
-      toast.error("Error in adding item");
+    console.error("addItem error:", error);
+    const errMsg = error?.response?.data?.message || error?.message || "Error in adding item";
+    toast.error(errMsg);
     } finally {
       setIsAdding(false);
     }
@@ -130,7 +132,6 @@ export default function BillingDashBoard() {
 
   const handleDelete = async (id) => {
     const deleted = await deleteItem(id);
-    console.log("deleteItem response:", deleted);
     await queryClient.invalidateQueries({ queryKey: ["billingItems"] });
     await refetch();
     toast.success("Item deleted successfully");

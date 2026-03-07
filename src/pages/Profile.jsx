@@ -14,6 +14,7 @@ import {
   FiPhone,
   FiCalendar,
 } from "react-icons/fi";
+import { getUserById,updateUser } from "../API/user";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,21 +23,27 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
 
   // Get user data from localStorage (set during login)
-  const [user, setUser] = useState({
-    name: localStorage.getItem("userName") || "User",
-    email: localStorage.getItem("userEmail") || "user@example.com",
-    role: localStorage.getItem("userRole") || "Doctor",
-    phone: localStorage.getItem("userPhone") || "",
-    joinedDate: localStorage.getItem("userJoinedDate") || new Date().toISOString().split("T")[0],
-  });
+  const [user, setUser] = useState({});
 
   const [editForm, setEditForm] = useState({ ...user });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-  });
-  const [passwordError, setPasswordError] = useState("");
+  });  const [passwordError, setPasswordError] = useState("");
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    const res=await getUserById(localStorage.getItem("Id"));
+    if(res){
+      const userData = res;
+      setUser(userData);
+      setEditForm(userData);
+    }
+  }
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -52,9 +59,7 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      // Simulate API call - replace with actual API
-      
-
+      await updateUser(editForm);
       setUser(editForm);
       setIsEditing(false);
       toast.success("Profile updated successfully!");
@@ -79,15 +84,14 @@ export default function Profile() {
 
     setLoading(true);
     try {
-      // Simulate API call - replace with actual API
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await updatePassword(passwordForm);
 
       setIsChangingPassword(false);
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast.success("Password changed successfully!");
     } catch (error) {
       console.error("Failed to change password", error);
-      toast.error("Failed to change password");
+      toast.error(`${error.response?.data?.message || "Failed to change password"}`);
     } finally {
       setLoading(false);
     }
@@ -128,14 +132,13 @@ export default function Profile() {
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
             {/* Profile Header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-md">
+              <div className="flex items-center gap-4">                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-md">
                   <span className="text-3xl font-bold text-blue-600">
-                    {user.name.charAt(0).toUpperCase()}
+                    {user.name?.charAt(0).toUpperCase() || "U"}
                   </span>
                 </div>
                 <div className="text-white">
-                  <h3 className="text-xl font-semibold">{user.name}</h3>
+                  <h3 className="text-xl font-semibold">{user.name || "User"}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <FiShield className="text-blue-200" />
                     <span className="text-blue-100 text-sm">{user.role}</span>
@@ -190,7 +193,7 @@ export default function Profile() {
                       <div>
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Phone</p>
                         <p className="text-sm font-medium text-slate-800 mt-0.5">
-                          {user.phone || "Not provided"}
+                          {user.phoneNumber || "Not provided"}
                         </p>
                       </div>
                     </div>
@@ -202,7 +205,7 @@ export default function Profile() {
                       <div>
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Joined</p>
                         <p className="text-sm font-medium text-slate-800 mt-0.5">
-                          {new Date(user.joinedDate).toLocaleDateString("en-US", {
+                          {new Date(user.createdAt).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
@@ -268,8 +271,11 @@ export default function Profile() {
                         </div>
                         <input
                           type="tel"
-                          name="phone"
-                          value={editForm.phone}
+                          name="phoneNumber"
+                          minLength={10}
+                          maxLength={10}
+                          pattern="[0-9]{10}"
+                          value={editForm.phoneNumber}
                           onChange={handleEditChange}
                           placeholder="Enter phone number"
                           className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors"
@@ -289,6 +295,7 @@ export default function Profile() {
                     <button
                       onClick={handleSaveProfile}
                       disabled={loading}
+                      type="submit"
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <FiSave className="text-sm" />

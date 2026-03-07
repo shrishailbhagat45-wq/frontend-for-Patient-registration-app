@@ -12,7 +12,7 @@ const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 // Billing api's
 
 export async function getBillingItems() {
-    const res= await axios.get(`${url}/billing`);
+    const res= await axios.get(`${url}/billing/${localStorage.getItem("doctorId")}`);
     console.log("Billing items response:", res);
     return res.data;
 }

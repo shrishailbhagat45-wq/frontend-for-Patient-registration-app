@@ -1,8 +1,6 @@
 import Login from './pages/Login';
 import { backendIsInitialized } from './API/Patient';
 import { useQuery } from '@tanstack/react-query';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const { data, isLoading, error } = useQuery({
@@ -25,7 +23,6 @@ function App() {
           <div className="w-10 h-10 rounded-full bg-green-400 animate-ping"></div>
         </div>}
       </div>
-      <ToastContainer />
     </>
   )
 }
