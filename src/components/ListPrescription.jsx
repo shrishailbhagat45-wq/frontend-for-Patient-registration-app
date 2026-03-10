@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 
-export default function ListPrescription({prescription, idx}) {
+export default function ListPrescription({prescription, idx, onEdit}) {
   // Format date
   const formattedDate = new Date(prescription.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -109,11 +109,19 @@ export default function ListPrescription({prescription, idx}) {
         )}
       </div>
 
-      {/* Action Button */}
-      <div className="p-4 pt-0 flex-shrink-0">
-        <Link to={`/prescription/${prescription._id}`}>
+      {/* Action Buttons */}
+      <div className="p-4 pt-0 flex-shrink-0 flex gap-2">
+        {onEdit && (
+          <button
+            onClick={() => onEdit && onEdit(prescription)}
+            className="flex-1 py-2.5 bg-amber-500 text-white rounded-md font-medium hover:bg-amber-600 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm"
+          >
+            <span className="truncate">Edit</span>
+          </button>
+        )}
+        <Link to={`/prescription/${prescription._id}`} className="flex-1">
           <button className="w-full py-2.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2 group text-sm">
-            <span className="truncate">View Full Prescription</span>
+            <span className="truncate">View</span>
             <svg 
               className="w-4 h-4 group-hover:translate-x-1 transition-transform flex-shrink-0" 
               fill="none" 

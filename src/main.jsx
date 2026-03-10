@@ -15,6 +15,7 @@ import BillingDashBoard from './pages/BillingDashBoard.jsx'
 import Billing from './pages/Billing.jsx'
 import ManagementDashboard from './pages/ManagementDashboard.jsx'
 import Profile from './pages/Profile.jsx'
+import GetBillingInfo from './pages/GetBillingInfo.jsx'
 
 const queryClient = new QueryClient()
 
@@ -29,7 +30,8 @@ const router = createBrowserRouter([
   {path:'/billing-dashboard',element:<BillingDashBoard />},
   {path:'/billing/:patientId', element:<Billing/>},
   {path:'/management-dashboard',element:<ManagementDashboard/>},
-  {path:'/profile',element:<Profile/>}
+  {path:'/profile',element:<Profile/>},
+  {path:'/billing-info',element:<GetBillingInfo/>}
 ]);
 
 createRoot(document.getElementById('root')).render(

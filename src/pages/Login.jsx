@@ -16,9 +16,7 @@ export default function Login() {
   const handleSubmit = async(e) => {
     e.preventDefault();
     const res=await login(form.username,form.password)
-    console.log("Login response:", res);
     if (res) {
-      console.log("Login response:", res);
       localStorage.setItem("token",res.token)
       if (res.role==="Receptionist") {
         localStorage.setItem("doctorId",res.doctorId)
@@ -27,8 +25,7 @@ export default function Login() {
         localStorage.setItem("doctorId",res.id)
         localStorage.setItem("Id",res.id)
       }
-      toast.success("Login successful!");
-      console.log(res)
+      toast.success("Login successful");
       navigate('/home')
     }
   };

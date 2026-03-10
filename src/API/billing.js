@@ -38,10 +38,24 @@ export async function deleteItem(id) {
 }
 
 export async function createBill(billData) {
-    console.log("Creating bill with data:", billData);
+    
     const res= await axios.post(`${url}/patient-bills`,{billData});
     if(res.status!==201){
         throw new Error('Failed to create bill', res.statusText);
     }
+    return res.data;
+}
+
+export async function getPatientBills({ doctorId, date, month }) {
+    // date: YYYY-MM-DD, month: YYYY-MM
+    const params = {};
+    if (doctorId) params.doctorId = doctorId;
+    if (date) params.date = date;
+    if (month) params.month = month;
+    const res = await axios.get(`${url}/patient-bills`, { params });
+    if (res.status !== 200) {
+        throw new Error('Failed to fetch bills', res.statusText);
+    }
+    console.log("Fetched bills response:", res);
     return res.data;
 }

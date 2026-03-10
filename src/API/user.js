@@ -16,8 +16,8 @@ export async function login(email,password) {
         const res=await axios.post(`${url}/auth/login`,{email,password});
         return res.data.data;
     }
-    catch{
-        toast.error("Invalid credential")
+    catch(error){
+        console.error("Invalid credential",error);
     }
     
 }
@@ -73,7 +73,7 @@ export async function updateUser(userData) {
 export async function updatePassword(passwordData) {   
     const id=localStorage.getItem("Id");
     try {
-        const response = await axios.put(`${url}/user/password/${id}`, {oldPassword:passwordData.oldPassword,newPassword:passwordData.newPassword}, {
+        const response = await axios.put(`${url}/user/password/${id}`, {currentPassword:passwordData.currentPassword,newPassword:passwordData.newPassword}, {
             headers: headers
         });
         return response.data;

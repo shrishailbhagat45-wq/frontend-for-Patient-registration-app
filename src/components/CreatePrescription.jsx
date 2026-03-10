@@ -1,9 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { createPrescription, getDrugSuggestions } from "../API/Prescriptions";
+import {
+  createPrescription,
+  getDrugSuggestions,
+  updatePrescription,
+} from "../API/Prescriptions";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 
-export default function CreatePrescription({ showModal, setShowModal }) {
+export default function CreatePrescription({
+  showModal,
+  setShowModal,
+  initialPrescription,
+}) {
   const [drugs, setDrugs] = useState([
     { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
   ]);
@@ -16,11 +24,16 @@ export default function CreatePrescription({ showModal, setShowModal }) {
   const navigate = useNavigate();
 
   const handleDrugChange = (idx, field, value) => {
-    setDrugs((prev) => prev.map((d, i) => (i === idx ? { ...d, [field]: value } : d)));
+    setDrugs((prev) =>
+      prev.map((d, i) => (i === idx ? { ...d, [field]: value } : d)),
+    );
   };
 
   const addNewDrug = () => {
-    setDrugs((prev) => [...prev, { name: "", strength: "", quantity: "", frequency: "", remarks: "" }]);
+    setDrugs((prev) => [
+      ...prev,
+      { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+    ]);
   };
 
   const removeDrug = (idx) => {
@@ -34,11 +47,42 @@ export default function CreatePrescription({ showModal, setShowModal }) {
 
   const handleClose = () => {
     setShowModal(false);
-    setDrugs([{ name: "", strength: "", quantity: "", frequency: "" }]);
+    setDrugs([
+      { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+    ]);
     setRemarks("");
     setSuggestions({});
     setHighlight({});
   };
+
+  // populate form when editing an existing prescription
+  useEffect(() => {
+    if (initialPrescription && showModal) {
+      const presetDrugs =
+        Array.isArray(initialPrescription.drug) &&
+        initialPrescription.drug.length
+          ? initialPrescription.drug.map((d) => ({
+              name: d.name || "",
+              strength: d.strength || "",
+              quantity: d.quantity || "",
+              frequency: d.frequency || "",
+              remarks: d.remarks || "",
+            }))
+          : [
+              {
+                name: "",
+                strength: "",
+                quantity: "",
+                frequency: "",
+                remarks: "",
+              },
+            ];
+      setDrugs(presetDrugs);
+      setDiagnosis(
+        initialPrescription.remarks || initialPrescription.Diagnosis || "",
+      );
+    }
+  }, [initialPrescription, showModal]);
 
   // debounce and fetch drug suggestions for a specific drug input
   const fetchSuggestions = (idx, query) => {
@@ -56,7 +100,10 @@ export default function CreatePrescription({ showModal, setShowModal }) {
         const data = res?.data ?? res ?? [];
         // apply only if query unchanged
         if (lastQueryRef.current[idx] === query) {
-          setSuggestions((s) => ({ ...s, [idx]: Array.isArray(data) ? data : [] }));
+          setSuggestions((s) => ({
+            ...s,
+            [idx]: Array.isArray(data) ? data : [],
+          }));
           setHighlight((h) => ({ ...h, [idx]: 0 }));
         }
       } catch (err) {
@@ -74,9 +121,10 @@ export default function CreatePrescription({ showModal, setShowModal }) {
 
   const selectSuggestion = (idx, suggestion) => {
     // suggestion might be string or object { name }
-    const name = typeof suggestion === "string" ? suggestion : suggestion.name ?? "";
+    const name =
+      typeof suggestion === "string" ? suggestion : (suggestion.name ?? "");
     setDrugs((prev) =>
-      prev.map((d, i) => (i === idx ? { ...d, name: name } : d))
+      prev.map((d, i) => (i === idx ? { ...d, name: name } : d)),
     );
     setSuggestions((s) => ({ ...s, [idx]: [] }));
   };
@@ -105,21 +153,34 @@ export default function CreatePrescription({ showModal, setShowModal }) {
 
   const handleSavePreview = async () => {
     const prescriptionData = { drug: drugs, Diagnosis };
-    const id = window.location.pathname.split("/").pop();
     try {
-      const response = await createPrescription(id, prescriptionData);
-      if (response?.status === 201) {
-        toast.success("Prescription saved");
-        navigate("/print-prescription", {
-          state: { prescriptionData: response.data, patientData: response.data.patientData },
-        });
+      if (initialPrescription && initialPrescription._id) {
+        // update flow
+        await updatePrescription(initialPrescription._id, prescriptionData);
+        toast.success("Prescription updated");
+        // close modal and return to patient page (no navigation to print)
         handleClose();
       } else {
-        toast.error("Error saving prescription");
+        // create flow
+        const id = window.location.pathname.split("/").pop();
+
+        const response = await createPrescription(id, prescriptionData);
+        if (response?.status === 201) {
+          toast.success("Prescription saved");
+          navigate("/print-prescription", {
+            state: {
+              prescriptionData: response.data,
+              patientData: response.data.patientData,
+            },
+          });
+          handleClose();
+        } else {
+          toast.error("Error saving prescription");
+        }
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to save prescription");
+      console.error("Error in saving/updating prescription", err);
+      toast.error("Failed to save/update prescription");
     }
   };
 
@@ -129,21 +190,37 @@ export default function CreatePrescription({ showModal, setShowModal }) {
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div>
-            <h3 className="text-lg font-semibold text-slate-800">Create Prescription</h3>
-            <p className="text-sm text-slate-500 mt-0.5">Add medications and diagnosis for the patient</p>
+            <h3 className="text-lg font-semibold text-slate-800">
+              Create Prescription
+            </h3>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Add medications and diagnosis for the patient
+            </p>
           </div>
           <button
             onClick={handleClose}
             className="text-slate-400 hover:text-slate-600 transition-colors"
             aria-label="Close"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
-        <div className="p-6 space-y-4">          {drugs.map((drug, idx) => (
+        <div className="p-6 space-y-4">
+          {" "}
+          {drugs.map((drug, idx) => (
             <div
               key={idx}
               className="bg-slate-50 rounded-lg p-4 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end relative"
@@ -163,7 +240,8 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 {suggestions[idx] && suggestions[idx].length > 0 && (
                   <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-lg rounded-md mt-1 z-30 max-h-44 overflow-y-auto">
                     {suggestions[idx].map((sug, sidx) => {
-                      const label = typeof sug === "string" ? sug : sug.name ?? "";
+                      const label =
+                        typeof sug === "string" ? sug : (sug.name ?? "");
                       const isActive = (highlight[idx] ?? 0) === sidx;
                       return (
                         <li
@@ -175,7 +253,9 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                           }}
                           className={
                             "px-3 py-2 cursor-pointer text-sm " +
-                            (isActive ? "bg-blue-600 text-white" : "hover:bg-slate-50 text-slate-800")
+                            (isActive
+                              ? "bg-blue-600 text-white"
+                              : "hover:bg-slate-50 text-slate-800")
                           }
                         >
                           <span>{label}</span>
@@ -194,7 +274,9 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                   type="number"
                   min="1"
                   value={drug.quantity}
-                  onChange={(e) => handleDrugChange(idx, "quantity", e.target.value)}
+                  onChange={(e) =>
+                    handleDrugChange(idx, "quantity", e.target.value)
+                  }
                   className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   placeholder="1"
                 />
@@ -206,7 +288,9 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 </label>
                 <select
                   value={drug.frequency}
-                  onChange={(e) => handleDrugChange(idx, "frequency", e.target.value)}
+                  onChange={(e) =>
+                    handleDrugChange(idx, "frequency", e.target.value)
+                  }
                   className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white cursor-pointer"
                 >
                   <option value="">Select</option>
@@ -220,11 +304,15 @@ export default function CreatePrescription({ showModal, setShowModal }) {
 
               {/* Per-drug remarks */}
               <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Remarks</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Remarks
+                </label>
                 <input
                   type="text"
                   value={drug.remarks || ""}
-                  onChange={(e) => handleDrugChange(idx, "remarks", e.target.value)}
+                  onChange={(e) =>
+                    handleDrugChange(idx, "remarks", e.target.value)
+                  }
                   className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   placeholder="Optional notes"
                 />
@@ -243,8 +331,11 @@ export default function CreatePrescription({ showModal, setShowModal }) {
                 )}
               </div>
             </div>
-          ))}          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Diagnosis / Remarks</label>
+          ))}{" "}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Diagnosis / Remarks
+            </label>
             <textarea
               value={Diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
@@ -253,14 +344,23 @@ export default function CreatePrescription({ showModal, setShowModal }) {
               placeholder="Enter diagnosis, symptoms, or additional remarks..."
             />
           </div>
-
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
             <button
               onClick={addNewDrug}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-colors font-medium text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Another Drug
             </button>
@@ -278,11 +378,28 @@ export default function CreatePrescription({ showModal, setShowModal }) {
               onClick={handleSavePreview}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors font-medium text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
-              Save & Preview
+              {initialPrescription && initialPrescription._id
+                ? "Update"
+                : "Save & Preview"}
             </button>
           </div>
         </div>

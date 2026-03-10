@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPatientById } from '../API/Patient';
 import { getPrescriptionsByPatientId } from '../API/Prescriptions';
@@ -25,6 +25,7 @@ const calculateAge = (birthDate) => {
 
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
+  const [editingPrescription, setEditingPrescription] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
   
@@ -47,6 +48,11 @@ export default function PatientInfo() {
     },
     enabled: !!id,
   });
+
+  // clear editing state when modal closes
+  useEffect(() => {
+    if (!showModal) setEditingPrescription(null);
+  }, [showModal]);
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -141,9 +147,14 @@ export default function PatientInfo() {
                 <LoadingList />
                 <LoadingList />
               </>
-            ) : (
+              ) : (
               listOfPrescriptions.map((prescription, idx) => (
-                <ListPrescription key={prescription._id || idx} prescription={prescription} idx={idx} />
+                <ListPrescription
+                  key={prescription._id || idx}
+                  prescription={prescription}
+                  idx={idx}
+                  onEdit={(p) => { setEditingPrescription(p); setShowModal(true); }}
+                />
               ))
             )}
           </div>
@@ -171,7 +182,7 @@ export default function PatientInfo() {
 
         {/* Prescription Modal */}
         {showModal && (
-          <CreatePrescription showModal={showModal} setShowModal={setShowModal} />
+          <CreatePrescription showModal={showModal} setShowModal={setShowModal} initialPrescription={editingPrescription} />
         )}
       </div>
     </div>

@@ -44,6 +44,21 @@ export async function createPrescription(id,prescriptionData) {
     return response.data;
 }
 
+export async function updatePrescription(id, prescriptionData) {
+    console.log("Updating prescription", id, prescriptionData);
+    let response = null;
+    try {
+        response = await axios.put(`${url}/prescriptions/${id}`, { ...prescriptionData });
+        if (response.status !== 200) {
+            throw new Error('Failed to update prescription', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error updating prescription:', error);
+        throw error;
+    }
+    return response.data;
+}
+
 // get drug suggestions
 export async function getDrugSuggestions(name){
     const res= await axios.post(`${url}/drugs`,{name});

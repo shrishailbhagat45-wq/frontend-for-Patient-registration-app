@@ -14,7 +14,7 @@ import {
   FiPhone,
   FiCalendar,
 } from "react-icons/fi";
-import { getUserById,updateUser } from "../API/user";
+import { getUserById,updateUser,updatePassword } from "../API/user";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -84,11 +84,15 @@ export default function Profile() {
 
     setLoading(true);
     try {
-      await updatePassword(passwordForm);
-
-      setIsChangingPassword(false);
-      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      toast.success("Password changed successfully!");
+      const res = await updatePassword(passwordForm);
+      console.log("updatePassword response:", res);
+      if(res && res.success){
+        setIsChangingPassword(false);
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        toast.success("Password changed successfully!");
+      } else{
+        toast.error(res.error || "Failed to change password");
+      }
     } catch (error) {
       console.error("Failed to change password", error);
       toast.error(`${error.response?.data?.message || "Failed to change password"}`);

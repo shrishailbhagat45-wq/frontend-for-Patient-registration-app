@@ -104,9 +104,9 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
                 </Link>
               </li>
               <li>
-                <Link to="/home" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
+                <Link to="/billing-info" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
                   <GrDocumentPdf className="text-xl" />
-                  <span>Get Documents</span>
+                  <span>Get Billing Info</span>
                 </Link>
               </li>
               <li>

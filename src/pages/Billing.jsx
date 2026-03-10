@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {  getPatientById, } from "../API/Patient";
 import { getBillingItems,createBill } from "../API/billing";
 import Navbar from "../components/Navbar";
+import { toast } from "react-toastify";
 
 export default function Billing() {
   const { patientId } = useParams(); // get single patient id from URL
+  const doctorId = localStorage.getItem("doctorId");
   const [selectedItemId, setSelectedItemId] = useState("");
   const [billItems, setBillItems] = useState([]);
   const [taxPercent, setTaxPercent] = useState(0);
@@ -100,7 +102,9 @@ export default function Billing() {
 
     const payload = {
       patientId: patientId,
-      items: billItems.map((it) => ({ item: it.id, quantity: it.qty, price: it.price })),
+      patientName: selectedPatient?.name ?? "Unknown",
+      doctorId: doctorId,
+      items: billItems.map((it) => ({ itemId: it.id, itemName: it.name, quantity: it.qty, price: it.price })),
       taxPercent: Number(taxPercent) || 0,
       taxAmount: Number(taxAmount) || 0,
       totalAmount: total,
@@ -110,9 +114,11 @@ export default function Billing() {
     const res = await createBill(payload);
     if (res && (res?.data || res)) {
       setMessage({ type: "success", text: "Bill created successfully." });
+      toast.success("Bill created successfully");
       setBillItems([]);
     } else {
       setMessage({ type: "error", text: "Failed to create bill." });
+      toast.error("Failed to create bill");
     }
   }
   
