@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { TfiAlignJustify } from "react-icons/tfi";
 import { GoHomeFill } from "react-icons/go";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { RiBillFill } from "react-icons/ri";
 import { GrDocumentPdf } from "react-icons/gr";
 import { MdManageAccounts } from "react-icons/md";
@@ -10,6 +10,7 @@ import { FaUserDoctor } from "react-icons/fa6";
 export default function Navbar() {  const [showMenu, setShowMenu] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [isXlUp, setIsXlUp] = useState(false);
+  const navigate = useNavigate();
 
   // tailwind 'xl' breakpoint = 1280px (larger desktops only)
   useEffect(() => {
@@ -37,7 +38,10 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
   const toggleMenu = () => setShowMenu((s) => !s);
   const toggleProfile = () => setShowProfile((s) => !s);  
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("doctorId");
+    localStorage.removeItem("Id");
+    navigate('/login', { replace: true });
   }
   return (
     <div className="navBar">
@@ -66,9 +70,13 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
               <Link to="/profile" className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                 Profile
               </Link>
-              <Link to="/" className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100" onClick={logout}>
+              <button
+                type="button"
+                className="block w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                onClick={logout}
+              >
                 Logout
-              </Link>
+              </button>
             </div>
           )}
         </div>
