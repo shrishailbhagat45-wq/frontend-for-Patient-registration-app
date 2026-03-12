@@ -21,7 +21,7 @@ export default function SearchBar() {
     },
   });
   const handleSearchChange = async (event) => {
-    const value = event.target.value;
+    const value = event.target.value.replace(/[^a-zA-Z]/g, "");
     setSearchTerm(value);
     setSelectedPatient(null);
 
