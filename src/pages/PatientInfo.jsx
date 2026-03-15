@@ -40,7 +40,7 @@ export default function PatientInfo() {
   });
 
   // Fetch prescriptions with dependency on showModal to refresh
-  const { data: listOfPrescriptions = [] } = useQuery({
+  const { data: listOfPrescriptions = [], isLoading: isPrescriptionsLoading } = useQuery({
     queryKey: ['prescriptions', id, showModal],
     queryFn: async () => {
       const prescriptions = await getPrescriptionsByPatientId(id);
@@ -141,12 +141,31 @@ export default function PatientInfo() {
 
           {/* Prescriptions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listOfPrescriptions.length === 0 ? (
+            {isPrescriptionsLoading ? (
               <>
                 <LoadingList />
                 <LoadingList />
                 <LoadingList />
               </>
+              ) : listOfPrescriptions.length === 0 ? (
+              <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="p-4 bg-slate-100 rounded-full">
+                      <FiFileText className="text-slate-400 text-4xl" />
+                    </div>
+                    <p className="text-slate-600 font-medium">No prescriptions yet</p>
+                    <p className="text-sm text-slate-400">Create the first prescription for this patient</p>
+                    <button
+                      onClick={() => setShowModal(true)}
+                      className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm text-sm"
+                    >
+                      <FiPlus className="text-base" />
+                      Create First Prescription
+                    </button>
+                  </div>
+                </div>
+              </div>
               ) : (
               listOfPrescriptions.map((prescription, idx) => (
                 <ListPrescription
@@ -158,26 +177,6 @@ export default function PatientInfo() {
               ))
             )}
           </div>
-
-          {/* Empty State */}
-          {listOfPrescriptions.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-lg border border-slate-200 mt-6">
-              <div className="flex flex-col items-center gap-3">
-                <div className="p-4 bg-slate-100 rounded-full">
-                  <FiFileText className="text-slate-400 text-4xl" />
-                </div>
-                <p className="text-slate-600 font-medium">No prescriptions yet</p>
-                <p className="text-sm text-slate-400">Create the first prescription for this patient</p>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm text-sm"
-                >
-                  <FiPlus className="text-base" />
-                  Create First Prescription
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Prescription Modal */}
@@ -188,3 +187,4 @@ export default function PatientInfo() {
     </div>
   );
 }
+

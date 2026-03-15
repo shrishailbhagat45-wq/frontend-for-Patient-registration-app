@@ -7,7 +7,7 @@ const headers ={
         'Content-Type': 'application/json',
         'Authorization': token
       }
-const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
 // Billing api's
 

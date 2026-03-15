@@ -6,7 +6,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import 'react-toastify/dist/ReactToastify.css'
 import RegisterPatient from './pages/RegisterPatient.jsx'
 import './index.css'
-import App from './App.jsx'
+import RootLayout from './RootLayout.jsx'
 import PatientInfo from './pages/PatientInfo.jsx'
 import DetailPrescription from './pages/DetailPrescription.jsx'
 import PrintPrescription from './pages/PrintPrescription.jsx'
@@ -29,7 +29,7 @@ const RequireAuth = () => {
 }
 
 const router = createBrowserRouter([
-  { path: '/', element: <App /> },
+  { path: '/', element: <RootLayout /> },
   {path: '/login', element: <Login />},
   {
     element: <RequireAuth />,
