@@ -18,6 +18,7 @@ export async function login(email,password) {
     }
     catch(error){
         console.error("Invalid credential",error);
+        throw error;
     }
     
 }
