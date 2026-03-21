@@ -129,11 +129,15 @@ export default function CreatePrescription({
   };
 
   const selectSuggestion = (idx, suggestion) => {
-    // suggestion might be string or object { name }
     const name =
       typeof suggestion === "string" ? suggestion : (suggestion.name ?? "");
+    // auto-fill strength from content field if available
+    const strength =
+      typeof suggestion === "object" ? (suggestion.content ?? "") : "";
     setDrugs((prev) =>
-      prev.map((d, i) => (i === idx ? { ...d, name: name } : d)),
+      prev.map((d, i) =>
+        i === idx ? { ...d, name, ...(strength && { strength }) } : d,
+      ),
     );
     setSuggestions((s) => ({ ...s, [idx]: [] }));
   };
@@ -271,27 +275,54 @@ export default function CreatePrescription({
                   placeholder="e.g. Paracetamol"
                 />
                 {suggestions[idx] && suggestions[idx].length > 0 && (
-                  <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-lg rounded-md mt-1 z-30 max-h-44 overflow-y-auto">
+                  <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-xl rounded-lg mt-1 z-30 max-h-64 overflow-y-auto divide-y divide-slate-100">
                     {suggestions[idx].map((sug, sidx) => {
-                      const label =
+                      const name =
                         typeof sug === "string" ? sug : (sug.name ?? "");
+                      const company =
+                        typeof sug === "object" ? (sug.company ?? "") : "";
+                      const content =
+                        typeof sug === "object" ? (sug.content ?? "") : "";
                       const isActive = (highlight[idx] ?? 0) === sidx;
                       return (
                         <li
                           key={sidx}
                           onMouseDown={(ev) => {
-                            // mouseDown to avoid losing focus before click
                             ev.preventDefault();
                             selectSuggestion(idx, sug);
                           }}
                           className={
-                            "px-3 py-2 cursor-pointer text-sm " +
+                            "px-3 py-2.5 cursor-pointer transition-colors " +
                             (isActive
-                              ? "bg-blue-600 text-white"
-                              : "hover:bg-slate-50 text-slate-800")
+                              ? "bg-blue-600"
+                              : "hover:bg-slate-50")
                           }
                         >
-                          <span>{label}</span>
+                          {/* Drug name */}
+                          <p className={
+                            "text-sm font-semibold leading-tight " +
+                            (isActive ? "text-white" : "text-slate-900")
+                          }>
+                            {name}
+                          </p>
+                          {/* Content (composition) */}
+                          {content && (
+                            <p className={
+                              "text-xs mt-0.5 leading-snug " +
+                              (isActive ? "text-blue-100" : "text-slate-500")
+                            }>
+                              {content}
+                            </p>
+                          )}
+                          {/* Company */}
+                          {company && (
+                            <p className={
+                              "text-[10px] mt-1 font-medium uppercase tracking-wide " +
+                              (isActive ? "text-blue-200" : "text-slate-400")
+                            }>
+                              {company}
+                            </p>
+                          )}
                         </li>
                       );
                     })}
