@@ -112,6 +112,23 @@ export async function removeFromQueueById(id){
     return res.data;
 }
 
+// Update patient vitals (weight, blood pressure, pulse rate, blood sugar level)
+export async function updatePatientVitals(patientId, vitalsData) {
+    let response = null;
+    try {
+        response = await axios.put(`${url}/patient/${patientId}`, vitalsData, {
+            headers: headers
+        });
+        if (response.status !== 200) {
+            throw new Error('Failed to update patient vitals', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error updating patient vitals:', error);
+        throw error;
+    }
+    return response.data;
+}
+
 // Function to initialize the backend
 export async function backendIsInitialized() {
     let response= null;

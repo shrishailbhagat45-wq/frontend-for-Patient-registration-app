@@ -130,14 +130,14 @@ export default function GetBillingInfo() {
     }
 
     return (
-      <div className="w-72">
-        <div className="flex items-center justify-between mb-2">
-          <button onClick={prevMonth} className="px-2 py-1">◀</button>
-          <div className="font-medium">{viewDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
-          <button onClick={nextMonth} className="px-2 py-1">▶</button>
+      <div className="w-64 sm:w-72">
+        <div className="flex items-center justify-between mb-2 gap-2">
+          <button onClick={prevMonth} className="px-2 py-1 text-sm hover:bg-slate-100 rounded">◀</button>
+          <div className="font-medium text-xs sm:text-sm text-center flex-1">{viewDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
+          <button onClick={nextMonth} className="px-2 py-1 text-sm hover:bg-slate-100 rounded">▶</button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-xs text-center text-slate-600 mb-1">
-          {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=> <div key={d}>{d}</div>)}
+          {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=> <div key={d} className="py-1">{d}</div>)}
         </div>
         <div>
           {weeks.map((week, wi) => (
@@ -148,7 +148,7 @@ export default function GetBillingInfo() {
                   <button
                     key={di}
                     onClick={() => d && onSelect(buildISO(year, month, d))}
-                    className={`h-8 rounded ${isSelected ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100'}`}
+                    className={`h-7 sm:h-8 text-xs rounded transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100'}`}
                     disabled={!d}
                   >
                     {d || ''}
@@ -165,98 +165,103 @@ export default function GetBillingInfo() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
-      <div className="max-w-6xl mx-auto pt-20 px-4 md:px-8 pb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div>
-              <h1 className="text-xl font-semibold text-slate-800">Billing Overview</h1>
-              <p className="text-sm text-slate-500">View bills by day or month and download monthly report</p>
+      <div className="w-full pt-16 sm:pt-20 px-3 sm:px-4 md:px-8 pb-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-semibold text-slate-800">Billing Overview</h1>
+                <p className="text-xs sm:text-sm text-slate-500">View bills by day or month and download monthly report</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setView('day')}
+                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm transition-colors ${view === 'day' ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}>
+                  Day
+                </button>
+                <button
+                  onClick={() => setView('month')}
+                  className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm transition-colors ${view === 'month' ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}>
+                  Month
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setView('day')}
-                className={`px-3 py-2 rounded-md text-sm ${view === 'day' ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}>
-                Day
-              </button>
-              <button
-                onClick={() => setView('month')}
-                className={`px-3 py-2 rounded-md text-sm ${view === 'month' ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}>
-                Month
-              </button>
-            </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-4">
-            {view === 'day' ? (
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Select date</label>
-                <div className="relative">
-                  <button onClick={()=> setShowCalendar(s => !s)} className="border px-3 py-2 rounded-md bg-white">
-                    {selectedDate}
-                  </button>
-                  {showCalendar && (
-                    <div className="absolute z-40 mt-2 bg-white border rounded-md shadow-lg p-3">
-                      <Calendar selected={selectedDate} onSelect={(d)=>{ setSelectedDate(d); setShowCalendar(false); }} />
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-end sm:flex-wrap">
+                {view === 'day' ? (
+                  <div className="flex-1 min-w-[200px] sm:min-w-0">
+                    <label className="block text-xs sm:text-sm text-slate-600 mb-1.5">Select date</label>
+                    <div className="relative">
+                      <button onClick={()=> setShowCalendar(s => !s)} className="w-full sm:w-auto border px-2 sm:px-3 py-2 rounded-md bg-white text-xs sm:text-sm">
+                        {selectedDate}
+                      </button>
+                      {showCalendar && (
+                        <div className="absolute z-40 mt-2 bg-white border rounded-md shadow-lg p-3">
+                          <Calendar selected={selectedDate} onSelect={(d)=>{ setSelectedDate(d); setShowCalendar(false); }} />
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                ) : (
+                  <div className="flex-1 min-w-[200px] sm:min-w-0">
+                    <label className="block text-xs sm:text-sm text-slate-600 mb-1.5">Select month</label>
+                    <input type="month" value={selectedMonth} onChange={(e)=> setSelectedMonth(e.target.value)} className="w-full sm:w-auto border px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm" />
+                  </div>
+                )}
+
+                <div className="flex gap-4 sm:ml-auto">
+                  <div className="flex-1 sm:flex-none text-center sm:text-right">
+                    <div className="text-xs text-slate-500">Bills</div>
+                    <div className="text-xl sm:text-2xl font-semibold">{totalCount}</div>
+                  </div>
+                  <div className="flex-1 sm:flex-none text-center sm:text-right">
+                    <div className="text-xs text-slate-500">Total</div>
+                    <div className="text-xl sm:text-2xl font-semibold">₹{Number(totalAmount).toFixed(2)}</div>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Select month</label>
-                <input type="month" value={selectedMonth} onChange={(e)=> setSelectedMonth(e.target.value)} className="border px-3 py-2 rounded-md" />
-              </div>
-            )}
 
-            <div className="ml-auto text-right">
-              <div className="text-sm text-slate-500">Bills</div>
-              <div className="text-2xl font-semibold">{totalCount}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-slate-500">Total Amount</div>
-              <div className="text-2xl font-semibold">₹{Number(totalAmount).toFixed(2)}</div>
+              {view === 'month' && (
+                <button onClick={downloadMonthlyPDF} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-md text-xs sm:text-sm hover:bg-green-700 transition-colors">
+                  <FiDownload className="flex-shrink-0" />
+                  <span>Download PDF</span>
+                </button>
+              )}
             </div>
 
-            {view === 'month' && (
-              <button onClick={downloadMonthlyPDF} className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md">
-                <FiDownload />
-                Download Monthly PDF
-              </button>
-            )}
-
-          </div>
-
-          <div className="bg-slate-50 rounded-lg p-4">
-            {isLoading ? (
-              <div className="text-center py-12">Loading bills...</div>
-            ) : bills.length === 0 ? (
-              <div className="text-center py-12">No bills found for selected {view === 'day' ? 'date' : 'month'}.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white">
-                  <thead>
-                    <tr className="text-sm text-slate-600">
-                      <th className="py-2 px-3 text-left">#</th>
-                      <th className="py-2 px-3 text-left">Patient</th>
-                      <th className="py-2 px-3 text-left">Date</th>
-                      <th className="py-2 px-3 text-left">Items</th>
-                      <th className="py-2 px-3 text-right">Amount (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bills.map((b, i) => (
-                      <tr key={b._id || i} className="border-t border-slate-100 text-sm">
-                        <td className="py-2 px-3">{i+1}</td>
-                        <td className="py-2 px-3">{b.patientName || b.patient?.name || '—'}</td>
-                        <td className="py-2 px-3">{new Date(b.createdAt).toLocaleString()}</td>
-                        <td className="py-2 px-3">{b.items?.map(it => it.itemName).join(', ')}</td>
-                        <td className="py-2 px-3 text-right">₹{Number(b.totalAmount || 0).toFixed(2)}</td>
+            <div className="bg-slate-50 rounded-lg p-3 sm:p-4 overflow-hidden">
+              {isLoading ? (
+                <div className="text-center py-8 sm:py-12 text-xs sm:text-sm">Loading bills...</div>
+              ) : bills.length === 0 ? (
+                <div className="text-center py-8 sm:py-12 text-xs sm:text-sm">No bills found for selected {view === 'day' ? 'date' : 'month'}.</div>
+              ) : (
+                <div className="overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4">
+                  <table className="min-w-full bg-white text-xs sm:text-sm">
+                    <thead>
+                      <tr className="text-slate-600 border-b border-slate-200">
+                        <th className="py-2 px-2 sm:px-3 text-left">#</th>
+                        <th className="py-2 px-2 sm:px-3 text-left">Patient</th>
+                        <th className="py-2 px-2 sm:px-3 text-left">Date</th>
+                        <th className="py-2 px-2 sm:px-3 text-left">Items</th>
+                        <th className="py-2 px-2 sm:px-3 text-right">Amount (₹)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {bills.map((b, i) => (
+                        <tr key={b._id || i} className="border-t border-slate-100">
+                          <td className="py-2 px-2 sm:px-3">{i+1}</td>
+                          <td className="py-2 px-2 sm:px-3 truncate">{b.patientName || b.patient?.name || '—'}</td>
+                          <td className="py-2 px-2 sm:px-3 whitespace-nowrap">{new Date(b.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                          <td className="py-2 px-2 sm:px-3 text-xs">{b.items?.map(it => it.itemName).join(', ') || '—'}</td>
+                          <td className="py-2 px-2 sm:px-3 text-right font-medium">₹{Number(b.totalAmount || 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

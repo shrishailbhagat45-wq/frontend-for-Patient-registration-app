@@ -62,7 +62,7 @@ export async function getUserById(id) {
 export async function updateUser(userData) {
     const id=localStorage.getItem("Id");
     try {
-        const response = await axios.put(`${url}/user/${id}`, {name:userData.name,email:userData.email,phoneNumber:userData.phoneNumber}, {
+        const response = await axios.put(`${url}/user/${id}`, {name:userData.name,email:userData.email,phoneNumber:userData.phoneNumber,specialization:userData.specialization}, {
             headers: headers
         });
         return response.data;

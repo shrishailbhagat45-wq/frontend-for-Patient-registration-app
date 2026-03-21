@@ -13,6 +13,7 @@ import {
   FiLock,
   FiPhone,
   FiCalendar,
+  FiBriefcase,
 } from "react-icons/fi";
 import { getUserById,updateUser,updatePassword } from "../API/user";
 
@@ -115,19 +116,19 @@ export default function Profile() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-slate-50 pt-20 px-4 pb-8">
+      <div className="min-h-screen bg-slate-50 pt-16 sm:pt-20 px-3 sm:px-4 pb-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-6">
             <button
               onClick={() => navigate("/home")}
-              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-4 text-sm"
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-4 text-xs sm:text-sm"
             >
-              <IoArrowBack className="text-lg" />
+              <IoArrowBack className="text-base" />
               <span>Back to Home</span>
             </button>
-            <h2 className="text-2xl font-semibold text-slate-800">My Profile</h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">My Profile</h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
               View and manage your account details
             </p>
           </div>
@@ -135,66 +136,66 @@ export default function Profile() {
           {/* Profile Card */}
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
             {/* Profile Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
-              <div className="flex items-center gap-4">                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-md">
-                  <span className="text-3xl font-bold text-blue-600">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 sm:px-6 py-6 sm:py-8">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white flex items-center justify-center shadow-md flex-shrink-0">
+                  <span className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {user.name?.charAt(0).toUpperCase() || "U"}
                   </span>
                 </div>
                 <div className="text-white">
-                  <h3 className="text-xl font-semibold">{user.name || "User"}</h3>
+                  <h3 className="text-lg sm:text-xl font-semibold">{user.name || "User"}</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <FiShield className="text-blue-200" />
-                    <span className="text-blue-100 text-sm">{user.role}</span>
+                    <span className="text-blue-100 text-xs sm:text-sm">{user.role}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Profile Details */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {!isEditing ? (
                 /* View Mode */
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wide">
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-800 uppercase tracking-wide">
                       Account Information
                     </h4>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                     >
                       <FiEdit2 className="text-sm" />
-                      Edit
+                      <span className="hidden sm:inline">Edit</span>
                     </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="p-2 bg-white rounded-md">
+                      <div className="p-2 bg-white rounded-md flex-shrink-0">
                         <FiUser className="text-slate-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Full Name</p>
-                        <p className="text-sm font-medium text-slate-800 mt-0.5">{user.name}</p>
+                        <p className="text-sm font-medium text-slate-800 mt-0.5 break-words">{user.name}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="p-2 bg-white rounded-md">
+                      <div className="p-2 bg-white rounded-md flex-shrink-0">
                         <FiMail className="text-slate-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Email</p>
-                        <p className="text-sm font-medium text-slate-800 mt-0.5">{user.email}</p>
+                        <p className="text-sm font-medium text-slate-800 mt-0.5 break-all">{user.email}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="p-2 bg-white rounded-md">
+                      <div className="p-2 bg-white rounded-md flex-shrink-0">
                         <FiPhone className="text-slate-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Phone</p>
                         <p className="text-sm font-medium text-slate-800 mt-0.5">
                           {user.phoneNumber || "Not provided"}
@@ -203,10 +204,22 @@ export default function Profile() {
                     </div>
 
                     <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="p-2 bg-white rounded-md">
+                      <div className="p-2 bg-white rounded-md flex-shrink-0">
+                        <FiBriefcase className="text-slate-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-slate-500 uppercase tracking-wide">Specialization</p>
+                        <p className="text-sm font-medium text-slate-800 mt-0.5">
+                          {user.specialization || user.speciality || "Not specified"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="p-2 bg-white rounded-md flex-shrink-0">
                         <FiCalendar className="text-slate-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-slate-500 uppercase tracking-wide">Joined</p>
                         <p className="text-sm font-medium text-slate-800 mt-0.5">
                           {new Date(user.createdAt).toLocaleDateString("en-US", {
@@ -286,24 +299,45 @@ export default function Profile() {
                         />
                       </div>
                     </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Specialization
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <FiBriefcase className="text-slate-400 text-sm" />
+                        </div>
+                        <input
+                          type="text"
+                          name="specialization"
+                          value={editForm.specialization || ""}
+                          onChange={handleEditChange}
+                          placeholder="Enter your specialization"
+                          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2">
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
                     <button
                       onClick={cancelEdit}
-                      className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md transition-colors flex items-center gap-1.5"
+                      className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-slate-600 hover:bg-slate-100 rounded-md transition-colors flex items-center justify-center sm:justify-start gap-1.5"
                     >
                       <FiX className="text-sm" />
-                      Cancel
+                      <span className="hidden sm:inline">Cancel</span>
                     </button>
                     <button
                       onClick={handleSaveProfile}
                       disabled={loading}
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 sm:px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center sm:justify-start gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <FiSave className="text-sm" />
-                      {loading ? "Saving..." : "Save Changes"}
+                      {loading ? "Saving..." : <span className="hidden sm:inline">Save Changes</span>}
+                      {loading && <span className="sm:hidden">Saving...</span>}
+                      {!loading && <span className="sm:hidden">Save</span>}
                     </button>
                   </div>
                 </div>

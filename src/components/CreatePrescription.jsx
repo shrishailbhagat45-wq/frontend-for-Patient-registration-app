@@ -4,6 +4,7 @@ import {
   getDrugSuggestions,
   updatePrescription,
 } from "../API/Prescriptions";
+import { updatePatientVitals } from "../API/Patient";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 
@@ -19,6 +20,10 @@ export default function CreatePrescription({
   const [remarks, setRemarks] = useState("");
   const [suggestions, setSuggestions] = useState({}); // { idx: [suggestion, ...] }
   const [highlight, setHighlight] = useState({}); // { idx: highlightedIndex }
+  const [weight, setWeight] = useState("");
+  const [bloodPressure, setBloodPressure] = useState("");
+  const [pulseRate, setPulseRate] = useState("");
+  const [bloodSugarLevel, setBloodSugarLevel] = useState("");
   const timersRef = useRef({});
   const lastQueryRef = useRef({});
   const navigate = useNavigate();
@@ -53,6 +58,10 @@ export default function CreatePrescription({
     setRemarks("");
     setSuggestions({});
     setHighlight({});
+    setWeight("");
+    setBloodPressure("");
+    setPulseRate("");
+    setBloodSugarLevel("");
   };
 
   // populate form when editing an existing prescription
@@ -157,6 +166,19 @@ export default function CreatePrescription({
       if (initialPrescription && initialPrescription._id) {
         // update flow
         await updatePrescription(initialPrescription._id, prescriptionData);
+        
+        // Update vitals if provided
+        if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
+          const patientId = window.location.pathname.split("/").pop();
+          const vitalsData = {
+            ...(weight && { weight: parseFloat(weight) }),
+            ...(bloodPressure && { bloodPressure }),
+            ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
+            ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
+          };
+          await updatePatientVitals(patientId, vitalsData);
+        }
+        
         toast.success("Prescription updated");
         // close modal and return to patient page (no navigation to print)
         handleClose();
@@ -166,6 +188,17 @@ export default function CreatePrescription({
 
         const response = await createPrescription(id, prescriptionData);
         if (response?.status === 201) {
+          // Update vitals if provided
+          if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
+            const vitalsData = {
+              ...(weight && { weight: parseFloat(weight) }),
+              ...(bloodPressure && { bloodPressure }),
+              ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
+              ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
+            };
+            await updatePatientVitals(id, vitalsData);
+          }
+          
           toast.success("Prescription saved");
           navigate("/print-prescription", {
             state: {
@@ -332,6 +365,63 @@ export default function CreatePrescription({
               </div>
             </div>
           ))}{" "}
+          {/* Vital Signs Section */}
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <h3 className="text-sm font-semibold text-slate-800 mb-3">Patient Vital Signs</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  placeholder="e.g. 70.5"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Blood Pressure (mmHg)
+                </label>
+                <input
+                  type="text"
+                  value={bloodPressure}
+                  onChange={(e) => setBloodPressure(e.target.value)}
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  placeholder="e.g. 120/80"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Pulse Rate (bpm)
+                </label>
+                <input
+                  type="number"
+                  value={pulseRate}
+                  onChange={(e) => setPulseRate(e.target.value)}
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  placeholder="e.g. 72"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Blood Sugar Level (mg/dL)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={bloodSugarLevel}
+                  onChange={(e) => setBloodSugarLevel(e.target.value)}
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  placeholder="e.g. 100"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 mt-2">These vital signs will be saved to patient information, not the prescription</p>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Diagnosis / Remarks

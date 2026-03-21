@@ -1,214 +1,365 @@
-import { GiCaduceus } from "react-icons/gi";
-import { FaPrescription } from "react-icons/fa";
+import { useRef } from "react";
 import { IoArrowBack } from "react-icons/io5";
 import Navbar from "./Navbar";
-import PrintButton from '../components/PrintButton';
+import PrintButton from "../components/PrintButton";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getUserById } from "../API/user";
 
-// Helper function to calculate age from birthDate
 const calculateAge = (birthDate) => {
   if (!birthDate) return null;
   const today = new Date();
   const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate()))
     age--;
-  }
   return age;
 };
 
-export default function PrescriptionComponent({patientData, prescriptionData}) {
+export default function PrescriptionComponent({
+  patientData,
+  prescriptionData,
+}) {
   const navigate = useNavigate();
-  
-  // Format date
+  const contentRef = useRef();
+
   const formattedDate = prescriptionData.createdAt
-    ? new Date(prescriptionData.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+    ? new Date(prescriptionData.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       })
     : "";
 
+  const doctorId =
+    prescriptionData.doctorId ||
+    patientData.doctorId ||
+    localStorage.getItem("doctorId");
+
+  const { data: doctorData = {}, isLoading: isDoctorLoading } = useQuery({
+    queryKey: ["doctor", doctorId],
+    queryFn: async () => {
+      if (!doctorId) return {};
+      const res = await getUserById(doctorId);
+      return res?.data || res || {};
+    },
+    enabled: !!doctorId,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+  });
+
+  const doctorName =
+    doctorData?.name ||
+    doctorData?.fullName ||
+    doctorData?.doctorName ||
+    "Unknown Doctor";
+  const specialization =
+    doctorData?.specialization ||
+    doctorData?.speciality ||
+    doctorData?.department ||
+    "General Physician";
+  const qualification =
+    doctorData?.qualification ||
+    doctorData?.qualifications ||
+    doctorData?.degree ||
+    "MBBS, MD";
+
+  const clinicName = doctorData?.clinicName || "Pardeshi Clinic";
+  const clinicAddress =
+    doctorData?.clinicAddress ||
+    "Jivaji Mandir, Near, Kolhapur Road, Ichalkaranji, Maharashtra 416115";
+  const clinicPhone =
+    doctorData?.phone || doctorData?.phoneNumber || "+1 234 567 8900";
+  const clinicEmail = doctorData?.email || "info@pardeshclinic.com";
+
+  const vitals = [
+    { label: "BP", value: patientData.bloodPressure },
+    { label: "PR", value: patientData.pulseRate },
+    { label: "BS", value: patientData.bloodSugarLevel },
+  ];
+
+  const demographics = [
+    {
+      label: "Age",
+      val: patientData.birthday
+        ? `${calculateAge(patientData.birthday)} yrs`
+        : "—",
+    },
+    { label: "Gender", val: patientData.gender || "—" },
+    {
+      label: "Weight",
+      val: patientData.weight ? `${patientData.weight} kg` : "—",
+    },
+  ];
+
   const handleGoBack = () => {
-    if (patientData._id) {
-      navigate(`/patient/${patientData._id}`);
-    } else {
-      navigate(-1); // Go back to previous page if no patient ID
-    }
+    if (patientData._id) navigate(`/patient/${patientData._id}`);
+    else navigate(-1);
   };
+
   return (
-    <div className="bg-slate-50 min-h-screen"> 
-      <Navbar />
-      
-      {/* Back Button and Print Button - Hidden when printing */}
-      <div className='fixed top-20 md:left-70 sm:left-6 z-50 print:hidden'>
-        <button
-          onClick={handleGoBack}
-          className='inline-flex items-center gap-2 text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 font-medium rounded-md text-sm px-4 py-2 transition-all shadow-sm hover:shadow-md'
+    <>
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 12mm 14mm; }
+          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      <div className="bg-slate-100 min-h-screen print:bg-white">
+        <div className="no-print">
+          <Navbar />
+        </div>
+
+        {/* Floating action buttons */}
+        <div className="no-print fixed top-20 md:left-72 left-4 z-50">
+          <button
+            onClick={handleGoBack}
+            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-sm font-medium rounded-lg px-4 py-2 shadow-sm transition-all"
+          >
+            <IoArrowBack className="text-slate-400" />
+            Back to Patient
+          </button>
+        </div>
+        <div className="no-print fixed top-20 right-4 sm:right-6 z-50">
+          <PrintButton contentRef={contentRef} />
+        </div>
+
+        {/* ─── Prescription card ─────────────────────────────────── */}
+        <div
+          className="pt-24 pb-16 px-4 sm:px-6 print:pt-0 print:pb-0 print:px-0"
+          ref={contentRef}
         >
-          <IoArrowBack className="text-base" />
-          <span className="hidden sm:inline">Back to Patient</span>
-          <span className="sm:hidden">Back</span>
-        </button>
-      </div>
-      <div className='fixed top-20 right-4 sm:right-6 z-50 print:hidden'>
-        <PrintButton />
-      </div>      {/* Main Prescription Container */}
-      <div className="print-container pt-45 pb-12 px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
-        <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden max-w-5xl mx-auto print:shadow-none print:rounded-none print:border-0">
-          {/* Header Section - Compact */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 relative overflow-hidden">
+          <div className="max-w-3xl mx-auto bg-white border border-slate-200 rounded overflow-hidden relative print:rounded-none print:border-0 print:shadow-none print:max-w-none">
+
+            {/* ── All content sits above watermark ───────────────── */}
             <div className="relative z-10">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-xl md:text-2xl font-semibold">Dr. [Doctor's Name]</h1>
-                  <p className="text-blue-100 text-sm mt-0.5">Specialty: General Physician • MBBS, MD</p>
+              {/* ── HEADER ───────────────────────────────────────── */}
+              <div className="bg-[#1e3a5f] px-7 py-5 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-28 h-28 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0 p-1">
+                    <img
+                      src="/clinic logo.png"
+                      alt=""
+                      className="w-24 h-24 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-white text-xl font-semibold tracking-tight leading-none">
+                      {clinicName}
+                    </h1>
+                    <p className="text-[#93afd4] text-[10px] tracking-[0.14em] uppercase mt-1.5">
+                      Medical Clinic
+                    </p>
+                  </div>
                 </div>
-                <div className="text-3xl md:text-4xl opacity-20">
-                  <GiCaduceus />
-                </div>
-              </div>
-            </div>
-            {/* Decorative background element */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
-          </div>          {/* Patient Information Section */}
-          <div className="p-6 border-b border-slate-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-              {/* Patient Name */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Patient Name</label>
-                <div className="text-base font-semibold text-slate-900 border-b-2 border-slate-300 pb-1">
-                  {patientData.name || ""}
-                </div>
-              </div>
-              
-              {/* Date */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</label>
-                <div className="text-base font-semibold text-slate-900 border-b-2 border-slate-300 pb-1">
-                  {formattedDate}
-                </div>
-              </div>
-            </div>            {/* Patient Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Age</label>
-                <div className="text-sm font-semibold text-slate-800 border-b-2 border-slate-300 pb-1">
-                  {patientData.birthday ? `${calculateAge(patientData.birthday)} years` : ""}
+                <div className="text-right">
+                  <p className="text-slate-200 text-[15px] font-medium tracking-tight">
+                    {isDoctorLoading ? "…" : `Dr. ${doctorName}`}
+                  </p>
+                  <p className="text-blue-400 text-[11px] font-medium mt-1">
+                    {isDoctorLoading ? "…" : specialization}
+                  </p>
+                  <p className="text-slate-500 text-[11px] mt-0.5">
+                    {isDoctorLoading ? "…" : qualification}
+                  </p>
                 </div>
               </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Gender</label>
-                <div className="text-sm font-semibold text-slate-800 border-b-2 border-slate-300 pb-1 capitalize">
-                  {patientData.gender || ""}
-                </div>
-              </div>
-              
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Weight</label>
-                <div className="text-sm font-semibold text-slate-800 border-b-2 border-slate-300 pb-1">
-                  {patientData.weight || ""} kg
-                </div>
-              </div>
-            </div>
 
-            {/* Diagnosis Section */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Diagnosis / Remarks</label>
-              <div className="text-sm text-slate-800 border-b-2 border-slate-300 pb-2 min-h-[40px]">
-                {prescriptionData.remarks || "N/A"}
-              </div>
-            </div>
-          </div>          {/* Prescription Symbol */}
-          <div className="px-6 pt-6">
-            <div className="flex items-center gap-3 text-slate-700">
-              <FaPrescription className="text-4xl text-blue-600" />
-              <div>
-                <h2 className="text-xl font-semibold text-slate-800">Prescription</h2>
-                <p className="text-sm text-slate-500">Medications prescribed below</p>
-              </div>
-            </div>
-          </div>
+              {/* Blue accent stripe */}
+              <div className="h-[2px] bg-blue-500" />
 
-          {/* Medications Table */}
-          <div className="p-6">
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 border-b border-slate-200">
-                      Drug Name
-                    </th>
-                    <th className="px-4 py-3 text-center font-semibold text-slate-700 border-b border-slate-200 w-24">
-                      Quantity
-                    </th>
-                    <th className="px-4 py-3 text-center font-semibold text-slate-700 border-b border-slate-200 w-28">
-                      Frequency
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-slate-700 border-b border-slate-200 w-80">
-                      Remarks
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {prescriptionData.drug?.map((drug, idx) => (
-                    <tr 
-                      key={idx} 
-                      className="hover:bg-slate-50 transition-colors"
-                    >
-                      <td className="px-4 py-3 border-b border-slate-100">
-                        <div className="font-semibold text-slate-900">{drug.name}</div>
-                        {drug.strength && (
-                          <div className="text-xs text-slate-500 mt-0.5">{drug.strength}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center border-b border-slate-100 font-semibold text-slate-800">
-                        {drug.quantity}
-                      </td>
-                      <td className="px-4 py-3 text-center border-b border-slate-100">
-                        <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
-                          {drug.frequency}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 border-b border-slate-100 text-slate-700 text-xs">
-                        {drug.remarks || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Instructions */}
-            <div className="mt-4 p-3 bg-amber-50 border-l-4 border-amber-400 rounded-r-md">
-              <p className="text-xs text-slate-700">
-                <span className="font-semibold text-amber-700">Note:</span> Please follow the prescribed dosage and frequency. 
-                Complete the full course of medication unless advised otherwise.
-              </p>
-            </div>
-          </div>
-
-          {/* Footer Section */}
-          <div className="bg-slate-50 border-t border-slate-200 px-6 py-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Clinic Address</p>
-                <p className="text-sm text-slate-700">
-                  Jivaji Mandir, Near Kolhapur Road, Jawaharnagar,<br />
-                  Ichalkaranji, Maharashtra 416115
+              {/* ── Rx META STRIP ────────────────────────────────── */}
+              <div className="px-7 py-2.5 flex justify-between items-center border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className="text-[20px] text-slate-300 leading-none"
+                    style={{ fontFamily: "Georgia, serif" }}
+                  >
+                    ℞
+                  </span>
+                  <span className="text-[9.5px] tracking-[0.15em] uppercase text-slate-400 font-semibold">
+                    Prescription
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Issued&nbsp;
+                  <span className="text-slate-600 font-medium text-[13px]">
+                    {formattedDate}
+                  </span>
                 </p>
               </div>
-              <div className="border-t md:border-t-0 md:border-l border-slate-300 pt-4 md:pt-0 md:pl-6 w-full md:w-auto">
-                <p className="text-xs text-slate-500 mb-2">Doctor's Signature</p>
-                <div className="w-48 h-12 border-b-2 border-slate-400"></div>
+
+              {/* ── PATIENT — name LEFT, demos + vitals RIGHT ─────── */}
+              <div className="px-7 py-5 flex items-start gap-8 border-b border-slate-100">
+                {/* Left: Patient name */}
+                <div className="min-w-[180px]">
+                  <p className="text-[9px] tracking-[0.16em] uppercase text-slate-400 font-semibold">
+                    Patient
+                  </p>
+                  <h2 className="text-[24px] font-medium text-slate-900 tracking-tight mt-1 leading-tight">
+                    {patientData.name || "—"}
+                  </h2>
+                </div>
+
+                {/* Vertical divider */}
+                <div className="w-px self-stretch bg-slate-100 flex-shrink-0" />
+
+                {/* Right: Demographics + Vitals */}
+                <div className="flex-1 flex flex-col gap-3 pt-0.5">
+                  <div className="flex gap-8">
+                    {demographics.map(({ label, val }) => (
+                      <div key={label}>
+                        <p className="text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
+                          {label}
+                        </p>
+                        <p className="text-[13px] font-medium text-slate-800 mt-0.5 capitalize">
+                          {val}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {vitals.map(({ label, value }) => (
+                      <div
+                        key={label}
+                        className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5"
+                      >
+                        <span className="text-[9px] tracking-[0.12em] uppercase text-slate-400 font-bold">
+                          {label}
+                        </span>
+                        <span className="text-[12px] font-semibold text-slate-700">
+                          {value || "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── REMARKS (conditional) ────────────────────────── */}
+              {prescriptionData.remarks && (
+                <div className="px-7 py-3 bg-amber-50/60 border-b border-amber-100">
+                  <p className="text-[9px] tracking-[0.14em] uppercase text-amber-600 font-semibold mb-1">
+                    Clinical Notes
+                  </p>
+                  <p className="text-[12px] text-amber-900/80 leading-relaxed">
+                    {prescriptionData.remarks}
+                  </p>
+                </div>
+              )}
+
+              {/* ── MEDICATIONS TABLE ─────────────────────────────── */}
+              <div className="px-7 py-5 relative">
+                {/* ── WATERMARK ──────────────────────────────────────── */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                    <img
+                      src="/clinic logo.png"
+                      alt=""
+                      className="w-64 h-64 object-contain"
+                      style={{ opacity: 0.15 }}
+                    />
+                  </div>
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th
+                        className="text-left text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold pb-2.5"
+                        style={{ width: "44%" }}
+                      >
+                        Medication
+                      </th>
+                      <th
+                        className="text-center text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold pb-2.5"
+                        style={{ width: "11%" }}
+                      >
+                        Qty
+                      </th>
+                      <th
+                        className="text-center text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold pb-2.5"
+                        style={{ width: "18%" }}
+                      >
+                        Frequency
+                      </th>
+                      <th
+                        className="text-left text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold pb-2.5"
+                        style={{ width: "27%" }}
+                      >
+                        Notes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {prescriptionData.drug?.map((drug, idx) => (
+                      <tr
+                        key={idx}
+                        className="border-b border-slate-50 last:border-b-0"
+                      >
+                        <td className="py-3 pr-4">
+                          <p className="text-[13px] font-medium text-slate-900">
+                            {drug.name}
+                          </p>
+                          {drug.strength && (
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              {drug.strength}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-3 text-center">
+                          <span className="text-[13px] font-semibold text-slate-700">
+                            {drug.quantity}
+                          </span>
+                        </td>
+                        <td className="py-3 text-center">
+                          <span
+                            className="inline-block bg-[#1e3a5f] text-slate-300 text-[10px] font-medium px-2.5 py-0.5 rounded"
+                            style={{ letterSpacing: "0.05em" }}
+                          >
+                            {drug.frequency}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          <span className="text-[11px] text-slate-400">
+                            {drug.remarks || "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Padding empty rows */}
+                    {Array.from({
+                      length: Math.max(
+                        0,
+                        5 - (prescriptionData.drug?.length || 0),
+                      ),
+                    }).map((_, i) => (
+                      <tr
+                        key={`e-${i}`}
+                        className="border-b border-slate-50 last:border-b-0"
+                      >
+                        <td className="py-[18px]" colSpan={4} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── FOOTER ───────────────────────────────────────── */}
+              <div className="px-7 py-4 border-t border-slate-100 bg-slate-50/60 flex justify-between items-end">
+                <div className="text-[10px] text-slate-400 leading-relaxed space-y-0.5">
+                  <p>{clinicAddress}</p>
+                  <p>
+                    {clinicPhone} · {clinicEmail}
+                  </p>
+                </div>
               </div>
             </div>
+            {/* end relative z-10 */}
           </div>
-
         </div>
       </div>
-    </div>
+    </>
   );
 }

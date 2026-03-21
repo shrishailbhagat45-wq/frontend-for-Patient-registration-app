@@ -8,6 +8,7 @@ import RegisterPatient from './pages/RegisterPatient.jsx'
 import './index.css'
 import RootLayout from './RootLayout.jsx'
 import PatientInfo from './pages/PatientInfo.jsx'
+import EditPatientProfile from './pages/EditPatientProfile.jsx'
 import DetailPrescription from './pages/DetailPrescription.jsx'
 import PrintPrescription from './pages/PrintPrescription.jsx'
 import Login from './pages/Login.jsx'
@@ -36,7 +37,8 @@ const router = createBrowserRouter([
     children: [
       {path:'/home',element:<Home />},
       {path: '/register', element: <RegisterPatient />},
-      {path: '/patient/:id', element: <PatientInfo />}, 
+      {path: '/patient/:id', element: <PatientInfo />},
+      {path: '/patient-profile/:id', element: <EditPatientProfile />}, 
       {path: '/prescription/:prescriptionId', element: <DetailPrescription />}, 
       {path: '/print-prescription', element: <PrintPrescription />},
       {path:'/billing-dashboard',element:<BillingDashBoard />},
