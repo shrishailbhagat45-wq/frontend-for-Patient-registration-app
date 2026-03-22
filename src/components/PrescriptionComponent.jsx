@@ -301,10 +301,10 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
             </div>
 
             {/* REMARKS */}
-            {prescriptionData.remarks && (
+            {prescriptionData.Diagnosis && (
               <div className="rx-remarks-box px-4 md:px-7 py-3 bg-amber-50 border-b border-amber-100 flex-shrink-0">
                 <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-amber-600 font-semibold mb-1">Clinical Notes</p>
-                <p className="text-[12px] text-amber-900 leading-relaxed">{prescriptionData.remarks}</p>
+                <p className="text-[12px] text-amber-900 leading-relaxed">{prescriptionData.Diagnosis}</p>
               </div>
             )}
 
@@ -371,16 +371,8 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
                 <div className="rx-footer-text text-[10px] text-slate-400 leading-relaxed space-y-0.5">
                   <p>{clinicAddress}</p>
                   <p>{clinicPhone} · {clinicEmail}</p>
-                  <p className="text-slate-300 mt-0.5">Valid for 30 days from date of issue</p>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="w-28 border-b border-slate-300 mb-1.5" />
-                  <p className="rx-sig-text text-[11px] text-slate-500 font-medium">
-                    {isDoctorLoading ? "…" : `Dr. ${doctorName}`}
-                  </p>
-                  <p className="text-[9px] text-slate-300 mt-0.5 tracking-[0.1em] uppercase">
-                    Signature &amp; Stamp
-                  </p>
                 </div>
               </div>
             </div>

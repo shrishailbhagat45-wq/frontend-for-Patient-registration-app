@@ -207,10 +207,9 @@ export default function PatientInfo() {
 
         {/* Prescription Modal */}
         {showModal && (
-          <CreatePrescription showModal={showModal} setShowModal={setShowModal} initialPrescription={editingPrescription} />
+          <CreatePrescription showModal={showModal} setShowModal={setShowModal} initialPrescription={editingPrescription} patientData={patientData} />
         )}
       </div>
     </div>
   );
 }
-

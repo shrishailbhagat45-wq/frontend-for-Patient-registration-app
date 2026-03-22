@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   createPrescription,
   getDrugSuggestions,
@@ -12,14 +12,15 @@ export default function CreatePrescription({
   showModal,
   setShowModal,
   initialPrescription,
+  patientData: currentPatientData = {},
 }) {
   const [drugs, setDrugs] = useState([
-    { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+    { name: "", quantity: "", frequency: "", remarks: "" },
   ]);
   const [Diagnosis, setDiagnosis] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [suggestions, setSuggestions] = useState({}); // { idx: [suggestion, ...] }
-  const [highlight, setHighlight] = useState({}); // { idx: highlightedIndex }
+  const [suggestions, setSuggestions] = useState({});
+  const [highlight, setHighlight] = useState({});
   const [weight, setWeight] = useState("");
   const [bloodPressure, setBloodPressure] = useState("");
   const [pulseRate, setPulseRate] = useState("");
@@ -37,7 +38,7 @@ export default function CreatePrescription({
   const addNewDrug = () => {
     setDrugs((prev) => [
       ...prev,
-      { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+      { name: "", quantity: "", frequency: "", remarks: "" },
     ]);
   };
 
@@ -53,7 +54,7 @@ export default function CreatePrescription({
   const handleClose = () => {
     setShowModal(false);
     setDrugs([
-      { name: "", strength: "", quantity: "", frequency: "", remarks: "" },
+      { name: "", quantity: "", frequency: "", remarks: "" },
     ]);
     setRemarks("");
     setSuggestions({});
@@ -64,7 +65,7 @@ export default function CreatePrescription({
     setBloodSugarLevel("");
   };
 
-  // populate form when editing an existing prescription
+  // Populate form when editing an existing prescription
   useEffect(() => {
     if (initialPrescription && showModal) {
       const presetDrugs =
@@ -72,42 +73,28 @@ export default function CreatePrescription({
         initialPrescription.drug.length
           ? initialPrescription.drug.map((d) => ({
               name: d.name || "",
-              strength: d.strength || "",
               quantity: d.quantity || "",
               frequency: d.frequency || "",
               remarks: d.remarks || "",
             }))
-          : [
-              {
-                name: "",
-                strength: "",
-                quantity: "",
-                frequency: "",
-                remarks: "",
-              },
-            ];
+          : [{ name: "", quantity: "", frequency: "", remarks: "" }];
       setDrugs(presetDrugs);
-      setDiagnosis(
-        initialPrescription.remarks || initialPrescription.Diagnosis || "",
-      );
+      setDiagnosis( initialPrescription.Diagnosis || "",);
     }
   }, [initialPrescription, showModal]);
 
-  // debounce and fetch drug suggestions for a specific drug input
+  // Debounce and fetch drug suggestions
   const fetchSuggestions = (idx, query) => {
     clearTimeout(timersRef.current[idx]);
     if (!query || query.trim().length < 1) {
       setSuggestions((s) => ({ ...s, [idx]: [] }));
       return;
     }
-
-    // debounce 300ms
     timersRef.current[idx] = setTimeout(async () => {
       lastQueryRef.current[idx] = query;
       try {
         const res = await getDrugSuggestions(query);
         const data = res?.data ?? res ?? [];
-        // apply only if query unchanged
         if (lastQueryRef.current[idx] === query) {
           setSuggestions((s) => ({
             ...s,
@@ -122,39 +109,31 @@ export default function CreatePrescription({
     }, 300);
   };
 
-  // call when user types in name field
   const handleDrugNameInput = (idx, value) => {
     handleDrugChange(idx, "name", value);
     fetchSuggestions(idx, value);
   };
 
   const selectSuggestion = (idx, suggestion) => {
-    const name =
-      typeof suggestion === "string" ? suggestion : (suggestion.name ?? "");
-    // auto-fill strength from content field if available
-    const strength =
-      typeof suggestion === "object" ? (suggestion.content ?? "") : "";
+    const name = typeof suggestion === "string" ? suggestion : (suggestion.name ?? "");
     setDrugs((prev) =>
       prev.map((d, i) =>
-        i === idx ? { ...d, name, ...(strength && { strength }) } : d,
+        i === idx ? { ...d, name } : d,
       ),
     );
     setSuggestions((s) => ({ ...s, [idx]: [] }));
   };
 
-  // keyboard navigation inside suggestion list
   const handleKeyDown = (e, idx) => {
     const list = suggestions[idx] || [];
     if (!list.length) return;
     const curr = highlight[idx] ?? 0;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      const next = Math.min(curr + 1, list.length - 1);
-      setHighlight((h) => ({ ...h, [idx]: next }));
+      setHighlight((h) => ({ ...h, [idx]: Math.min(curr + 1, list.length - 1) }));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      const prev = Math.max(curr - 1, 0);
-      setHighlight((h) => ({ ...h, [idx]: prev }));
+      setHighlight((h) => ({ ...h, [idx]: Math.max(curr - 1, 0) }));
     } else if (e.key === "Enter") {
       e.preventDefault();
       const sel = list[curr];
@@ -168,52 +147,66 @@ export default function CreatePrescription({
     const prescriptionData = { drug: drugs, Diagnosis };
     try {
       if (initialPrescription && initialPrescription._id) {
-        // update flow
+        // ── UPDATE flow ───────────────────────────────────────
         await updatePrescription(initialPrescription._id, prescriptionData);
-        
-        // Update vitals if provided
+
         if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
           const patientId = window.location.pathname.split("/").pop();
+          await updatePatientVitals(patientId, {
+            ...(weight && { weight: parseFloat(weight) }),
+            ...(bloodPressure && { bloodPressure }),
+            ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
+            ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
+          });
+        }
+
+        toast.success("Prescription updated");
+        handleClose();
+
+      } else {
+        // ── CREATE flow ───────────────────────────────────────
+        const id = window.location.pathname.split("/").pop();
+        const createdPrescription = await createPrescription(id, prescriptionData);
+        const updatedVitals = {};
+        if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
           const vitalsData = {
             ...(weight && { weight: parseFloat(weight) }),
             ...(bloodPressure && { bloodPressure }),
             ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
             ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
           };
-          await updatePatientVitals(patientId, vitalsData);
+          await updatePatientVitals(id, vitalsData);
+          // Keep a copy to merge into patientData for PrintPrescription
+          Object.assign(updatedVitals, vitalsData);
         }
-        
-        toast.success("Prescription updated");
-        // close modal and return to patient page (no navigation to print)
-        handleClose();
-      } else {
-        // create flow
-        const id = window.location.pathname.split("/").pop();
 
-        const response = await createPrescription(id, prescriptionData);
-        if (response?.status === 201) {
-          // Update vitals if provided
-          if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
-            const vitalsData = {
-              ...(weight && { weight: parseFloat(weight) }),
-              ...(bloodPressure && { bloodPressure }),
-              ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
-              ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
-            };
-            await updatePatientVitals(id, vitalsData);
-          }
-          
-          toast.success("Prescription saved");
-          navigate("/print-prescription", {
-            state: {
-              prescriptionData: response.data,
-              patientData: response.data.patientData,
-            },
-          });
-          handleClose();
-        } else {
-          toast.error("Error saving prescription");
-        }
+        toast.success("Prescription saved");
+
+        // Build the final prescription data for PrintPrescription.
+        // The backend response may not echo back the drug array (or may use a
+        // different key). We therefore guarantee the drug list by falling back
+        // to the local `drugs` state the user just filled in, and do the same
+        // for the remarks/Diagnosis field.
+        const finalPrescriptionData = {
+          ...createdPrescription,
+          // prefer backend value, fall back to local state
+          drug: (
+            Array.isArray(createdPrescription?.drug) && createdPrescription.drug.length > 0
+              ? createdPrescription.drug
+              : Array.isArray(createdPrescription?.drugs) && createdPrescription.drugs.length > 0
+                ? createdPrescription.drugs
+                : drugs   // local state — always correct
+          ),
+          Diagnosis: createdPrescription?.remarks ?? createdPrescription?.Diagnosis ?? Diagnosis,
+        };
+
+        navigate("/print-prescription", {
+          state: {
+            prescriptionData: finalPrescriptionData,
+            patientData: { ...currentPatientData, ...updatedVitals },
+          },
+        });
+        handleClose();
       }
     } catch (err) {
       console.error("Error in saving/updating prescription", err);
@@ -239,24 +232,13 @@ export default function CreatePrescription({
             className="text-slate-400 hover:text-slate-600 transition-colors"
             aria-label="Close"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         <div className="p-6 space-y-4">
-          {" "}
           {drugs.map((drug, idx) => (
             <div
               key={idx}
@@ -277,12 +259,9 @@ export default function CreatePrescription({
                 {suggestions[idx] && suggestions[idx].length > 0 && (
                   <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-xl rounded-lg mt-1 z-30 max-h-64 overflow-y-auto divide-y divide-slate-100">
                     {suggestions[idx].map((sug, sidx) => {
-                      const name =
-                        typeof sug === "string" ? sug : (sug.name ?? "");
-                      const company =
-                        typeof sug === "object" ? (sug.company ?? "") : "";
-                      const content =
-                        typeof sug === "object" ? (sug.content ?? "") : "";
+                      const name = typeof sug === "string" ? sug : (sug.name ?? "");
+                      const company = typeof sug === "object" ? (sug.company ?? "") : "";
+                      const content = typeof sug === "object" ? (sug.content ?? "") : "";
                       const isActive = (highlight[idx] ?? 0) === sidx;
                       return (
                         <li
@@ -293,33 +272,19 @@ export default function CreatePrescription({
                           }}
                           className={
                             "px-3 py-2.5 cursor-pointer transition-colors " +
-                            (isActive
-                              ? "bg-blue-600"
-                              : "hover:bg-slate-50")
+                            (isActive ? "bg-blue-600" : "hover:bg-slate-50")
                           }
                         >
-                          {/* Drug name */}
-                          <p className={
-                            "text-sm font-semibold leading-tight " +
-                            (isActive ? "text-white" : "text-slate-900")
-                          }>
+                          <p className={"text-sm font-semibold leading-tight " + (isActive ? "text-white" : "text-slate-900")}>
                             {name}
                           </p>
-                          {/* Content (composition) */}
                           {content && (
-                            <p className={
-                              "text-xs mt-0.5 leading-snug " +
-                              (isActive ? "text-blue-100" : "text-slate-500")
-                            }>
+                            <p className={"text-xs mt-0.5 leading-snug " + (isActive ? "text-blue-100" : "text-slate-500")}>
                               {content}
                             </p>
                           )}
-                          {/* Company */}
                           {company && (
-                            <p className={
-                              "text-[10px] mt-1 font-medium uppercase tracking-wide " +
-                              (isActive ? "text-blue-200" : "text-slate-400")
-                            }>
+                            <p className={"text-[10px] mt-1 font-medium uppercase tracking-wide " + (isActive ? "text-blue-200" : "text-slate-400")}>
                               {company}
                             </p>
                           )}
@@ -338,9 +303,7 @@ export default function CreatePrescription({
                   type="number"
                   min="1"
                   value={drug.quantity}
-                  onChange={(e) =>
-                    handleDrugChange(idx, "quantity", e.target.value)
-                  }
+                  onChange={(e) => handleDrugChange(idx, "quantity", e.target.value)}
                   className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   placeholder="1"
                 />
@@ -352,9 +315,7 @@ export default function CreatePrescription({
                 </label>
                 <select
                   value={drug.frequency}
-                  onChange={(e) =>
-                    handleDrugChange(idx, "frequency", e.target.value)
-                  }
+                  onChange={(e) => handleDrugChange(idx, "frequency", e.target.value)}
                   className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white cursor-pointer"
                 >
                   <option value="">Select</option>
@@ -366,7 +327,6 @@ export default function CreatePrescription({
                 </select>
               </div>
 
-              {/* Per-drug remarks */}
               <div className="sm:col-span-3">
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   Remarks
@@ -374,9 +334,7 @@ export default function CreatePrescription({
                 <input
                   type="text"
                   value={drug.remarks || ""}
-                  onChange={(e) =>
-                    handleDrugChange(idx, "remarks", e.target.value)
-                  }
+                  onChange={(e) => handleDrugChange(idx, "remarks", e.target.value)}
                   className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   placeholder="Optional notes"
                 />
@@ -395,15 +353,14 @@ export default function CreatePrescription({
                 )}
               </div>
             </div>
-          ))}{" "}
+          ))}
+
           {/* Vital Signs Section */}
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h3 className="text-sm font-semibold text-slate-800 mb-3">Patient Vital Signs</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Weight (kg)
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Weight (kg)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -414,9 +371,7 @@ export default function CreatePrescription({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Blood Pressure (mmHg)
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Blood Pressure (mmHg)</label>
                 <input
                   type="text"
                   value={bloodPressure}
@@ -426,9 +381,7 @@ export default function CreatePrescription({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Pulse Rate (bpm)
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Pulse Rate (bpm)</label>
                 <input
                   type="number"
                   value={pulseRate}
@@ -438,9 +391,7 @@ export default function CreatePrescription({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Blood Sugar Level (mg/dL)
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Blood Sugar Level (mg/dL)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -451,8 +402,11 @@ export default function CreatePrescription({
                 />
               </div>
             </div>
-            <p className="text-xs text-slate-600 mt-2">These vital signs will be saved to patient information, not the prescription</p>
+            <p className="text-xs text-slate-600 mt-2">
+              These vital signs will be saved to patient information, not the prescription
+            </p>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Diagnosis / Remarks
@@ -465,28 +419,19 @@ export default function CreatePrescription({
               placeholder="Enter diagnosis, symptoms, or additional remarks..."
             />
           </div>
+
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
             <button
               onClick={addNewDrug}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-colors font-medium text-sm"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               Add Another Drug
             </button>
 
-            <div className="flex-1"></div>
+            <div className="flex-1" />
 
             <button
               onClick={handleClose}
@@ -499,28 +444,11 @@ export default function CreatePrescription({
               onClick={handleSavePreview}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors font-medium text-sm"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              {initialPrescription && initialPrescription._id
-                ? "Update"
-                : "Save & Preview"}
+              {initialPrescription && initialPrescription._id ? "Update" : "Save & Preview"}
             </button>
           </div>
         </div>
