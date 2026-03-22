@@ -173,7 +173,7 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
               {/* Divider */}
               <div className="h-px bg-slate-100 my-3" />
 
-              <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-12">
               {/* Demographics */}
                 <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
                   {demographics.map(({ label, val }) => (
