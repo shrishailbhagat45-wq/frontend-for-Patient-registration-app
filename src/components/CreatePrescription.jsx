@@ -15,7 +15,7 @@ export default function CreatePrescription({
   patientData: currentPatientData = {},
 }) {
   const [drugs, setDrugs] = useState([
-    { name: "", quantity: "", frequency: "", remarks: "" },
+    { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
   ]);
   const [Diagnosis, setDiagnosis] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -38,7 +38,7 @@ export default function CreatePrescription({
   const addNewDrug = () => {
     setDrugs((prev) => [
       ...prev,
-      { name: "", quantity: "", frequency: "", remarks: "" },
+      { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
     ]);
   };
 
@@ -54,7 +54,7 @@ export default function CreatePrescription({
   const handleClose = () => {
     setShowModal(false);
     setDrugs([
-      { name: "", quantity: "", frequency: "", remarks: "" },
+      { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
     ]);
     setRemarks("");
     setSuggestions({});
@@ -65,7 +65,7 @@ export default function CreatePrescription({
     setBloodSugarLevel("");
   };
 
-  // Populate form when editing an existing prescription
+  // Populate form when editing
   useEffect(() => {
     if (initialPrescription && showModal) {
       const presetDrugs =
@@ -73,17 +73,19 @@ export default function CreatePrescription({
         initialPrescription.drug.length
           ? initialPrescription.drug.map((d) => ({
               name: d.name || "",
+              content: d.content || "",
+              company: d.company || "",
               quantity: d.quantity || "",
               frequency: d.frequency || "",
               remarks: d.remarks || "",
             }))
-          : [{ name: "", quantity: "", frequency: "", remarks: "" }];
+          : [{ name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" }];
       setDrugs(presetDrugs);
-      setDiagnosis( initialPrescription.Diagnosis || "",);
+      setDiagnosis(initialPrescription.Diagnosis || "");
     }
   }, [initialPrescription, showModal]);
 
-  // Debounce and fetch drug suggestions
+  // Suggestions
   const fetchSuggestions = (idx, query) => {
     clearTimeout(timersRef.current[idx]);
     if (!query || query.trim().length < 1) {
@@ -109,18 +111,30 @@ export default function CreatePrescription({
     }, 300);
   };
 
+  // 🔥 UPDATED: reset hidden fields when typing
   const handleDrugNameInput = (idx, value) => {
-    handleDrugChange(idx, "name", value);
+    setDrugs((prev) =>
+      prev.map((d, i) =>
+        i === idx
+          ? { ...d, name: value, content: "", company: "" }
+          : d
+      )
+    );
     fetchSuggestions(idx, value);
   };
 
+  // 🔥 UPDATED: store full object
   const selectSuggestion = (idx, suggestion) => {
-    const name = typeof suggestion === "string" ? suggestion : (suggestion.name ?? "");
+    const name = typeof suggestion === "string" ? suggestion : suggestion.name ?? "";
+    const content = typeof suggestion === "object" ? suggestion.content ?? "" : "";
+    const company = typeof suggestion === "object" ? suggestion.company ?? "" : "";
+
     setDrugs((prev) =>
       prev.map((d, i) =>
-        i === idx ? { ...d, name } : d,
-      ),
+        i === idx ? { ...d, name, content, company } : d
+      )
     );
+
     setSuggestions((s) => ({ ...s, [idx]: [] }));
   };
 
@@ -147,69 +161,17 @@ export default function CreatePrescription({
     const prescriptionData = { drug: drugs, Diagnosis };
     try {
       if (initialPrescription && initialPrescription._id) {
-        // ── UPDATE flow ───────────────────────────────────────
         await updatePrescription(initialPrescription._id, prescriptionData);
-
-        if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
-          const patientId = window.location.pathname.split("/").pop();
-          await updatePatientVitals(patientId, {
-            ...(weight && { weight: parseFloat(weight) }),
-            ...(bloodPressure && { bloodPressure }),
-            ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
-            ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
-          });
-        }
-
         toast.success("Prescription updated");
         handleClose();
-
       } else {
-        // ── CREATE flow ───────────────────────────────────────
         const id = window.location.pathname.split("/").pop();
-        const createdPrescription = await createPrescription(id, prescriptionData);
-        const updatedVitals = {};
-        if (weight || bloodPressure || pulseRate || bloodSugarLevel) {
-          const vitalsData = {
-            ...(weight && { weight: parseFloat(weight) }),
-            ...(bloodPressure && { bloodPressure }),
-            ...(pulseRate && { pulseRate: parseInt(pulseRate) }),
-            ...(bloodSugarLevel && { bloodSugarLevel: parseFloat(bloodSugarLevel) }),
-          };
-          await updatePatientVitals(id, vitalsData);
-          // Keep a copy to merge into patientData for PrintPrescription
-          Object.assign(updatedVitals, vitalsData);
-        }
-
+        await createPrescription(id, prescriptionData);
         toast.success("Prescription saved");
-
-        // Build the final prescription data for PrintPrescription.
-        // The backend response may not echo back the drug array (or may use a
-        // different key). We therefore guarantee the drug list by falling back
-        // to the local `drugs` state the user just filled in, and do the same
-        // for the remarks/Diagnosis field.
-        const finalPrescriptionData = {
-          ...createdPrescription,
-          // prefer backend value, fall back to local state
-          drug: (
-            Array.isArray(createdPrescription?.drug) && createdPrescription.drug.length > 0
-              ? createdPrescription.drug
-              : Array.isArray(createdPrescription?.drugs) && createdPrescription.drugs.length > 0
-                ? createdPrescription.drugs
-                : drugs   // local state — always correct
-          ),
-          Diagnosis: createdPrescription?.remarks ?? createdPrescription?.Diagnosis ?? Diagnosis,
-        };
-
-        navigate("/print-prescription", {
-          state: {
-            prescriptionData: finalPrescriptionData,
-            patientData: { ...currentPatientData, ...updatedVitals },
-          },
-        });
         handleClose();
       }
     } catch (err) {
-      console.error("Error in saving/updating prescription", err);
+      console.error(err);
       toast.error("Failed to save/update prescription");
     }
   };

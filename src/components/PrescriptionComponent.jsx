@@ -334,8 +334,8 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
                   <div key={idx} className="flex items-start py-2.5 border-b border-slate-50 last:border-b-0">
                     <div className="flex-1 min-w-0 pr-2">
                       <p className="rx-drug-name text-[13px] font-medium text-slate-900 leading-snug">{drug.name}</p>
-                      {drug.strength && (
-                        <p className="rx-drug-str text-[11px] text-slate-400 mt-0.5">{drug.strength}</p>
+                      {drug.content && (
+                        <p className="rx-drug-str text-[11px] text-slate-400 mt-0.5">{drug.content}</p>
                       )}
                       {drug.remarks && (
                         <p className="md:hidden text-[11px] text-slate-400 italic mt-0.5">{drug.remarks}</p>

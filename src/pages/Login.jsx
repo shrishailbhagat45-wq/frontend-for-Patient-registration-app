@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { login } from '../API/user';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
