@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { login } from '../API/user';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -19,9 +20,11 @@ export default function Login() {
         localStorage.setItem("token",res.token)
         if (res.role==="Receptionist") {
           localStorage.setItem("doctorId",res.doctorId)
+          localStorage.setItem("clinicId",res.clinicId)
           localStorage.setItem("Id",res.id)
         } else {
           localStorage.setItem("doctorId",res.id)
+          localStorage.setItem("clinicId",res.clinicId)
           localStorage.setItem("Id",res.id)
         }
         toast.success("Login successful");
@@ -87,6 +90,13 @@ export default function Login() {
             Sign In
           </button>
         </form>
+
+        <p className="text-center text-sm text-slate-500 mt-4">
+          Don't have an account?{' '}
+          <Link to="/createClinic" className="text-blue-600 hover:underline">
+            Create Clinic
+          </Link>
+        </p>
       </div>
     </div>
   );

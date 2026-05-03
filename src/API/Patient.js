@@ -23,7 +23,7 @@ export async function createPatient(patientData) {
         birthday: birthdayISO,
         phoneNumber: patientData.phoneNumber,
         weight: parseInt(patientData.weight),
-        doctorId: localStorage.getItem("doctorId")
+        clinicId: localStorage.getItem("clinicId"),
     }
     let response= null;
     try {
@@ -47,7 +47,7 @@ export async function createPatient(patientData) {
 
 // Get patients by name (search)
 export async function getPatients(name) {
-    const data = { name: name.trim(), doctorId: localStorage.getItem("doctorId") };
+    const data = { name: name.trim(), clinicId: localStorage.getItem("clinicId") };
         const response = await axios.post(`${url}/patient/getPatient`,data,{
             headers: headers
         });
@@ -95,7 +95,8 @@ export async function getPrescriptionById(id) {
 
 export async function addPatientToQueue(patient){
     console.log("Adding patient to queue:", patient);
-    const res= await axios.post(`${url}/patient-queue`,{patient});
+    const res= await axios.post(`${url}/patient-queue`,{name:patient.name,patientId:patient._id
+,clinicId:patient.clinicId,doctorId:localStorage.getItem("doctorId"),phoneNumber:patient.phoneNumber},);
     if(res.status!==201){
         throw new Error('Failed to add patient to queue', res.statusText);
     }

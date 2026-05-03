@@ -48,6 +48,7 @@ export default function SearchBar() {
     setSearchTerm(patient.name);
     setFilteredPatients([]);
   };
+  
   const addToQueue = async (e, patient) => {
     e.stopPropagation();
     e.preventDefault();

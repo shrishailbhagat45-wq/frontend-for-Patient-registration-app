@@ -4,6 +4,14 @@
   line-height: 1.5;
   font-weight: 400;
 
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  transition: background-color 9999s ease-in-out 0s;
+  }
+
   color-scheme: light dark;
   color: rgba(0, 0, 0, 0.87);
   background-color: white;

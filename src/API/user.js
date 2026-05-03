@@ -92,3 +92,8 @@ export async function deleteReceptionist(id) {
         console.error("Error deleting receptionist:", error);
     }
 }
+
+export async function CreateClinic(data) {
+    const res = await axios.post(`${url}/clinic/register`, data);
+    return res.data;
+}

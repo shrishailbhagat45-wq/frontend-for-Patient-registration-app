@@ -18,6 +18,8 @@ import Billing from './pages/Billing.jsx'
 import ManagementDashboard from './pages/ManagementDashboard.jsx'
 import Profile from './pages/Profile.jsx'
 import GetBillingInfo from './pages/GetBillingInfo.jsx'
+import Create from './pages/Create.jsx'
+import CreateClinic from './pages/CreateClinic.jsx'
 
 const queryClient = new QueryClient()
 
@@ -32,6 +34,7 @@ const RequireAuth = () => {
 const router = createBrowserRouter([
   { path: '/', element: <RootLayout /> },
   {path: '/login', element: <Login />},
+  {path: '/createClinic', element: <CreateClinic/> },
   {
     element: <RequireAuth />,
     children: [
@@ -45,7 +48,7 @@ const router = createBrowserRouter([
       {path:'/billing/:patientId', element:<Billing/>},
       {path:'/management-dashboard',element:<ManagementDashboard/>},
       {path:'/profile',element:<Profile/>},
-      {path:'/billing-info',element:<GetBillingInfo/>}
+      {path:'/billing-info',element:<GetBillingInfo/>},
     ]
   }
 ]);

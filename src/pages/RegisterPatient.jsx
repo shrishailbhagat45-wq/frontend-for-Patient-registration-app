@@ -64,7 +64,7 @@ const RegisterPatient = () => {  const [form, setForm] = useState({
         toast.success("Patient Registered Successfully");
         navigate("/home");
       } else {
-        toast.error("Error in registering patient");
+        toast.error(response.message || "Failed to register patient. Please try again.");
       }    } catch (error) {
       // Show specific error message from backend if available
       const errorMessage = error.response?.data?.message?.[0] || 
