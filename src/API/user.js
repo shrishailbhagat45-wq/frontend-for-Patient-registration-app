@@ -1,99 +1,220 @@
 import axios from "axios";
-import axiosRetry from 'axios-retry';
-axiosRetry(axios, { retries: 60 });
-const token="Bearer "+localStorage.getItem("token");
-const headers ={
-        
-        'Content-Type': 'application/json',
-        'Authorization': token
-      }
-const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+import axiosRetry from "axios-retry";
 
+// ==========================
+// BASE URL
+// ==========================
+const url =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-//Login
-export async function login(email,password) {
-    try{
-        const res=await axios.post(`${url}/auth/login`,{email,password});
-        return res.data.data;
+// ==========================
+// AXIOS INSTANCE
+// ==========================
+const api = axios.create({
+  baseURL: url,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// ==========================
+// RETRY CONFIG
+// ==========================
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+});
+
+// ==========================
+// AUTO ATTACH TOKEN
+// ==========================
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    catch(error){
-        console.error("Invalid credential",error);
-        throw error;
-    }
-    
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ==========================
+// LOGIN
+// ==========================
+export async function login(email, password) {
+  try {
+    const response = await api.post("/auth/login", {
+      email,
+      password,
+    });
+
+    return response.data.data;
+  } catch (error) {
+    console.error("Invalid credentials:", error);
+    throw error;
+  }
 }
 
-//Receptionist api's
-
+// ==========================
+// ADD RECEPTIONIST
+// ==========================
 export async function addReceptionist(receptionistData) {
+  try {
     const data = {
-        ...receptionistData,
-        doctorId: localStorage.getItem("doctorId")
-    }
-    const res= await axios.post(`${url}/user/addReceptionist`,data,{
-            headers: headers
-        });
-    if(res.status!==201){
-        throw new Error('Failed to add user', res.statusText);
-    }
-    return res.data;;
+      ...receptionistData,
+      doctorId: localStorage.getItem("doctorId"),
+    };
+
+    const response = await api.post(
+      "/user/addReceptionist",
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error adding receptionist:", error);
+    throw error;
+  }
 }
 
-export async function getReceptionist(){
-    const doctorId= localStorage.getItem("doctorId");
-    const res= await axios.get(`${url}/user/receptionists/${doctorId}`,{
-            headers: headers
-        });
-    return res.data;
+// ==========================
+// GET RECEPTIONISTS
+// ==========================
+export async function getReceptionist() {
+  try {
+    const doctorId = localStorage.getItem("doctorId");
+
+    const response = await api.get(
+      `/user/receptionists/${doctorId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching receptionists:", error);
+    throw error;
+  }
 }
 
+// ==========================
+// GET USER BY ID
+// ==========================
 export async function getUserById(id) {
-    let response= null;
-    try {
-        response = await axios.get(`${url}/user/${id}`,{
-            headers: headers
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching user by ID:", error);
-    }
+  try {
+    const response = await api.get(`/user/${id}`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    throw error;
+  }
 }
 
+// ==========================
+// UPDATE USER
+// ==========================
 export async function updateUser(userData) {
-    const id=localStorage.getItem("Id");
-    try {
-        const response = await axios.put(`${url}/user/${id}`, {name:userData.name,email:userData.email,phoneNumber:userData.phoneNumber,specialization:userData.specialization}, {
-            headers: headers
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error updating user:", error);
-    }
+  try {
+    const id = localStorage.getItem("Id");
+
+    const data = {
+      name: userData.name,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      specialization: userData.specialization,
+    };
+
+    const response = await api.put(`/user/${id}`, data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
 }
 
-export async function updatePassword(passwordData) {   
-    const id=localStorage.getItem("Id");
-    try {
-        const response = await axios.put(`${url}/user/password/${id}`, {currentPassword:passwordData.currentPassword,newPassword:passwordData.newPassword}, {
-            headers: headers
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error updating password:", error);
-    }
+// ==========================
+// UPDATE PASSWORD
+// ==========================
+export async function updatePassword(passwordData) {
+  try {
+    const id = localStorage.getItem("Id");
+
+    const data = {
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
+    };
+
+    const response = await api.put(
+      `/user/password/${id}`,
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updating password:", error);
+    throw error;
+  }
 }
 
+// ==========================
+// DELETE RECEPTIONIST
+// ==========================
 export async function deleteReceptionist(id) {
-    try {
-        await axios.delete(`${url}/user/${id}`, {
-            headers: headers
-        });
-    } catch (error) {
-        console.error("Error deleting receptionist:", error);
-    }
+  try {
+    const response = await api.delete(`/user/${id}`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting receptionist:", error);
+    throw error;
+  }
 }
 
-export async function CreateClinic(data) {
-    const res = await axios.post(`${url}/clinic/register`, data);
-    return res.data;
+// ==========================
+// ADD DOCTOR
+// ==========================
+export async function addDoctor(doctorData) {
+  try {
+    const response = await api.post(
+      "/user/addDoctor",
+      doctorData
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error adding doctor:", error);
+    throw error;
+  }
+}
+
+// ==========================
+// GET DOCTOR
+// ==========================
+export async function getDoctor(id) {
+  try {
+    
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
+    throw error;
+  }
+}
+
+// ==========================
+// CREATE CLINIC
+// ==========================
+export async function createClinic(data) {
+  try {
+    const response = await api.post(
+      "/clinic/register",
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating clinic:", error);
+    throw error;
+  }
 }

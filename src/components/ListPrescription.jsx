@@ -20,7 +20,7 @@ export default function ListPrescription({prescription, idx, onEdit}) {
         <div className="flex items-center justify-between text-white">
           <div className="flex-1 min-w-0 pr-3">
             <h3 className="text-base font-semibold tracking-wide truncate">
-              {prescription.patientName?.toUpperCase()}
+              {prescription.patientName || 'Patient'}
             </h3>
             <p className="text-blue-100 text-xs flex items-center gap-1.5 mt-0.5">
               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -70,15 +70,15 @@ export default function CreatePrescription({
     if (initialPrescription && showModal) {
       const presetDrugs =
         Array.isArray(initialPrescription.drug) &&
-        initialPrescription.drug.length
+          initialPrescription.drug.length
           ? initialPrescription.drug.map((d) => ({
-              name: d.name || "",
-              content: d.content || "",
-              company: d.company || "",
-              quantity: d.quantity || "",
-              frequency: d.frequency || "",
-              remarks: d.remarks || "",
-            }))
+            name: d.name || "",
+            content: d.content || "",
+            company: d.company || "",
+            quantity: d.quantity || "",
+            frequency: d.frequency || "",
+            remarks: d.remarks || "",
+          }))
           : [{ name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" }];
       setDrugs(presetDrugs);
       setDiagnosis(initialPrescription.Diagnosis || "");
@@ -162,6 +162,29 @@ export default function CreatePrescription({
     try {
       if (initialPrescription && initialPrescription._id) {
         await updatePrescription(initialPrescription._id, prescriptionData);
+        const updateData = {};
+
+        if (weight !== undefined && weight !== null && weight !== '') {
+          updateData.weight = parseFloat(weight);
+        }
+
+        if (bloodPressure !== undefined && bloodPressure !== null && bloodPressure !== '') {
+          updateData.bloodPressure = bloodPressure;
+        }
+
+        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== '') {
+          updateData.pulseRate = parseInt(pulseRate);
+        }
+
+        if (bloodSugarLevel !== undefined && bloodSugarLevel !== null && bloodSugarLevel !== '') {
+          updateData.bloodSugarLevel = parseFloat(bloodSugarLevel);
+        }
+
+        // Skip API call if nothing exists
+        if (Object.keys(updateData).length > 0) {
+          updatePatientVitals(currentPatientData._id, updateData);
+        }
+
         toast.success("Prescription updated");
         handleClose();
       } else {

@@ -80,7 +80,7 @@ export default function PatientInfo() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg md:text-2xl font-semibold text-slate-800 truncate">
-                {patientData.name?.toUpperCase() || 'PATIENT'}
+                {patientData.name ? patientData.name : 'PATIENT'}
               </h1>                
               <div className="flex flex-wrap items-center gap-2 mt-1 text-xs md:text-sm text-slate-600">
                 {patientData.birthday && (

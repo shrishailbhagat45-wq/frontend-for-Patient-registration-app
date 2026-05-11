@@ -1,66 +1,148 @@
 import axios from "axios";
-import axiosRetry from 'axios-retry';
-axiosRetry(axios, { retries: 60 });
-const token="Bearer "+localStorage.getItem("token");
-const headers ={
-        
-        'Content-Type': 'application/json',
-        'Authorization': token
-      }
-const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+import axiosRetry from "axios-retry";
 
+// ==========================
+// BASE URL
+// ==========================
+const url =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+// ==========================
+// AXIOS INSTANCE
+// ==========================
+const api = axios.create({
+  baseURL: url,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// ==========================
+// RETRY CONFIG
+// ==========================
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+});
+
+// ==========================
+// AUTO ATTACH TOKEN
+// ==========================
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ==========================
+// GET PRESCRIPTIONS BY PATIENT ID
+// ==========================
 export async function getPrescriptionsByPatientId(id) {
-    let response= null; 
-    try {
-         response = await axios.get(`${url}/prescriptions/patient/${id}`);
-         console.log("Fetched prescriptions response:", response);
-        if (response.status !== 200) {
-           
-            throw new Error('Failed to fetch prescriptions', response.statusText);
-        }   
-    } catch (error) {
-        console.error('Error fetching prescriptions:', error);
-        throw error;
-    }
+  try {
+    const response = await api.get(
+      `/prescriptions/patient/${id}`
+    );
+
+    console.log(
+      "Fetched prescriptions response:",
+      response.data
+    );
+
     return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching prescriptions:",
+      error
+    );
+    throw error;
+  }
 }
 
+// ==========================
+// CREATE PRESCRIPTION
+// ==========================
+export async function createPrescription(
+  id,
+  prescriptionData
+) {
+  try {
+    console.log(
+      "Creating prescription with data:",
+      prescriptionData
+    );
 
-export async function createPrescription(id,prescriptionData) {
-    console.log("Creating prescription with data:", prescriptionData);
-    let response= null;
-    try {
-         response = await axios.post(`${url}/prescriptions/add/${id}`, {...prescriptionData} );
-         
-         if (response.status !== 201) {
-           
-            throw new Error('Failed to fetch prescriptions', response.statusText);
-        }   
-    } catch (error) {
-        console.error('Error fetching prescriptions:', error);
-        throw error;
-    }
-    console.log("Response data:", response.data);
+    const response = await api.post(
+      `/prescriptions/add/${id}`,
+      prescriptionData
+    );
+
+    console.log(
+      "Prescription created:",
+      response.data
+    );
+
     return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating prescription:",
+      error
+    );
+    throw error;
+  }
 }
 
-export async function updatePrescription(id, prescriptionData) {
-    console.log("Updating prescription", id, prescriptionData);
-    let response = null;
-    try {
-        response = await axios.put(`${url}/prescriptions/${id}`, { ...prescriptionData });
-        if (response.status !== 200) {
-            throw new Error('Failed to update prescription', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error updating prescription:', error);
-        throw error;
-    }
+// ==========================
+// UPDATE PRESCRIPTION
+// ==========================
+export async function updatePrescription(
+  id,
+  prescriptionData
+) {
+  try {
+    console.log(
+      "Updating prescription:",
+      id,
+      prescriptionData
+    );
+
+    const response = await api.put(
+      `/prescriptions/${id}`,
+      prescriptionData
+    );
+
     return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating prescription:",
+      error
+    );
+    throw error;
+  }
 }
 
-// get drug suggestions
-export async function getDrugSuggestions(name){
-    const res= await axios.post(`${url}/drugs`,{name});
-    return res.data;
+// ==========================
+// GET DRUG SUGGESTIONS
+// ==========================
+export async function getDrugSuggestions(name) {
+  try {
+    const response = await api.post(
+      "/drugs",
+      { name }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching drug suggestions:",
+      error
+    );
+    throw error;
+  }
 }

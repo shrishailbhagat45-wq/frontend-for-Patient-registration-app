@@ -1,151 +1,193 @@
 import axios from "axios";
-import axiosRetry from 'axios-retry';
+import axiosRetry from "axios-retry";
 
-axiosRetry(axios, { retries: 60 });
-const token="Bearer "+localStorage.getItem("token");
-const headers ={
-        
-        'Content-Type': 'application/json',
-        'Authorization': token
-      }
-const url=import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const url =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-// Crate a new patient
+// Axios instance
+const api = axios.create({
+  baseURL: url,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Retry failed requests
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+});
+
+// Automatically attach latest token to every request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ==========================
+// CREATE PATIENT
+// ==========================
 export async function createPatient(patientData) {
-    // Convert date to ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
-    const birthdayISO = patientData.birthDate 
-        ? new Date(patientData.birthDate).toISOString() 
-        : null;
+  try {
+    const birthdayISO = patientData.birthDate
+      ? new Date(patientData.birthDate).toISOString()
+      : null;
 
     const data = {
-        name: patientData.name,
-        gender: patientData.gender,
-        birthday: birthdayISO,
-        phoneNumber: patientData.phoneNumber,
-        weight: parseInt(patientData.weight),
-        clinicId: localStorage.getItem("clinicId"),
-    }
-    let response= null;
-    try {
-        response = await axios.post(`${url}/patient/create`, JSON.stringify(data) , {
-        headers: headers
-        });
-        if (response.status !== 201) {
-            console.log("Response status:", response.status);
-            throw new Error('Failed to create patient', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error creating patient:', error);
-        throw error;
-    }
-    console.log("Response data:", response);
+      name: patientData.name,
+      gender: patientData.gender,
+      birthday: birthdayISO,
+      phoneNumber: patientData.phoneNumber,
+      weight: Number(patientData.weight),
+      clinicId: localStorage.getItem("clinicId"),
+    };
+
+    const response = await api.post("/patient/create", data);
 
     return response.data;
-    
+  } catch (error) {
+    console.error("Error creating patient:", error);
+    throw error;
+  }
 }
 
-
-// Get patients by name (search)
+// ==========================
+// GET PATIENTS
+// ==========================
 export async function getPatients(name) {
-    const data = { name: name.trim(), clinicId: localStorage.getItem("clinicId") };
-        const response = await axios.post(`${url}/patient/getPatient`,data,{
-            headers: headers
-        });
-        return response.data;
+  try {
+    const data = {
+      name: name.trim(),
+      clinicId: localStorage.getItem("clinicId"),
+    };
+
+    const response = await api.post("/patient/getPatient", data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching patients:", error);
+    throw error;
+  }
 }
 
+// ==========================
+// GET PATIENT BY ID
+// ==========================
 export async function getPatientById(id) {
-    let response= null;
-    try {
-         response = await axios.get(`${url}/patient/${id}`,{
-            headers: headers
-        });
-         console.log("Fetched patient response:", response);
-        if (response.status !== 200) {
-
-            throw new Error('Failed to fetch patient', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error fetching patient:', error);
-        throw error;
-    }
+  try {
+    const response = await api.get(`/patient/${id}`);
 
     return response.data;
-    
-}   
+  } catch (error) {
+    console.error("Error fetching patient:", error);
+    throw error;
+  }
+}
 
+// ==========================
+// GET PRESCRIPTION BY ID
+// ==========================
 export async function getPrescriptionById(id) {
-    let response= null;
-    try {
-            response = await axios.get(`${url}/prescriptions/${id}`,{
-            headers: headers
-        });
-        if (response.status !== 200) {
-            throw new Error('Failed to fetch prescription', response.statusText);
-        }
-    }
-    catch (error) {
-        console.error('Error fetching prescription:', error);
-        throw error;
-    }
+  try {
+    const response = await api.get(`/prescriptions/${id}`);
+
     return response.data;
+  } catch (error) {
+    console.error("Error fetching prescription:", error);
+    throw error;
+  }
 }
 
-// patient queue api's
+// ==========================
+// ADD PATIENT TO QUEUE
+// ==========================
+export async function addPatientToQueue(patient) {
+  try {
+    const data = {
+      name: patient.name,
+      patientId: patient._id,
+      clinicId: patient.clinicId,
+      doctorId: localStorage.getItem("doctorId"),
+      phoneNumber: patient.phoneNumber,
+    };
 
-export async function addPatientToQueue(patient){
-    console.log("Adding patient to queue:", patient);
-    const res= await axios.post(`${url}/patient-queue`,{name:patient.name,patientId:patient._id
-,clinicId:patient.clinicId,doctorId:localStorage.getItem("doctorId"),phoneNumber:patient.phoneNumber},);
-    if(res.status!==201){
-        throw new Error('Failed to add patient to queue', res.statusText);
-    }
-    return res.data;
+    const response = await api.post("/patient-queue", data);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error adding patient to queue:", error);
+    throw error;
+  }
 }
 
-export async function getQueuedPatients(){
-    const res= await axios.get(`${url}/patient-queue`);
-    return res.data;
+// ==========================
+// GET QUEUED PATIENTS
+// ==========================
+export async function getQueuedPatients() {
+  try {
+    const response = await api.get("/patient-queue", {
+      headers: {
+        doctorId: localStorage.getItem("doctorId"),
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching queued patients:", error);
+    throw error;
+  }
 }
 
-export async function removeFromQueueById(id){
-    const res= await axios.delete(`${url}/patient-queue/${id}`);
-    return res.data;
+// ==========================
+// REMOVE FROM QUEUE
+// ==========================
+export async function removeFromQueueById(id) {
+  try {
+    const response = await api.delete(`/patient-queue/${id}`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error removing patient from queue:", error);
+    throw error;
+  }
 }
 
-// Update patient vitals (weight, blood pressure, pulse rate, blood sugar level)
+// ==========================
+// UPDATE PATIENT VITALS
+// ==========================
 export async function updatePatientVitals(patientId, vitalsData) {
-    let response = null;
-    try {
-        response = await axios.put(`${url}/patient/${patientId}`, vitalsData, {
-            headers: headers
-        });
-        if (response.status !== 200) {
-            throw new Error('Failed to update patient vitals', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error updating patient vitals:', error);
-        throw error;
-    }
+  try {
+    const response = await api.put(
+      `/patient/${patientId}`,
+      vitalsData
+    );
+
     return response.data;
+  } catch (error) {
+    console.error("Error updating patient vitals:", error);
+    throw error;
+  }
 }
 
-// Function to initialize the backend
+// ==========================
+// CHECK BACKEND STATUS
+// ==========================
 export async function backendIsInitialized() {
-    let response= null;
-    try {
-         response = await axios.get(`${url}`);
-        if (response.status !== 200) {
-            console.log("Response status:", response.status);
-            throw new Error('Failed to fetch status', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error fetching status:', error);
-        throw error;
-    }
-    console.log("Response data:", response);
+  try {
+    
+    const response = await api.get("/");
 
     return response.status;
-    
+  } catch (error) {
+    console.error("Error checking backend:", error);
+    throw error;
+  }
 }
-

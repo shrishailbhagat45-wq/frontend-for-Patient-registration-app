@@ -150,12 +150,12 @@ export default function EditPatientProfile() {
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md flex-shrink-0">
                 <span className="text-white font-bold text-xl md:text-2xl">
-                  {formData.name?.charAt(0).toUpperCase() || 'P'}
+                  {formData.name ? formData.name.charAt(0) : 'P'}
                 </span>
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl md:text-2xl font-semibold text-slate-800 truncate">
-                  {formData.name?.toUpperCase() || 'PATIENT'}
+                  {formData.name ? formData.name : 'PATIENT'}
                 </h1>
                 <p className="text-xs md:text-sm text-slate-500 mt-1">
                   {formData.birthday ? `${calculateAge(formData.birthday)} years old` : 'Age not set'}

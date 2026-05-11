@@ -1,6 +1,7 @@
 import React from 'react'
 import RegisterReceptionist from '../components/RegisterReceptionist'
 import Navbar from '../components/Navbar'
+import RegisterDoctor from '../components/RegisterDoctor'
 
 export default function ManagementDashboard() {
   return (
@@ -8,6 +9,7 @@ export default function ManagementDashboard() {
     <Navbar />
     <div className='pt-20 pb-8'>
         <RegisterReceptionist />
+        <RegisterDoctor />
     </div>
     </div>
   )
