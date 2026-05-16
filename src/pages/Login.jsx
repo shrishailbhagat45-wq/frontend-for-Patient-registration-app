@@ -22,10 +22,12 @@ export default function Login() {
           localStorage.setItem("doctorId",res.doctorId)
           localStorage.setItem("clinicId",res.clinicId)
           localStorage.setItem("Id",res.id)
+          localStorage.setItem("role",res.role)
         } else {
           localStorage.setItem("doctorId",res.id)
           localStorage.setItem("clinicId",res.clinicId)
           localStorage.setItem("Id",res.id)
+          localStorage.setItem("role",res.role)
         }
         toast.success("Login successful");
         navigate('/home')

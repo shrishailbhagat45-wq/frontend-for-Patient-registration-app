@@ -85,12 +85,12 @@ export async function addReceptionist(receptionistData) {
 // ==========================
 export async function getReceptionist() {
   try {
-    const doctorId = localStorage.getItem("doctorId");
-
-    const response = await api.get(
-      `/user/receptionists/${doctorId}`
-    );
-
+    const payload = {
+      role: localStorage.getItem("role"),
+      doctorId: localStorage.getItem("doctorId"),
+      clinicId: localStorage.getItem("clinicId"),
+    };
+    const response = await api.post("/user/receptionists", payload);
     return response.data;
   } catch (error) {
     console.error("Error fetching receptionists:", error);
@@ -159,28 +159,18 @@ export async function updatePassword(passwordData) {
   }
 }
 
-// ==========================
-// DELETE RECEPTIONIST
-// ==========================
-export async function deleteReceptionist(id) {
-  try {
-    const response = await api.delete(`/user/${id}`);
-
-    return response.data;
-  } catch (error) {
-    console.error("Error deleting receptionist:", error);
-    throw error;
-  }
-}
 
 // ==========================
 // ADD DOCTOR
 // ==========================
 export async function addDoctor(doctorData) {
+  const data={...doctorData,
+    clinicId: localStorage.getItem('clinicId')
+  }
   try {
     const response = await api.post(
       "/user/addDoctor",
-      doctorData
+      data
     );
 
     return response.data;
@@ -193,9 +183,11 @@ export async function addDoctor(doctorData) {
 // ==========================
 // GET DOCTOR
 // ==========================
-export async function getDoctor(id) {
+export async function getDoctor() {
+  const id=localStorage.getItem("clinicId")
   try {
-    
+    const response = await api.get(`/user/doctors/${id}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching doctors:", error);
     throw error;
@@ -215,6 +207,21 @@ export async function createClinic(data) {
     return response.data;
   } catch (error) {
     console.error("Error creating clinic:", error);
+    throw error;
+  }
+}
+
+
+// ==========================
+// DELETE USERS
+// ==========================
+
+export async function deleteUser(id){
+  try {
+    const response = await api.delete(`/user/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
     throw error;
   }
 }

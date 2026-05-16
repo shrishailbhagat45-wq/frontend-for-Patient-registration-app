@@ -1,12 +1,9 @@
-import { addDoctor, getDoctor } from "../API/user";
+import { addDoctor, getDoctor, deleteUser } from "../API/user";
 import {
   FiUserPlus,
-  FiMail,
-  FiLock,
-  FiShield,
   FiUsers,
   FiTrash2,
-  FiPhone,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { MdOutlineMedicalServices } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const SPECIALIZATIONS = [
   "General Physician",
@@ -82,15 +80,16 @@ export default function RegisterDoctor() {
   const {
     data: doctors = [],
     isLoading: loading,
+    refetch,
   } = useQuery({
     queryKey: ["doctors"],
     queryFn: async () => {
       const res = await getDoctor(localStorage.getItem("doctorId"));
-
       const data = res?.data ?? res ?? [];
-
       return Array.isArray(data) ? data : [];
     },
+    retry: 3,
+    refetchOnWindowFocus: false,
     onError: (err) => {
       console.error("Failed to load doctors", err);
     },
@@ -122,12 +121,20 @@ export default function RegisterDoctor() {
     addMutation.mutate(data);
   };
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Delete this doctor?")) return;
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['doctors'] });
+      toast.success('Doctor deleted successfully');
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || 'Failed to delete doctor');
+    },
+  });
 
-    queryClient.setQueryData(["doctors"], (old) =>
-      old.filter((d) => d.id !== id)
-    );
+  const handleDelete = (id) => {
+    if (!window.confirm('Delete this doctor?')) return;
+    deleteMutation.mutate(id);
   };
 
   // Search specialization
@@ -360,15 +367,24 @@ export default function RegisterDoctor() {
 
       {/* Doctors List */}
       <section className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-            <FiUsers className="text-blue-600" />
-            Registered Doctors
-          </h3>
-
-          <p className="text-sm text-slate-500 mt-1">
-            {doctors.length} doctor(s)
-          </p>
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <FiUsers className="text-blue-600" />
+              Registered Doctors
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              {doctors.length} doctor(s)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-md hover:bg-slate-100 transition-colors"
+            title="Refresh"
+          >
+            <FiRefreshCw className="text-base" />
+          </button>
         </div>
 
         <ul className="divide-y divide-slate-100">
@@ -383,7 +399,7 @@ export default function RegisterDoctor() {
           ) : (
             doctors.map((d) => (
               <li
-                key={d.id}
+                key={d._id}
                 className="px-6 py-4 flex items-center justify-between hover:bg-slate-50"
               >
                 <div>
@@ -398,11 +414,12 @@ export default function RegisterDoctor() {
                 </div>
 
                 <button
-                  onClick={() => handleDelete(d.id)}
-                  className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm flex items-center gap-1"
+                  onClick={() => handleDelete(d._id)}
+                  disabled={deleteMutation.isPending}
+                  className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiTrash2 />
-                  Delete
+                  {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
                 </button>
               </li>
             ))

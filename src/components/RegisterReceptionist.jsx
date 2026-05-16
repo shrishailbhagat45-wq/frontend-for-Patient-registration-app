@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { addReceptionist, getReceptionist } from "../API/user";
-import { FiUserPlus, FiMail, FiLock, FiShield, FiUsers, FiTrash2 } from "react-icons/fi";
+import { FiUserPlus, FiMail, FiLock, FiShield, FiUsers, FiTrash2, FiRefreshCw } from "react-icons/fi";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,8 +13,7 @@ export default function RegisterReceptionist() {
   // Fetch receptionists using useQuery
   const { 
     data: receptionists = [], 
-    isLoading: loading, 
-    error 
+    refetch,
   } = useQuery({
     queryKey: ['receptionists'],
     queryFn: async () => {
@@ -22,9 +21,8 @@ export default function RegisterReceptionist() {
       const data = res?.data ?? res ?? [];
       return Array.isArray(data) ? data : [];
     },
-    onError: (err) => {
-      console.error("Failed to load users", err);
-    }
+    retry: 3,
+    refetchOnWindowFocus: false,
   });
 
   // Add receptionist mutation
@@ -67,6 +65,8 @@ export default function RegisterReceptionist() {
       email: form.email.trim(),
       password: form.password,
       role: form.role,
+      doctorId: localStorage.getItem("doctorId"),
+      clinicId: localStorage.getItem("clinicId")
     };
 
     addMutation.mutate(payload);
@@ -194,6 +194,14 @@ export default function RegisterReceptionist() {
             </h3>
             <p className="text-sm text-slate-500 mt-0.5">{receptionists.length} {receptionists.length === 1 ? 'member' : 'members'}</p>
           </div>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-md hover:bg-slate-100 transition-colors"
+            title="Refresh"
+          >
+            <FiRefreshCw className="text-base" />
+          </button>
         </div>
 
         <ul className="divide-y divide-slate-100">

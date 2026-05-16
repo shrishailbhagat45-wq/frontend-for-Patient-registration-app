@@ -11,6 +11,7 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
   const [showProfile, setShowProfile] = useState(false);
   const [isXlUp, setIsXlUp] = useState(false);
   const navigate = useNavigate();
+  const role=localStorage.getItem('role')
 
   // tailwind 'xl' breakpoint = 1280px (larger desktops only)
   useEffect(() => {
@@ -117,12 +118,15 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
                   <span>Get Billing Info</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/management-dashboard" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
-                  <MdManageAccounts className="text-xl" />
-                  <span>Staff Management</span>
-                </Link>
-              </li>
+              { role!=='Receptionist'?
+                (<li>
+                  <Link to="/management-dashboard" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
+                    <MdManageAccounts className="text-xl" />
+                    <span>Staff Management</span>
+                  </Link>
+                </li>):null
+              }
+              
             </ul>
           </nav>
         </aside>
