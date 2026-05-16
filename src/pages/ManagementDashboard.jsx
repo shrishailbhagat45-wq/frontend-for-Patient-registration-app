@@ -10,7 +10,7 @@ export default function ManagementDashboard() {
     <Navbar />
     <div className='pt-20 pb-8'>
         <RegisterReceptionist />
-        {role==='Admin'?<RegisterDoctor />:''}
+        {role==='Admin'?(<RegisterDoctor />):null}
     </div>
     </div>
   )
