@@ -11,7 +11,15 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
   const [showProfile, setShowProfile] = useState(false);
   const [isXlUp, setIsXlUp] = useState(false);
   const navigate = useNavigate();
-  const role=localStorage.getItem('role')
+  const [role, setRole] = useState('')
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem('role')
+
+    if (storedRole) {
+      setRole(storedRole.trim())
+    }
+  }, [])
 
   // tailwind 'xl' breakpoint = 1280px (larger desktops only)
   useEffect(() => {
