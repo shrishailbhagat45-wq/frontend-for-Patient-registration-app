@@ -5,6 +5,7 @@ import { getAppointments, updateAppointmentStatus } from '../API/Appointment';
 import AppointmentModal from './AppointmentModal';
 import { FiCalendar, FiRefreshCw, FiChevronDown } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(isoDate) {
@@ -238,7 +239,9 @@ export default function AppointmentTable({ onStatsChange }) {
               <tbody className="divide-y divide-slate-100">
                 {rows.map((a) => (
                   <tr key={a._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-slate-800 font-medium whitespace-nowrap">{a._name}</td>
+                    
+                    <td className="px-4 py-3 text-sm text-slate-800 font-medium whitespace-nowrap">
+                      <Link to ={`/patient/${a.patientId._id}`}>{a._name}</Link></td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._uhid}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._phone}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{formatDate(a.date)}</td>

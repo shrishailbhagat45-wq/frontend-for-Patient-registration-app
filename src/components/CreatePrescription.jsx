@@ -189,6 +189,28 @@ export default function CreatePrescription({
         handleClose();
       } else {
         const id = window.location.pathname.split("/").pop();
+        const updateData = {};
+
+        if (weight !== undefined && weight !== null && weight !== '') {
+          updateData.weight = parseFloat(weight);
+        }
+
+        if (bloodPressure !== undefined && bloodPressure !== null && bloodPressure !== '') {
+          updateData.bloodPressure = bloodPressure;
+        }
+
+        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== '') {
+          updateData.pulseRate = parseInt(pulseRate);
+        }
+
+        if (bloodSugarLevel !== undefined && bloodSugarLevel !== null && bloodSugarLevel !== '') {
+          updateData.bloodSugarLevel = parseFloat(bloodSugarLevel);
+        }
+
+        // Skip API call if nothing exists
+        if (Object.keys(updateData).length > 0) {
+          updatePatientVitals(currentPatientData._id, updateData);
+        }
         await createPrescription(id, prescriptionData);
         toast.success("Prescription saved");
         handleClose();
