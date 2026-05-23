@@ -117,7 +117,7 @@ export default function Navbar() {  const [showMenu, setShowMenu] = useState(fal
               <li>
                 <Link to="/billing-dashboard" className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base">
                   <RiBillFill className="text-xl" />
-                  <span>Billing Items</span>
+                  <span>Billing Dashboard</span>
                 </Link>
               </li>
               <li>

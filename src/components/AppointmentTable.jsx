@@ -130,17 +130,29 @@ export default function AppointmentTable({ onStatsChange }) {
   const [statuses, setStatuses] = useState({});
 
   const { data: appointments = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['appointments'],
-    queryFn: getAppointments,
-    select: (res) => (Array.isArray(res) ? res : res?.data ?? res?.appointments ?? []),
-    onSuccess: (data) => {
-      if (!onStatsChange) return;
-      const today = new Date().toDateString();
-      const todayCount = data.filter((a) => new Date(a.date).toDateString() === today).length;
-      const waitingCount = data.filter((a) => a.status === 'Waiting').length;
-      onStatsChange(todayCount, waitingCount);
-    },
-  });
+  queryKey: ['appointments'],
+  queryFn: getAppointments,
+  select: (res) =>
+    Array.isArray(res)
+      ? res
+      : res?.data ?? res?.appointments ?? [],
+});
+
+useEffect(() => {
+  if (!onStatsChange || appointments.length === 0) return;
+
+  const today = new Date().toDateString();
+
+  const todayCount = appointments.filter(
+    (a) => new Date(a.date).toDateString() === today
+  ).length;
+
+  const waitingCount = appointments.filter(
+    (a) => a.status === 'waiting'
+  ).length;
+
+  onStatsChange(todayCount, waitingCount);
+}, [appointments, onStatsChange]);
 
   const handleStatusChange = (id, newStatus) => {
     setStatuses((prev) => ({ ...prev, [id]: newStatus }));
@@ -241,7 +253,7 @@ export default function AppointmentTable({ onStatsChange }) {
                   <tr key={a._id} className="hover:bg-slate-50 transition-colors">
                     
                     <td className="px-4 py-3 text-sm text-slate-800 font-medium whitespace-nowrap">
-                      <Link to ={`/patient/${a.patientId._id}`}>{a._name}</Link></td>
+                      <Link to ={a.patientId._id?`/patient/${a.patientId._id}`:'/'}>{a._name}</Link></td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._uhid}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._phone}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{formatDate(a.date)}</td>

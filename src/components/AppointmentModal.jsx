@@ -168,68 +168,105 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
 
   // ─── Save: register new patient (if needed) then create appointment ────────
   const onSubmit = async (data) => {
-    // Extra validation for new patient fields
-    if (!patientIsPresent) {
-      let hasError = false;
-      if (!data.name?.trim()) {
-        setError('name', { message: 'Name is required' });
-        hasError = true;
-      }
-      if (!/^\d{10}$/.test(data.phoneNumber || '')) {
-        setError('phoneNumber', { message: 'Enter a valid 10-digit phone number' });
-        hasError = true;
-      }
-      if (!data.gender) {
-        setError('gender', { message: 'Gender is required' });
-        hasError = true;
-      }
-      if (hasError) return;
+
+  if (!patientIsPresent) {
+
+    let hasError = false;
+
+    if (!data.name?.trim()) {
+      setError('name', { message: 'Name is required' });
+      hasError = true;
     }
 
-    setIsSaving(true);
+    if (!/^\d{10}$/.test(data.phoneNumber || '')) {
+      setError('phoneNumber', {
+        message: 'Enter a valid 10-digit phone number'
+      });
+      hasError = true;
+    }
 
-    try {
-      let patientId;
+    if (!data.gender) {
+      setError('gender', { message: 'Gender is required' });
+      hasError = true;
+    }
 
-      if (patientIsPresent) {
-        // Existing patient — use their ID directly
-        patientId = selectedPatient._id;
-      } else {
-        // New patient — register first, then use the returned ID
-        try {
-          const created = await createPatient({
-            name: data.name,
-            gender: data.gender,
-            birthDate: data.birthDate || null,
-            phoneNumber: data.phoneNumber,
-            weight: 0,
-          });
-          patientId = created._id || created?.patient?._id;
-        } catch {
-          toast.error('Failed to register patient. Please try again.');
+    if (hasError) return;
+  }
+
+  setIsSaving(true);
+
+  try {
+
+    let patientId;
+
+    /**
+     * EXISTING PATIENT
+     */
+    if (patientIsPresent) {
+
+      patientId = selectedPatient._id;
+
+    } else {
+
+      /**
+       * CREATE NEW PATIENT
+       */
+      try {
+
+        const created = await createPatient({
+          name: data.name,
+          gender: data.gender,
+          birthDate: data.birthDate || null,
+          phoneNumber: data.phoneNumber,
+          weight: 0,
+        });
+
+        patientId = created?.data?._id;
+
+        if (!patientId) {
+          toast.error('Failed to get patient ID');
           return;
         }
-      }
 
-      // Create the appointment
-      try {
-        await createAppointment({
-          patientId,
-          clinicId: localStorage.getItem('clinicId'),
-          doctorId: localStorage.getItem('doctorId'),
-          date: data.date,
-          timeFrom: data.timeFrom,
-          timeTo: data.timeTo,
-        });
-        toast.success('Appointment booked successfully!');
-        onSuccess();
-      } catch {
-        toast.error('Failed to create appointment. Please try again.');
+      } catch (error) {
+
+        console.error(error);
+
+        toast.error('Failed to register patient. Please try again.');
+        return;
       }
-    } finally {
-      setIsSaving(false);
     }
-  };
+
+    /**
+     * CREATE APPOINTMENT
+     */
+    try {
+
+      await createAppointment({
+        patientId,
+        clinicId: localStorage.getItem('clinicId'),
+        doctorId: localStorage.getItem('doctorId'),
+        date: data.date,
+        timeFrom: data.timeFrom,
+        timeTo: data.timeTo,
+      });
+
+      toast.success('Appointment booked successfully!');
+
+      onSuccess();
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error('Failed to create appointment. Please try again.');
+    }
+
+  } finally {
+
+    setIsSaving(false);
+  }
+};
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
   const inputCls = (field) =>

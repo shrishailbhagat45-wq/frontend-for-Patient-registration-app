@@ -182,3 +182,85 @@ export async function getPatientBills({
     throw error;
   }
 }
+
+// ==========================
+// add service for billing dashboard
+export async function addService(serviceData) {
+  const data = {
+    clinicId: localStorage.getItem("clinicId"),
+    ...serviceData,
+  };
+  console.log("Adding service with data:", data);
+  try {
+    const response = await api.post(
+      "/services-billing",
+      data
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error adding service:",
+      error
+    );
+    throw error;
+  }
+}
+
+// ==========================
+// GET SERVICES
+export async function getServices() {
+  try {
+    const clinicId = localStorage.getItem("clinicId");
+    const response = await api.get(
+      `/services-billing/${clinicId}`
+    );
+    
+    console.log("Services API Response:", response.data);
+    
+    // Handle both array and object responses
+    const data = response.data;
+    return Array.isArray(data) ? data : data.services || data.data || [];
+  } catch (error) {
+    console.error(
+      "Error fetching services:",
+      error
+    );
+    throw error;
+  }
+}
+
+// ==========================
+// UPDATE SERVICE
+export async function updateService(serviceId, serviceData) {
+  try {
+    const response = await api.put(
+      `/services-billing/${serviceId}`,
+      serviceData
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating service:",
+      error
+    );
+    throw error;
+  }
+}
+
+// ==========================
+// DELETE SERVICE
+export async function deleteService(serviceId) {
+  try {
+    const response = await api.delete(
+      `/services-billing/${serviceId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error deleting service:",
+      error
+    );
+    throw error;
+  }
+}
