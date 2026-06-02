@@ -5,6 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 
@@ -94,10 +95,12 @@ export default function Services() {
         actualPrice: "",
         sellingPrice: "",
       });
+
+      toast.success("Service added successfully!");
     },
 
     onError: (error) => {
-      console.log(error);
+      toast.error(error.response?.data?.message || "Error adding service");
     },
   });
 
@@ -119,10 +122,12 @@ export default function Services() {
         sellingPrice: "",
       });
       setEditId(null);
+
+      toast.success("Service updated successfully!");
     },
 
     onError: (error) => {
-      console.log(error);
+      toast.error(error.response?.data?.message || "Error updating service");
     },
   });
 
@@ -137,10 +142,12 @@ export default function Services() {
       queryClient.invalidateQueries({
         queryKey: ["services", clinicId],
       });
+
+      toast.success("Service deleted successfully!");
     },
 
     onError: (error) => {
-      console.log(error);
+      toast.error(error.response?.data?.message || "Error deleting service");
     },
   });
 

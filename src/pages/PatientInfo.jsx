@@ -7,6 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import LoadingList from '../components/LoadingList';
 import ListPrescription from '../components/ListPrescription';
 import CreatePrescription from '../components/CreatePrescription';
+import InvoiceList from '../components/InvoiceList';
 import Navbar from '../components/Navbar';
 
 import {
@@ -240,7 +241,10 @@ export default function PatientInfo() {
                 </button>
               </Link>
 
-              <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-md hover:shadow-lg">
+              <button
+                onClick={() => navigate(`/invoice/${id}`)}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-md hover:shadow-lg"
+              >
                 <FiDollarSign size={14} />
                 Create Bill
               </button>
@@ -322,6 +326,19 @@ export default function PatientInfo() {
             ))}
           </div>
         )}
+
+        {/* Invoices Section */}
+        <div className="mt-12">
+          <div className="mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">
+              Billing
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-slate-900">
+              Invoices
+            </h2>
+          </div>
+          <InvoiceList patientId={id} />
+        </div>
       </div>
 
       {/* Modal */}

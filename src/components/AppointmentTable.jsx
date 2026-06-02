@@ -2,10 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAppointments, updateAppointmentStatus } from '../API/Appointment';
+import { getLatestInvoiceByPatient } from '../API/billing';
 import AppointmentModal from './AppointmentModal';
 import { FiCalendar, FiRefreshCw, FiChevronDown } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(isoDate) {
@@ -17,26 +18,68 @@ function formatDate(isoDate) {
 
 const COLUMNS = [
   'Patient Name', 'UHID', 'Mobile', 'Date',
-  'Time From', 'Time To', 'Status', 'Actions',
+  'Time From', 'Time To', 'Status', 'Bill Status', 'Actions',
 ];
 
 // ─── StatusBadge ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const styles = {
-    Waiting:   'bg-blue-100 text-blue-700',
-    Completed: 'bg-green-100 text-green-700',
-    Cancelled: 'bg-red-100 text-red-700',
+    waiting:   'bg-yellow-50 text-yellow-700 shadow-sm',
+    completed: 'bg-green-50 text-green-700 shadow-sm',
+    cancelled: 'bg-red-50 text-red-700  shadow-sm',
   };
+  const normalized = String(status).toLowerCase();
+  const displayText = String(status).charAt(0).toUpperCase() + String(status).slice(1);
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status] ?? 'bg-slate-100 text-slate-600'}`}>
-      {status || '—'}
+    <span className={`px-3 py-1.5 rounded-md text-xs font-semibold ${styles[normalized] ?? 'bg-slate-50 text-slate-600 border border-slate-200'}`}>
+      {displayText || '—'}
     </span>
   );
 }
 
-// ─── ActionsDropdown ──────────────────────────────────────────────────────────
+// ─── BillBadge ────────────────────────────────────────────────────────────────
 // Renders the menu via a portal so it escapes overflow:hidden/auto containers.
-function ActionsDropdown({ appointment, onStatusChange, onRefetch }) {
+function BillBadge({ billStatus }) {
+  const styles = {
+    Paid: 'bg-emerald-50 text-emerald-700 shadow-sm',
+    Partial: 'bg-amber-50 text-amber-700 shadow-sm',
+    Generated: 'bg-indigo-50 text-indigo-700  shadow-sm',
+    'Not Created': 'bg-slate-50 text-slate-600  shadow-sm',
+    Unpaid: 'bg-rose-50 text-rose-700  shadow-sm',
+  };
+
+  return (
+    <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${styles[billStatus] ?? 'bg-slate-50 text-slate-600 border border-slate-200'}`}>
+      {billStatus || 'Not Created'}
+    </span>
+  );
+}
+
+function getBillStatus(invoice) {
+  if (!invoice) {
+    return 'Not Created';
+  }
+
+  const status = invoice.status || invoice.paymentStatus;
+  if (status) {
+    const normalized = String(status).toLowerCase();
+    if (normalized.includes('paid')) return 'Paid';
+    if (normalized.includes('partial')) return 'Partial';
+    if (normalized.includes('unpaid')) return 'Unpaid';
+    return String(status).charAt(0).toUpperCase() + String(status).slice(1);
+  }
+
+  const remaining = Number(invoice.amountRemaining ?? 0);
+  const paid = Number(invoice.amountPaid ?? 0);
+  if (remaining === 0 && paid > 0) return 'Paid';
+  if (paid > 0) return 'Partial';
+
+  if (invoice.id || invoice._id) return 'Generated';
+  return 'Not Created';
+}
+
+function ActionsDropdown({ appointment, onStatusChange, onRefetch, invoice }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState({});
   const btnRef = useRef(null);
@@ -68,6 +111,31 @@ function ActionsDropdown({ appointment, onStatusChange, onRefetch }) {
     }
   };
 
+  const handleEditBill = async () => {
+    setIsOpen(false);
+    const patientId = appointment.patientId?._id || appointment.patientId?.id || appointment.patientId;
+    if (!patientId) return;
+    
+    try {
+      // Fetch the latest invoice data
+      const invoiceData = await getLatestInvoiceByPatient(patientId);
+      
+      // Extract the invoice ID from the response
+      const invoiceId = invoiceData?._id || invoiceData?.id;
+      
+      if (!invoiceId) {
+        toast.error('Invoice ID not found. Please create a bill first.');
+        return;
+      }
+      
+      // Navigate with the invoice ID in the URL params and pass data via state
+      navigate(`/invoice/${patientId}/${invoiceId}`, { state: { invoiceData } });
+    } catch (error) {
+      toast.error('Failed to load invoice. Please try again.');
+      console.error('Error fetching invoice:', error);
+    }
+  };
+
   const menu = isOpen && !isTerminal ? ReactDOM.createPortal(
     <>
       <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} aria-hidden="true" />
@@ -85,6 +153,28 @@ function ActionsDropdown({ appointment, onStatusChange, onRefetch }) {
           className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-red-50 hover:text-red-700 transition-colors border-t border-slate-100"
         >
           Mark as Cancelled
+        </button>
+        {invoice && invoice._id && (
+          <button
+            type="button"
+            onClick={handleEditBill}
+            className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-colors border-t border-slate-100"
+          >
+            Edit Bill
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(false);
+            const patientId = appointment.patientId?._id || appointment.patientId?.id || appointment.patientId;
+            if (patientId) {
+              navigate(`/invoice/${patientId}`);
+            }
+          }}
+          className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border-t border-slate-100"
+        >
+          Create Bill
         </button>
       </div>
     </>,
@@ -125,18 +215,47 @@ function SkeletonRow() {
 // Accepts optional onStatsChange(todayCount, waitingCount) so the parent
 // can update its stat cards without duplicating the query.
 export default function AppointmentTable({ onStatsChange }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statuses, setStatuses] = useState({});
+  const [invoices, setInvoices] = useState({});
 
   const { data: appointments = [], isLoading, isError, refetch } = useQuery({
-  queryKey: ['appointments'],
-  queryFn: getAppointments,
-  select: (res) =>
-    Array.isArray(res)
-      ? res
-      : res?.data ?? res?.appointments ?? [],
-});
+    queryKey: ['appointments'],
+    queryFn: getAppointments,
+    select: (res) =>
+      Array.isArray(res)
+        ? res
+        : res?.data ?? res?.appointments ?? [],
+  });
+
+  // Fetch latest invoice for each appointment's patient
+  useEffect(() => {
+    if (!appointments.length) return;
+
+    const fetchInvoices = async () => {
+      const invoiceMap = {};
+      
+      for (const appointment of appointments) {
+        const patientId = appointment.patientId?._id || appointment.patientId?.id || appointment.patientId;
+        
+        if (patientId && !invoiceMap[patientId]) {
+          try {
+            const invoice = await getLatestInvoiceByPatient(patientId);
+            invoiceMap[patientId] = invoice;
+          } catch (error) {
+            console.error(`Failed to fetch invoice for patient ${patientId}:`, error);
+            invoiceMap[patientId] = null;
+          }
+        }
+      }
+      
+      setInvoices(invoiceMap);
+    };
+
+    fetchInvoices();
+  }, [appointments]);
 
 useEffect(() => {
   if (!onStatsChange || appointments.length === 0) return;
@@ -158,14 +277,20 @@ useEffect(() => {
     setStatuses((prev) => ({ ...prev, [id]: newStatus }));
   };
 
-  const rows = appointments.map((a) => ({
-    ...a,
-    status: statuses[a._id] ?? a.status,
-    // Resolve patient fields from flat or nested shape
-    _name:  a.patientName  || a.patientId?.name        || '—',
-    _uhid:  a.uhid         || a.patientId?.uhid         || '—',
-    _phone: a.phoneNumber  || a.patientId?.phoneNumber  || '—',
-  }));
+  const rows = appointments.map((a) => {
+    const patientId = a.patientId?._id || a.patientId?.id || a.patientId;
+    const invoice = invoices[patientId];
+    
+    return {
+      ...a,
+      status: statuses[a._id] ?? a.status,
+      billStatus: getBillStatus(invoice),
+      // Resolve patient fields from flat or nested shape
+      _name:  a.patientName  || a.patientId?.name        || '—',
+      _uhid:  a.uhid         || a.patientId?.uhid         || '—',
+      _phone: a.phoneNumber  || a.patientId?.phoneNumber  || '—',
+    };
+  });
 
   return (
     <>
@@ -253,7 +378,10 @@ useEffect(() => {
                   <tr key={a._id} className="hover:bg-slate-50 transition-colors">
                     
                     <td className="px-4 py-3 text-sm text-slate-800 font-medium whitespace-nowrap">
-                      <Link to ={a.patientId._id?`/patient/${a.patientId._id}`:'/'}>{a._name}</Link></td>
+                      <Link to={a.patientId?._id ? `/patient/${a.patientId._id}` : a.patientId?.id ? `/patient/${a.patientId.id}` : a.patientId ? `/patient/${a.patientId}` : '/'}>
+                        {a._name}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._uhid}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._phone}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{formatDate(a.date)}</td>
@@ -263,7 +391,15 @@ useEffect(() => {
                       <StatusBadge status={a.status} />
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <ActionsDropdown appointment={a} onStatusChange={handleStatusChange} onRefetch={refetch} />
+                      <BillBadge billStatus={a.billStatus} />
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <ActionsDropdown 
+                        appointment={a} 
+                        onStatusChange={handleStatusChange} 
+                        onRefetch={refetch}
+                        invoice={invoices[a.patientId?._id || a.patientId?.id || a.patientId]}
+                      />
                     </td>
                   </tr>
                 ))}

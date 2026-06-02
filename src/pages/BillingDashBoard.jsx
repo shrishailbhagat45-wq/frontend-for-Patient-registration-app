@@ -4,6 +4,7 @@ import BillingNav from '../components/BillingNav';
 import Services from '../components/Services';
 import LabTest from '../components/LabTest';
 import Medicines from '../components/Medicines';
+import Analytics from '../components/Analytics';
 
 export default function BillingDashBoard() {
   const [activeTab, setActiveTab] = useState('services');
@@ -22,6 +23,7 @@ export default function BillingDashBoard() {
         {activeTab === 'services' && <Services />}
         {activeTab === 'lab-tests' && <LabTest />}
         {activeTab === 'medicines' && <Medicines />}
+        {activeTab === 'analytics' && <Analytics />}
       </div>
     </div>
   )

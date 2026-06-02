@@ -195,6 +195,20 @@ export async function getDoctor() {
 }
 
 // ==========================
+// Get all doctors including the admin doctor for the clinic
+// ==========================
+export async function getAllDoctors() {
+  const clinicId = localStorage.getItem("clinicId");
+  try {
+    const response = await api.get(`/user/allDoctors/${clinicId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all doctors:", error);
+    throw error;
+  }
+}
+
+// ==========================
 // CREATE CLINIC
 // ==========================
 export async function createClinic(data) {

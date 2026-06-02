@@ -17,9 +17,9 @@ import BillingDashBoard from './pages/BillingDashBoard.jsx'
 import Billing from './pages/Billing.jsx'
 import ManagementDashboard from './pages/ManagementDashboard.jsx'
 import Profile from './pages/Profile.jsx'
-import GetBillingInfo from './pages/GetBillingInfo.jsx'
 import Create from './pages/Create.jsx'
 import CreateClinic from './pages/CreateClinic.jsx'
+import Invoice from './pages/Invoice.jsx'
 
 const queryClient = new QueryClient()
 
@@ -48,7 +48,7 @@ const router = createBrowserRouter([
       {path:'/billing/:patientId', element:<Billing/>},
       {path:'/management-dashboard',element:<ManagementDashboard/>},
       {path:'/profile',element:<Profile/>},
-      {path:'/billing-info',element:<GetBillingInfo/>},
+      {path:'/invoice/:patientId/:invoiceId?', element: <Invoice />},
     ]
   }
 ]);
