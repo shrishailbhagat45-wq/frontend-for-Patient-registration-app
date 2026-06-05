@@ -1,36 +1,4 @@
-import axios from "axios";
-import axiosRetry from "axios-retry";
-
-const url =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
-// Axios instance
-const api = axios.create({
-  baseURL: url,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Retry failed requests
-axiosRetry(api, {
-  retries: 3,
-  retryDelay: axiosRetry.exponentialDelay,
-});
-
-// Automatically attach latest token to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+import api from "../utils/axiosInstance";
 
 // ==========================
 // CREATE APPOINTMENT

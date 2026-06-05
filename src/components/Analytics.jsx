@@ -5,6 +5,8 @@ import {
   transformPaymentMethodsData,
   formatAnalyticsMetrics,
 } from '../utils/chartDataHelpers';
+import { handleError } from '../utils/errorHandler';
+import ErrorDisplay from './ErrorDisplay';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -54,12 +56,12 @@ export default function Analytics() {
         setAnalyticsData(data);
         setMetrics(formatAnalyticsMetrics(data));
       } catch (err) {
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            'Failed to fetch analytics data'
-        );
-        console.error('Analytics fetch error:', err);
+        const errorDetails = handleError(err, {
+          context: 'Payment Analytics',
+          customMessage: 'Failed to load payment analytics data',
+          showToast: true,
+        });
+        setError(errorDetails.message);
       } finally {
         setIsLoading(false);
       }
@@ -78,12 +80,12 @@ export default function Analytics() {
         const data = await getDoctorPerformanceAnalytics(selectedPeriod);
         setDoctorData(data);
       } catch (err) {
-        setDoctorError(
-          err.response?.data?.message ||
-            err.message ||
-            'Failed to fetch doctor performance data'
-        );
-        console.error('Doctor performance fetch error:', err);
+        const errorDetails = handleError(err, {
+          context: 'Doctor Performance Analytics',
+          customMessage: 'Failed to load doctor performance data',
+          showToast: true,
+        });
+        setDoctorError(errorDetails.message);
       } finally {
         setDoctorLoading(false);
       }
