@@ -39,15 +39,6 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Add clinic ID to requests if available
-    const clinicId = localStorage.getItem('clinicId');
-    if (clinicId && !config.params?.clinicId) {
-      config.params = {
-        ...config.params,
-        clinicId,
-      };
-    }
-
     return config;
   },
   (error) => {

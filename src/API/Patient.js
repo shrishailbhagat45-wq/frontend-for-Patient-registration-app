@@ -148,16 +148,6 @@ export async function updatePatientVitals(patientId, vitalsData) {
 // ==========================
 // CHECK BACKEND STATUS
 // ==========================
-setInterval(() => {
-  console.log("Checking backend status...");
-  backendIsInitialized()
-    .then((status) => {
-      console.log("Backend status:", status);
-    })
-    .catch((error) => {
-      console.error("Backend check failed:", error);
-    });
-}, 60000); 
 
 export async function backendIsInitialized() {
   try {
