@@ -15,7 +15,7 @@ import {
   FiCalendar,
   FiBriefcase,
 } from "react-icons/fi";
-import { getUserById,updateUser,updatePassword } from "../API/user";
+import { updateUser,updatePassword, getUserProfile } from "../API/user";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export default function Profile() {
   }, []);
 
   const fetchUserData = async () => {
-    const res=await getUserById(localStorage.getItem("Id"));
+    const res=await getUserProfile(localStorage.getItem("Id"));
     if(res){
       const userData = res;
       setUser(userData);

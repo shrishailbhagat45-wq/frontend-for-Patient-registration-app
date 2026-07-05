@@ -71,6 +71,16 @@ export async function getUserById(id) {
   }
 }
 
+export async function getUserProfile(id) {
+  try {
+    const response = await api.get(`/user/profile/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    throw error;
+  }
+}
+
 // ==========================
 // UPDATE USER
 // ==========================
@@ -194,7 +204,20 @@ export async function deleteUser(id){
     const response = await api.delete(`/user/delete/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching doctors:", error);
+    console.error("Error deleting user:", error);
+    throw error;
+  }
+}
+
+// ==========================
+// UPDATE USER (RECEPTIONIST/DOCTOR)
+// ==========================
+export async function updateUserById(id, userData) {
+  try {
+    const response = await api.put(`/user/${id}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating user:", error);
     throw error;
   }
 }

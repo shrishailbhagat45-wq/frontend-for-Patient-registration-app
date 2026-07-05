@@ -1,12 +1,6 @@
 /**
  * Reusable Error Display Component
  * Shows error messages in a styled container
- * @param {Object} props
- * @param {Object} props.error - Error object
- * @param {string} props.title - Error title
- * @param {string} props.message - Custom error message
- * @param {Function} props.retry - Retry function
- * @param {string} props.className - Additional CSS classes
  */
 export default function ErrorDisplay({
   error,
@@ -67,9 +61,6 @@ export default function ErrorDisplay({
 /**
  * Inline Error Message Component
  * For smaller, inline error messages (e.g., form fields)
- * @param {Object} props
- * @param {string} props.message - Error message
- * @param {string} props.className - Additional CSS classes
  */
 export function InlineError({ message, className = '' }) {
   if (!message) return null;
@@ -84,11 +75,6 @@ export function InlineError({ message, className = '' }) {
 /**
  * Empty State with Error
  * For displaying errors in empty list/table states
- * @param {Object} props
- * @param {string} props.title - Error title
- * @param {string} props.message - Error message
- * @param {Function} props.retry - Retry function
- * @param {string} props.className - Additional CSS classes
  */
 export function EmptyStateError({
   title = 'Something went wrong',

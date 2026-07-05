@@ -21,7 +21,7 @@ export const ErrorTypes = {
 const ErrorMessages = {
   [ErrorTypes.NETWORK]: 'Network error. Please check your internet connection.',
   [ErrorTypes.AUTHENTICATION]: 'Authentication failed. Please login again.',
-  [ErrorTypes.AUTHORIZATION]: 'You do not have permission to perform this action.',
+  [ErrorTypes.AUTHORIZATION]: 'You don\'t have access to perform this action.',
   [ErrorTypes.VALIDATION]: 'Please check your input and try again.',
   [ErrorTypes.NOT_FOUND]: 'The requested resource was not found.',
   [ErrorTypes.SERVER]: 'Server error. Please try again later.',
@@ -153,6 +153,13 @@ export function handleError(error, options = {}) {
               window.location.href = '/login';
             }
           },
+        });
+        break;
+
+      case ErrorTypes.AUTHORIZATION:
+        toast.error(errorMessage, {
+          autoClose: 5000, 
+          icon: '🚫',
         });
         break;
 

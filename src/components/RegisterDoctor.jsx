@@ -1,9 +1,11 @@
-import { addDoctor, getDoctor, deleteUser } from "../API/user";
+import { addDoctor, getDoctor, deleteUser, updateUserById } from "../API/user";
 import {
   FiUserPlus,
   FiUsers,
   FiTrash2,
   FiRefreshCw,
+  FiEdit2,
+  FiX,
 } from "react-icons/fi";
 import { MdOutlineMedicalServices } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +40,7 @@ const doctorSchema = z.object({
     .email("Email is invalid")
     .trim(),
 
-  password: z.string().min(1, "Password is required"),
+  password: z.string().optional(),
 
   phoneNumber: z
     .string()
@@ -57,6 +59,7 @@ export default function RegisterDoctor() {
 
   const [searchSpecializations, setSearchSpecializations] = useState([]);
   const [searchOn, setSearchOn] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const {
     register,
@@ -103,22 +106,85 @@ export default function RegisterDoctor() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
-
       reset();
-
       setSearchSpecializations([]);
       setSearchOn(false);
+      toast.success("Doctor added successfully!");
     },
 
     onError: (err) => {
       console.error("Failed to add doctor", err);
+      toast.error(err?.response?.data?.message || "Failed to add doctor");
+    },
+  });
 
-      alert("Failed to add doctor");
+  // Update doctor
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      return await updateUserById(id, data);
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      reset();
+      setSearchSpecializations([]);
+      setSearchOn(false);
+      setEditingId(null);
+      toast.success("Doctor updated successfully!");
+    },
+
+    onError: (err) => {
+      console.error("Failed to update doctor", err);
+      toast.error(err?.response?.data?.message || "Failed to update doctor");
     },
   });
 
   const onSubmit = (data) => {
-    addMutation.mutate(data);
+    // Validate password for new doctors
+    if (!editingId && !data.password) {
+      toast.error("Password is required for new doctors");
+      return;
+    }
+
+    const payload = {
+      name: data.name,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      specialization: data.specialization,
+      role: data.role,
+    };
+
+    // Only include password if provided
+    if (data.password) {
+      payload.password = data.password;
+    }
+
+    if (editingId) {
+      // Update existing doctor
+      updateMutation.mutate({ id: editingId, data: payload });
+    } else {
+      // Add new doctor
+      addMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (doctor) => {
+    setValue("name", doctor.name);
+    setValue("email", doctor.email);
+    setValue("password", ""); // Don't populate password
+    setValue("phoneNumber", doctor.phoneNumber);
+    setValue("specialization", doctor.specialization);
+    setValue("role", "Doctor");
+    setEditingId(doctor._id);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    reset();
+    setEditingId(null);
+    setSearchSpecializations([]);
+    setSearchOn(false);
   };
 
   const deleteMutation = useMutation({
@@ -190,13 +256,32 @@ export default function RegisterDoctor() {
 
       {/* Register Form */}
       <section className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <FiUserPlus className="text-blue-600 text-lg" />
-
-          <h3 className="text-lg font-semibold text-slate-800">
-            Register Doctor
-          </h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <FiUserPlus className="text-blue-600 text-lg" />
+            <h3 className="text-lg font-semibold text-slate-800">
+              {editingId ? "Edit Doctor" : "Register Doctor"}
+            </h3>
+          </div>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-slate-400 hover:text-slate-600 p-1.5 rounded-md hover:bg-slate-100 transition-colors"
+              title="Cancel Edit"
+            >
+              <FiX className="text-lg" />
+            </button>
+          )}
         </div>
+
+        {editingId && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Editing mode:</strong> Leave password blank to keep the current password
+            </p>
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -248,13 +333,14 @@ export default function RegisterDoctor() {
           {/* Password */}
           <label className="flex flex-col">
             <span className="text-sm font-medium text-slate-700 mb-1.5">
-              Password *
+              Password {!editingId && "*"}
+              {editingId && <span className="text-xs text-slate-500 ml-1">(optional)</span>}
             </span>
 
             <input
               {...register("password")}
               type="password"
-              placeholder="Enter password"
+              placeholder={editingId ? "Leave blank to keep current password" : "Enter password"}
               className={`border rounded-md px-3 py-2 text-sm ${
                 errors.password ? "border-red-400" : "border-slate-300"
               }`}
@@ -353,13 +439,26 @@ export default function RegisterDoctor() {
           </label>
 
           {/* Submit */}
-          <div className="sm:col-span-2 flex justify-end">
+          <div className="sm:col-span-2 flex justify-end gap-3">
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-5 py-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 transition font-medium text-sm"
+              >
+                Cancel
+              </button>
+            )}
             <button
               type="submit"
-              disabled={addMutation.isPending}
-              className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium text-sm disabled:opacity-50"
+              disabled={addMutation.isPending || updateMutation.isPending}
+              className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium text-sm disabled:opacity-50 flex items-center gap-2"
             >
-              {addMutation.isPending ? "Adding..." : "Add Doctor"}
+              {editingId ? <FiEdit2 /> : <FiUserPlus />}
+              {editingId
+                ? (updateMutation.isPending ? "Updating..." : "Update Doctor")
+                : (addMutation.isPending ? "Adding..." : "Add Doctor")
+              }
             </button>
           </div>
         </form>
@@ -413,14 +512,23 @@ export default function RegisterDoctor() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDelete(d._id)}
-                  disabled={deleteMutation.isPending}
-                  className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FiTrash2 />
-                  {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(d)}
+                    className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm flex items-center gap-1 transition-colors"
+                  >
+                    <FiEdit2 />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(d._id)}
+                    disabled={deleteMutation.isPending}
+                    className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <FiTrash2 />
+                    {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </li>
             ))
           )}

@@ -243,7 +243,16 @@ export default function AppointmentTable({ onStatsChange }) {
         if (patientId && !invoiceMap[patientId]) {
           try {
             const invoice = await getLatestInvoiceByPatient(patientId);
+            const today = new Date();
+            const updatedDate = new Date(updatedAt);
+
+            const isToday =
+              today.getFullYear() === updatedDate.getFullYear() &&
+              today.getMonth() === updatedDate.getMonth() &&
+              today.getDate() === updatedDate.getDate();
+            if(isToday) {
             invoiceMap[patientId] = invoice;
+            }
           } catch (error) {
             console.error(`Failed to fetch invoice for patient ${patientId}:`, error);
             invoiceMap[patientId] = null;
