@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
 import { FiArrowLeft, FiEdit2, FiSave, FiX } from 'react-icons/fi';
+import BloodPressureInput from '../components/BloodPressureInput';
 
 // Helper function to calculate age from birthDate
 const calculateAge = (birthDate) => {
@@ -303,11 +304,9 @@ export default function EditPatientProfile() {
                   <label className="block text-xs md:text-sm font-medium text-slate-700 mb-2">
                     Blood Pressure (mmHg)
                   </label>
-                  <input
-                    type="text"
-                    name="bloodPressure"
+                  <BloodPressureInput
                     value={formData.bloodPressure}
-                    onChange={handleInputChange}
+                    onChange={(formatted) => setFormData(prev => ({ ...prev, bloodPressure: formatted }))}
                     disabled={!isEditing}
                     className="w-full px-3 md:px-4 py-2 text-sm border border-slate-300 rounded-lg md:rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-600 disabled:cursor-not-allowed transition-colors"
                     placeholder="e.g. 120/80"
