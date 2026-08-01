@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getInvoicesByPatient } from '../API/billing';
-import { FiChevronLeft, FiChevronRight, FiFileText, FiCalendar, FiDollarSign, FiAlertCircle, FiEdit } from 'react-icons/fi';
+import { FiFileText, FiCalendar, FiDollarSign, FiAlertCircle, FiEdit } from 'react-icons/fi';
 import LoadingList from './LoadingList';
+import Pagination from './Pagination';
 
 /**
  * Display invoices for a patient with pagination support
@@ -29,19 +30,8 @@ const InvoiceList = ({ patientId }) => {
   });
 
   const { invoices = [], pagination = {} } = invoiceData;
-  const totalPages = Math.ceil((pagination.total || 0) / limit);
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / limit);
+  const totalCount = pagination.total || 0;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -212,47 +202,12 @@ const InvoiceList = ({ patientId }) => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-2">
-          <button
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-            className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            title="Previous page"
-          >
-            <FiChevronLeft size={18} />
-          </button>
-
-          {/* Page Numbers */}
-          <div className="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
-                  currentPage === page
-                    ? 'bg-indigo-600 text-white'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage >= totalPages}
-            className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            title="Next page"
-          >
-            <FiChevronRight size={18} />
-          </button>
-
-          {/* Info */}
-          <span className="ml-2 text-xs text-slate-500">
-            Page {currentPage} of {totalPages}
-          </span>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={setCurrentPage}
+        />
       )}
     </div>
   );

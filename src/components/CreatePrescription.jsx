@@ -28,6 +28,7 @@ export default function CreatePrescription({
   const timersRef = useRef({});
   const lastQueryRef = useRef({});
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDrugChange = (idx, field, value) => {
     setDrugs((prev) =>
@@ -158,6 +159,8 @@ export default function CreatePrescription({
   };
 
   const handleSavePreview = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const prescriptionData = { drug: drugs, Diagnosis };
     try {
       if (initialPrescription && initialPrescription._id) {
@@ -218,6 +221,8 @@ export default function CreatePrescription({
     } catch (err) {
       console.error(err);
       toast.error("Failed to save/update prescription");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -449,13 +454,19 @@ export default function CreatePrescription({
 
             <button
               onClick={handleSavePreview}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors font-medium text-sm"
+              disabled={isSubmitting}
+              className={
+                "w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 rounded-md shadow-sm transition-colors font-medium text-sm " +
+                (isSubmitting
+                  ? "bg-blue-400 text-white cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700")
+              }
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              {initialPrescription && initialPrescription._id ? "Update" : "Save & Preview"}
+              {initialPrescription && initialPrescription._id ? (isSubmitting ? "Updating..." : "Update") : (isSubmitting ? "Saving..." : "Save & Preview")}
             </button>
           </div>
         </div>

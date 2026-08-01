@@ -42,20 +42,36 @@ api.interceptors.request.use(
 );
 
 // ==========================
-// GET PRESCRIPTIONS BY PATIENT ID
+// GET PRESCRIPTIONS BY PATIENT ID (with pagination)
 // ==========================
-export async function getPrescriptionsByPatientId(id) {
+export async function getPrescriptionsByPatientId(id, page = 1, limit = 6) {
   try {
     const response = await api.get(
-      `/prescriptions/patient/${id}`
+      `/prescriptions/patient/${id}?page=${page}&limit=${limit}`
     );
 
-    console.log(
-      "Fetched prescriptions response:",
-      response.data
-    );
-
-    return response.data;
+    const data = response.data;
+    console.log('getPrescriptionsByPatientId response:', data);
+    
+    // Handle paginated response { data: [...], pagination: {...} }
+    if (data.data && data.pagination) {
+      return {
+        prescriptions: Array.isArray(data.data) ? data.data : [],
+        pagination: data.pagination,
+      };
+    }
+    // Handle { prescriptions: [...], pagination: {...} }
+    if (data.prescriptions && data.pagination) {
+      return {
+        prescriptions: data.prescriptions,
+        pagination: data.pagination,
+      };
+    }
+    // Handle simple array response (backward compatibility)
+    return {
+      prescriptions: Array.isArray(data) ? data : [],
+      pagination: { page: 1, limit: 6, total: (Array.isArray(data) ? data : []).length },
+    };
   } catch (error) {
     console.error(
       "Error fetching prescriptions:",

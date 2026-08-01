@@ -9,6 +9,7 @@ import ListPrescription from '../components/ListPrescription';
 import CreatePrescription from '../components/CreatePrescription';
 import InvoiceList from '../components/InvoiceList';
 import Navbar from '../components/Navbar';
+import Pagination from '../components/Pagination';
 
 import {
   FiUser,
@@ -59,6 +60,8 @@ const VitalBadge = ({ icon: Icon, label, value }) => (
 export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
   const [editingPrescription, setEditingPrescription] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 6; // 6 prescriptions per page (2 rows of 3)
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -74,18 +77,30 @@ export default function PatientInfo() {
     enabled: !!id,
   });
 
+  // Fetch prescriptions with pagination
   const {
-    data: listOfPrescriptions = [],
+    data: prescriptionData = { prescriptions: [], pagination: { page: 1, limit: 6, total: 0 } },
     isLoading: isPrescriptionsLoading,
   } = useQuery({
-    queryKey: ['prescriptions', id, showModal],
-
+    queryKey: ['prescriptions', id, currentPage, showModal],
     queryFn: async () => {
-      const prescriptions = await getPrescriptionsByPatientId(id);
-      return prescriptions.data || [];
+      const result = await getPrescriptionsByPatientId(id, currentPage, limit);
+      console.log('Prescription data received:', result);
+      return result;
     },
-
     enabled: !!id,
+  });
+
+  const { prescriptions: listOfPrescriptions = [], pagination = {} } = prescriptionData;
+  const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / limit);
+  const totalCount = pagination.total || 0;
+  
+  console.log('Prescriptions pagination:', { 
+    listOfPrescriptions: listOfPrescriptions.length, 
+    pagination, 
+    totalPages, 
+    totalCount,
+    currentPage 
   });
 
   useEffect(() => {
@@ -271,7 +286,7 @@ export default function PatientInfo() {
               Prescriptions
 
               <span className="ml-2 text-sm font-medium text-slate-400">
-                ({listOfPrescriptions.length})
+                ({totalCount})
               </span>
             </h2>
           </div>
@@ -312,19 +327,29 @@ export default function PatientInfo() {
         ) : (
 
           /* Prescription Grid */
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {listOfPrescriptions.map((prescription, idx) => (
-              <ListPrescription
-                key={prescription._id || idx}
-                prescription={prescription}
-                idx={idx}
-                onEdit={(p) => {
-                  setEditingPrescription(p);
-                  setShowModal(true);
-                }}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {listOfPrescriptions.map((prescription, idx) => (
+                <ListPrescription
+                  key={prescription._id || idx}
+                  prescription={prescription}
+                  idx={idx}
+                  onEdit={(p) => {
+                    setEditingPrescription(p);
+                    setShowModal(true);
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
 
         {/* Invoices Section */}
