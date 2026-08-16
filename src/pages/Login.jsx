@@ -18,6 +18,7 @@ export default function Login() {
       const res=await login(form.username,form.password)
       if (res) {
         localStorage.setItem("token",res.token)
+        localStorage.setItem("refreshToken",res.refreshToken)
         if (res.role==="Receptionist") {
           localStorage.setItem("doctorId",res.doctorId)
           localStorage.setItem("clinicId",res.clinicId)
