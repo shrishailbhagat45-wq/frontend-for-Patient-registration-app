@@ -61,7 +61,7 @@ export default function PatientInfo() {
   const [showModal, setShowModal] = useState(false);
   const [editingPrescription, setEditingPrescription] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 6; // 6 prescriptions per page (2 rows of 3)
+  const limit = 3;
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ export default function PatientInfo() {
 
   // Fetch prescriptions with pagination
   const {
-    data: prescriptionData = { prescriptions: [], pagination: { page: 1, limit: 6, total: 0 } },
+    data: prescriptionData = { prescriptions: [], pagination: { page: 1, limit, total: 0 } },
     isLoading: isPrescriptionsLoading,
   } = useQuery({
     queryKey: ['prescriptions', id, currentPage, showModal],

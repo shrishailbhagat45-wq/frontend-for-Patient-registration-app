@@ -44,7 +44,7 @@ api.interceptors.request.use(
 // ==========================
 // GET PRESCRIPTIONS BY PATIENT ID (with pagination)
 // ==========================
-export async function getPrescriptionsByPatientId(id, page = 1, limit = 6) {
+export async function getPrescriptionsByPatientId(id, page = 1, limit = 3) {
   try {
     const response = await api.get(
       `/prescriptions/patient/${id}?page=${page}&limit=${limit}`
@@ -70,7 +70,7 @@ export async function getPrescriptionsByPatientId(id, page = 1, limit = 6) {
     // Handle simple array response (backward compatibility)
     return {
       prescriptions: Array.isArray(data) ? data : [],
-      pagination: { page: 1, limit: 6, total: (Array.isArray(data) ? data : []).length },
+      pagination: { page: 1, limit, total: (Array.isArray(data) ? data : []).length },
     };
   } catch (error) {
     console.error(

@@ -22,14 +22,9 @@ export async function login(email, password) {
 // ==========================
 export async function addReceptionist(receptionistData) {
   try {
-    const data = {
-      ...receptionistData,
-      doctorId: localStorage.getItem("doctorId"),
-    };
-
     const response = await api.post(
       "/user/addReceptionist",
-      data
+      receptionistData
     );
 
     return response.data;
@@ -44,11 +39,17 @@ export async function addReceptionist(receptionistData) {
 // ==========================
 export async function getReceptionist() {
   try {
+    const role = localStorage.getItem("role");
     const payload = {
-      role: localStorage.getItem("role"),
-      doctorId: localStorage.getItem("doctorId"),
-      clinicId: localStorage.getItem("clinicId"),
+      role,
     };
+
+    if (role === "Doctor") {
+      payload.doctorId = localStorage.getItem("doctorId");
+    } else {
+      payload.clinicId = localStorage.getItem("clinicId");
+    }
+
     const response = await api.post("/user/receptionists", payload);
     return response.data;
   } catch (error) {
@@ -183,7 +184,7 @@ export async function getAllDoctors() {
 export async function createClinic(data) {
   try {
     const response = await api.post(
-      "/clinic/register",
+      "/clinic/create",
       data
     );
 

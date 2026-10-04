@@ -74,8 +74,12 @@ export default function Profile() {
 
   const handleChangePassword = async () => {
     // Validate passwords
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+    if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(passwordForm.newPassword)) {
+      setPasswordError("Password must contain an uppercase letter, a number, and a special character");
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -87,7 +91,7 @@ export default function Profile() {
     try {
       const res = await updatePassword(passwordForm);
       console.log("updatePassword response:", res);
-      if(res && res.success){
+      if (res?.status === 200 && !res.error) {
         setIsChangingPassword(false);
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
         toast.success("Password changed successfully!");

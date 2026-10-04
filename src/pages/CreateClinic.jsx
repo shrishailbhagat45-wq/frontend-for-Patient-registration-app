@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createClinic } from "../API/user";
 
 /* =========================
    ZOD SCHEMA
@@ -11,8 +12,8 @@ const clinicSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().optional(),
   phone: z.string().regex(/^[0-9]{10}$/, "Enter valid 10-digit phone"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  password: z.string().min(6, "Minimum 6 characters"),
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Minimum 8 characters"),
   city: z.string().min(1, "City is required"),
   state: z.string().optional(),
   address: z.string().optional(),
@@ -101,15 +102,19 @@ export default function CreateClinic() {
     try {
       setLoading(true);
 
-      const res = await CreateClinic(data);
+      const result = await createClinic({
+        name: data.clinicName,
+        address: [data.address, data.city, data.state].filter(Boolean).join(", "),
+        phoneNumber: data.phone,
+        email: data.email,
+        adminName: [data.firstName, data.lastName].filter(Boolean).join(" "),
+        password: data.password,
+      });
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message);
-
-      alert("Clinic created successfully!");
+      alert(result.message || "Clinic created successfully!");
 
     } catch (err) {
-      alert(err.message || "Something went wrong");
+      alert(err.response?.data?.message || err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }

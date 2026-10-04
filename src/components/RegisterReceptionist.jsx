@@ -80,6 +80,9 @@ export default function RegisterReceptionist() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Email is invalid.";
     // Password is only required when adding new receptionist
     if (!editingId && !form.password) return "Password is required.";
+    if (form.password && !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(form.password)) {
+      return "Password must contain an uppercase letter, a number, and a special character.";
+    }
     return null;
   };
 
@@ -97,8 +100,8 @@ export default function RegisterReceptionist() {
       role: form.role,
     };
 
-    // Only include password if it's provided (for add or update)
-    if (form.password) {
+    // Password is accepted only by the create receptionist DTO.
+    if (!editingId && form.password) {
       payload.password = form.password;
     }
 
@@ -180,7 +183,7 @@ export default function RegisterReceptionist() {
         {editingId && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <strong>Editing mode:</strong> Leave password blank to keep the current password
+              <strong>Editing mode:</strong> Password changes are not available from this form.
             </p>
           </div>
         )}
@@ -217,22 +220,23 @@ export default function RegisterReceptionist() {
             />
           </label>
 
-          <label className="flex flex-col">
-            <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
-              <FiLock className="text-slate-500 text-sm" />
-              Password {!editingId && <span className="text-red-500">*</span>}
-              {editingId && <span className="text-xs text-slate-500">(optional)</span>}
-            </span>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required={!editingId}
-              placeholder={editingId ? "Leave blank to keep current password" : "Enter password"}
-              className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            />
-          </label>
+          {!editingId && (
+            <label className="flex flex-col">
+              <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
+                <FiLock className="text-slate-500 text-sm" />
+                Password <span className="text-red-500">*</span>
+              </span>
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter password"
+                className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </label>
+          )}
 
           <label className="flex flex-col">
             <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
@@ -246,7 +250,6 @@ export default function RegisterReceptionist() {
               className="border border-slate-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer"
             >
               <option>Receptionist</option>
-              <option>Manager</option>
             </select>
           </label>          <div className="sm:col-span-2 flex justify-end gap-3">
             {editingId && (

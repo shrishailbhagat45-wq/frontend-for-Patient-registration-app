@@ -85,18 +85,76 @@ function ActionsDropdown({ appointment, onStatusChange, onRefetch, invoice }) {
   const btnRef = useRef(null);
   const isTerminal = appointment.status === 'completed' || appointment.status === 'cancelled';
 
-  // Position the portal menu below the button on open
+  // Keep the portal menu inside the viewport so it works on mobile and desktop.
   useEffect(() => {
-    if (isOpen && btnRef.current) {
+    if (!isOpen || !btnRef.current) return;
+
+    const rect = btnRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const menuWidth = viewportWidth < 480 ? viewportWidth - 16 : 220;
+    const menuHeight = 210;
+
+    const left = viewportWidth < 480
+      ? 8
+      : Math.min(
+          Math.max(12, rect.left + rect.width / 2 - menuWidth / 2),
+          viewportWidth - menuWidth - 12
+        );
+
+    const top = Math.min(
+      Math.max(12, rect.bottom + 8),
+      viewportHeight - menuHeight - 12
+    );
+
+    setMenuStyle({
+      position: 'fixed',
+      top,
+      left,
+      zIndex: 9999,
+      width: `${menuWidth}px`,
+      maxWidth: 'calc(100vw - 16px)',
+      minWidth: '12rem',
+    });
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleResize = () => {
+      if (!btnRef.current) return;
+
       const rect = btnRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const menuWidth = viewportWidth < 480 ? viewportWidth - 16 : 220;
+      const menuHeight = 210;
+
+      const left = viewportWidth < 480
+        ? 8
+        : Math.min(
+            Math.max(12, rect.left + rect.width / 2 - menuWidth / 2),
+            viewportWidth - menuWidth - 12
+          );
+
+      const top = Math.min(
+        Math.max(12, rect.bottom + 8),
+        viewportHeight - menuHeight - 12
+      );
+
       setMenuStyle({
         position: 'fixed',
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
+        top,
+        left,
         zIndex: 9999,
+        width: `${menuWidth}px`,
+        maxWidth: 'calc(100vw - 16px)',
         minWidth: '12rem',
       });
-    }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isOpen]);
 
   const handleSelect = async (newStatus) => {
@@ -236,30 +294,21 @@ export default function AppointmentTable({ onStatsChange }) {
 
     const fetchInvoices = async () => {
       const invoiceMap = {};
-      
+
       for (const appointment of appointments) {
         const patientId = appointment.patientId?._id || appointment.patientId?.id || appointment.patientId;
-        
-        if (patientId && !invoiceMap[patientId]) {
-          try {
-            const invoice = await getLatestInvoiceByPatient(patientId);
-            const today = new Date();
-            const updatedDate = new Date(updatedAt);
 
-            const isToday =
-              today.getFullYear() === updatedDate.getFullYear() &&
-              today.getMonth() === updatedDate.getMonth() &&
-              today.getDate() === updatedDate.getDate();
-            if(isToday) {
-            invoiceMap[patientId] = invoice;
-            }
-          } catch (error) {
-            console.error(`Failed to fetch invoice for patient ${patientId}:`, error);
-            invoiceMap[patientId] = null;
-          }
+        if (!patientId || invoiceMap[patientId]) continue;
+
+        try {
+          const invoice = await getLatestInvoiceByPatient(patientId);
+          invoiceMap[patientId] = invoice ?? null;
+        } catch (error) {
+          console.error(`Failed to fetch invoice for patient ${patientId}:`, error);
+          invoiceMap[patientId] = null;
         }
       }
-      
+
       setInvoices(invoiceMap);
     };
 
@@ -383,15 +432,21 @@ useEffect(() => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {rows.map((a) => (
-                  <tr key={a._id} className="hover:bg-slate-50 transition-colors">
-                    
-                    <td className="px-4 py-3 text-sm text-slate-800 font-medium whitespace-nowrap">
-                      <Link to={a.patientId?._id ? `/patient/${a.patientId._id}` : a.patientId?.id ? `/patient/${a.patientId.id}` : a.patientId ? `/patient/${a.patientId}` : '/'}>
-                        {a._name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._uhid}</td>
+                {rows.map((a) => {
+                  const patientId = a.patientId?._id || a.patientId?.id || a.patientId;
+
+                  return (
+                    <tr key={a._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-slate-800 font-medium whitespace-nowrap">
+                        {patientId ? (
+                          <Link to={`/patient/${patientId}`}>
+                            {a._name}
+                          </Link>
+                        ) : (
+                          <span className="text-slate-800">{a._name}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._uhid}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a._phone}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{formatDate(a.date)}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{a.timeFrom || '—'}</td>
@@ -402,16 +457,17 @@ useEffect(() => {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <BillBadge billStatus={a.billStatus} />
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <ActionsDropdown 
-                        appointment={a} 
-                        onStatusChange={handleStatusChange} 
-                        onRefetch={refetch}
-                        invoice={invoices[a.patientId?._id || a.patientId?.id || a.patientId]}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <ActionsDropdown 
+                          appointment={a} 
+                          onStatusChange={handleStatusChange} 
+                          onRefetch={refetch}
+                          invoice={invoices[patientId]}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

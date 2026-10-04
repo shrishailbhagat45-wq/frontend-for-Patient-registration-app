@@ -35,3 +35,37 @@ export async function getDoctorPerformanceAnalytics(period = "today") {
     throw error;
   }
 }
+
+// ==========================
+// GET FINANCIAL SUMMARY ANALYTICS
+// ==========================
+export async function getFinancialSummaryAnalytics(period = "today") {
+  try {
+    const clinicId = localStorage.getItem("clinicId");
+    const response = await api.get(
+      `/invoices/analytics/financial-summary?period=${period}&clinicId=${clinicId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching financial summary analytics:", error);
+    throw error;
+  }
+}
+
+// ==========================
+// GET DASHBOARD ANALYTICS
+// ==========================
+export async function getDashboardAnalytics(period = "today") {
+  try {
+    const clinicId = localStorage.getItem("clinicId");
+    const response = await api.get(
+      `/invoices/analytics/dashboard?period=${period}&clinicId=${clinicId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching dashboard analytics:", error);
+    throw error;
+  }
+}

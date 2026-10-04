@@ -3,7 +3,7 @@ import Navbar from "./Navbar";
 import PrintButton from "../components/PrintButton";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getUserById } from "../API/user";
+import { getUserProfile } from "../API/user";
 
 const calculateAge = (birthDate) => {
   if (!birthDate) return null;
@@ -33,7 +33,7 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
     queryKey: ["doctor", doctorId],
     queryFn: async () => {
       if (!doctorId) return {};
-      const res = await getUserById(doctorId);
+      const res = await getUserProfile(doctorId);
       return res?.data || res || {};
     },
     enabled: !!doctorId,
@@ -48,11 +48,11 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
   const qualification =
     doctorData?.qualification || doctorData?.qualifications || doctorData?.degree || "MBBS, MD";
 
-  const clinicName = doctorData?.clinicName || "Pardeshi Clinic";
+  const clinicName = doctorData.clinicId?.name || "HealSync Clinic";
   const clinicAddress =
-    doctorData?.clinicAddress || "Jivaji Mandir, Kolhapur Road, Ichalkaranji, Maharashtra 416115";
-  const clinicPhone = doctorData?.phone || doctorData?.phoneNumber || "+91 234 567 8900";
-  const clinicEmail = doctorData?.email || "info@pardeshclinic.com";
+    doctorData.clinicId?.address || "Kolhapur Road, Ichalkaranji, Maharashtra 416115";
+  const clinicPhone = doctorData.clinicId?.phoneNumber || "+91 234 567 8900";
+  const clinicEmail = doctorData.clinicId?.email || "info@healsyncclinic.com";
 
   const vitals = [
     { label: "BP", value: patientData.bloodPressure },
@@ -205,23 +205,21 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
       <div className="bg-slate-100 min-h-screen">
         <div className="no-print"><Navbar /></div>
 
-        {/* Floating buttons */}
-        <div className="no-print fixed top-20 md:left-72 left-3 z-50">
-          <button
-            onClick={handleGoBack}
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-sm font-medium rounded-lg px-3 py-2 shadow-sm transition-all"
-          >
-            <IoArrowBack className="text-slate-400 flex-shrink-0" />
-            <span className="hidden sm:inline">Back to Patient</span>
-            <span className="sm:hidden">Back</span>
-          </button>
-        </div>
-        <div className="no-print fixed top-20 right-3 sm:right-6 z-50">
-          <PrintButton />
-        </div>
-
         {/* ── Page wrapper ── */}
         <div className="rx-print-wrapper pt-20 pb-10 px-2 sm:px-4 md:px-6">
+
+          {/* Actions stay above the card so they never cover the clinic identity. */}
+          <div className="no-print max-w-3xl mx-auto mb-3 flex items-center justify-between gap-3">
+            <button
+              onClick={handleGoBack}
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-sm font-medium rounded-lg px-3 py-2 shadow-sm transition-colors"
+            >
+              <IoArrowBack className="text-slate-400 flex-shrink-0" />
+              <span className="hidden sm:inline">Back to Patient</span>
+              <span className="sm:hidden">Back</span>
+            </button>
+            <PrintButton />
+          </div>
 
           {/* ── Card ── */}
           <div className="rx-card w-full max-w-3xl mx-auto bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col">
@@ -229,14 +227,14 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
             {/* HEADER */}
             <div className="rx-header bg-[#1e3a5f] px-4 py-4 md:px-7 md:py-5 flex-shrink-0">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
-                <div className="rx-header-left flex items-center gap-3 min-w-0">
+                <div className="rx-header-left flex items-center gap-3 w-full min-w-0">
                   <img
                     src="/clinic logo.png"
                     alt=""
                     className="w-10 h-10 md:w-14 md:h-14 object-contain flex-shrink-0"
                   />
-                  <div className="min-w-0">
-                    <h1 className="text-white text-lg md:text-xl font-semibold tracking-tight leading-tight truncate">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-white text-base sm:text-lg md:text-xl font-semibold tracking-tight leading-tight break-words line-clamp-2">
                       {clinicName}
                     </h1>
                     <p className="text-[#93afd4] text-[9px] tracking-[0.14em] uppercase mt-0.5">
@@ -244,7 +242,7 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
                     </p>
                   </div>
                 </div>
-                <div className="rx-header-right border-t border-white/10 pt-3 md:border-0 md:pt-0 md:text-right flex-shrink-0">
+                <div className="rx-header-right w-full border-t border-white/10 pt-3 md:w-auto md:border-0 md:pt-0 md:text-right flex-shrink-0">
                   <p className="text-slate-200 text-sm md:text-[15px] font-medium">
                     {isDoctorLoading ? "…" : `Dr. ${doctorName}`}
                   </p>

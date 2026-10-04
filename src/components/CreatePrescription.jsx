@@ -6,7 +6,6 @@ import {
 } from "../API/Prescriptions";
 import { updatePatientVitals } from "../API/Patient";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router";
 import BloodPressureInput from "./BloodPressureInput";
 
 export default function CreatePrescription({
@@ -28,7 +27,6 @@ export default function CreatePrescription({
   const [bloodSugarLevel, setBloodSugarLevel] = useState("");
   const timersRef = useRef({});
   const lastQueryRef = useRef({});
-  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDrugChange = (idx, field, value) => {
@@ -58,6 +56,7 @@ export default function CreatePrescription({
     setDrugs([
       { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
     ]);
+    setDiagnosis("");
     setRemarks("");
     setSuggestions({});
     setHighlight({});
@@ -84,6 +83,10 @@ export default function CreatePrescription({
           : [{ name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" }];
       setDrugs(presetDrugs);
       setDiagnosis(initialPrescription.Diagnosis || "");
+      setWeight(initialPrescription.drug?.[0]?.weight?.toString() || "");
+      setBloodPressure(initialPrescription.drug?.[0]?.bloodPressure || "");
+      setPulseRate(initialPrescription.drug?.[0]?.pulseRate?.toString() || "");
+      setBloodSugarLevel(initialPrescription.drug?.[0]?.bloodSugarLevel?.toString() || "");
     }
   }, [initialPrescription, showModal]);
 
@@ -161,8 +164,30 @@ export default function CreatePrescription({
 
   const handleSavePreview = async () => {
     if (isSubmitting) return;
+    const parsedWeight = Number(weight);
+    if (!weight || !Number.isFinite(parsedWeight)) {
+      toast.error("Enter the patient's weight to save this prescription");
+      return;
+    }
+
     setIsSubmitting(true);
-    const prescriptionData = { drug: drugs, Diagnosis };
+    const prescriptionVitals = {};
+    if (bloodPressure) prescriptionVitals.bloodPressure = bloodPressure;
+    if (pulseRate !== "") prescriptionVitals.pulseRate = Number(pulseRate);
+    if (bloodSugarLevel !== "") {
+      prescriptionVitals.bloodSugarLevel = Number(bloodSugarLevel);
+    }
+
+    const prescriptionData = {
+      drug: drugs.map((drug) => ({
+        ...drug,
+        weight: parsedWeight,
+        ...prescriptionVitals,
+      })),
+      weight: parsedWeight,
+      ...prescriptionVitals,
+      Diagnosis,
+    };
     try {
       if (initialPrescription && initialPrescription._id) {
         await updatePrescription(initialPrescription._id, prescriptionData);
@@ -373,7 +398,7 @@ export default function CreatePrescription({
             <h3 className="text-sm font-semibold text-slate-800 mb-3">Patient Vital Signs</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Weight (kg)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Weight (kg) <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   step="0.1"
@@ -415,7 +440,7 @@ export default function CreatePrescription({
               </div>
             </div>
             <p className="text-xs text-slate-600 mt-2">
-              These vital signs will be saved to patient information, not the prescription
+              These vital signs will be saved to patient information and attached to the prescription
             </p>
           </div>
 
