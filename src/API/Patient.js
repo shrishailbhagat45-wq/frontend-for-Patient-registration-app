@@ -14,7 +14,11 @@ export async function createPatient(patientData) {
       gender: patientData.gender,
       birthday: birthdayISO,
       phoneNumber: patientData.phoneNumber,
-      weight: Number(patientData.weight),
+      weight: Number(patientData.weight || 0),
+      bloodPressure: patientData.bloodPressure || null,
+      pulseRate: Number(patientData.pulseRate || 0),
+      bloodSugarLevel: Number(patientData.bloodSugarLevel || 0),
+      address: patientData.address || null,
       clinicId: localStorage.getItem("clinicId"),
     };
 

@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastContainer } from 'react-toastify'
 import { Navigate, Outlet } from 'react-router-dom'
 import 'react-toastify/dist/ReactToastify.css'
-import RegisterPatient from './pages/RegisterPatient.jsx'
 import './index.css'
 import RootLayout from './RootLayout.jsx'
 import PatientInfo from './pages/PatientInfo.jsx'
@@ -39,7 +38,6 @@ const router = createBrowserRouter([
     element: <RequireAuth />,
     children: [
       {path:'/home',element:<Home />},
-      {path: '/register', element: <RegisterPatient />},
       {path: '/patient/:id', element: <PatientInfo />},
       {path: '/patient-profile/:id', element: <EditPatientProfile />}, 
       {path: '/prescription/:prescriptionId', element: <DetailPrescription />}, 
@@ -59,4 +57,3 @@ createRoot(document.getElementById('root')).render(
     <ToastContainer />
   </QueryClientProvider>
 )
-

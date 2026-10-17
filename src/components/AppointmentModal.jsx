@@ -6,22 +6,27 @@ import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { FiX, FiSearch, FiLoader } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { getPatients, createPatient } from '../API/Patient';
+import { getPatients, createPatient, updatePatientVitals } from '../API/Patient';
 import { createAppointment } from '../API/Appointment';
+import BloodPressureInput from './BloodPressureInput';
 
 // ─── Validation schema ────────────────────────────────────────────────────────
 // Only the appointment-level fields are required unconditionally.
 // Patient fields (name, phoneNumber, gender) are required only when registering
 // a new patient — enforced in handleSave after checking patientIsPresent.
 const schema = z.object({
-  name:        z.string().optional(),
-  phoneNumber: z.string().optional(),
-  gender:      z.string().optional(),
-  birthDate:   z.string().optional(),
-  address:     z.string().optional(),
-  date:        z.string().min(1, 'Date is required'),
-  timeFrom:    z.string().min(1, 'Time From is required'),
-  timeTo:      z.string().min(1, 'Time To is required'),
+  name:              z.string().optional(),
+  phoneNumber:       z.string().optional(),
+  gender:            z.string().optional(),
+  birthDate:         z.string().optional(),
+  address:           z.string().optional(),
+  weight:            z.number().nullable().optional(),
+  bloodPressure:     z.string().optional(),
+  pulseRate:         z.number().nullable().optional(),
+  bloodSugarLevel:   z.number().nullable().optional(),
+  date:              z.string().min(1, 'Date is required'),
+  timeFrom:          z.string().min(1, 'Time From is required'),
+  timeTo:            z.string().min(1, 'Time To is required'),
 }).refine(
   (d) => !d.timeFrom || !d.timeTo || d.timeTo > d.timeFrom,
   { message: 'Time To must be after Time From', path: ['timeTo'] }
@@ -53,14 +58,18 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
     reset,
     setValue,
     setError,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       name: '', phoneNumber: '', gender: '', birthDate: '', address: '',
+      weight: null, bloodPressure: '', pulseRate: null, bloodSugarLevel: null,
       date: todayISO, timeFrom: '', timeTo: '',
     },
   });
+
+  const bloodPressureValue = watch('bloodPressure') || '';
 
   // ─── Patient search via useQuery ────────────────────────────────────────────
   // Uses the existing getPatients endpoint. Enabled only when debouncedQuery ≥ 2 chars.
@@ -90,6 +99,7 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
     if (isOpen) {
       reset({
         name: '', phoneNumber: '', gender: '', birthDate: '', address: '',
+        weight: null, bloodPressure: '', pulseRate: null, bloodSugarLevel: null,
         date: new Date().toISOString().split('T')[0],
         timeFrom: '', timeTo: '',
       });
@@ -140,6 +150,10 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
       ? new Date(patient.birthday).toISOString().split('T')[0]
       : '');
     setValue('address', patient.address || '');
+    setValue('weight', patient.weight !== null && patient.weight !== undefined ? Number(patient.weight) : null);
+    setValue('bloodPressure', patient.bloodPressure || '');
+    setValue('pulseRate', patient.pulseRate !== null && patient.pulseRate !== undefined ? Number(patient.pulseRate) : null);
+    setValue('bloodSugarLevel', patient.bloodSugarLevel !== null && patient.bloodSugarLevel !== undefined ? Number(patient.bloodSugarLevel) : null);
   };
 
   // ─── Clear patient selection when search is cleared ─────────────────────────
@@ -163,6 +177,10 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
       setValue('gender', '');
       setValue('birthDate', '');
       setValue('address', '');
+      setValue('weight', null);
+      setValue('bloodPressure', '');
+      setValue('pulseRate', null);
+      setValue('bloodSugarLevel', null);
     }
   };
 
@@ -206,6 +224,19 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
 
       patientId = selectedPatient._id;
 
+      try {
+        await updatePatientVitals(patientId, {
+          weight: data.weight,
+          bloodPressure: data.bloodPressure || null,
+          pulseRate: data.pulseRate,
+          bloodSugarLevel: data.bloodSugarLevel,
+        });
+      } catch (error) {
+        console.error('Failed to update patient vitals:', error);
+        toast.error('Failed to update patient vitals. Please try again.');
+        return;
+      }
+
     } else {
 
       /**
@@ -218,7 +249,10 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
           gender: data.gender,
           birthDate: data.birthDate || null,
           phoneNumber: data.phoneNumber,
-          weight: 0,
+          weight: data.weight,
+          bloodPressure: data.bloodPressure || null,
+          pulseRate: data.pulseRate,
+          bloodSugarLevel: data.bloodSugarLevel,
         });
 
         patientId = created?.data?._id;
@@ -337,8 +371,9 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     type="text"
                     value={searchQuery}
                     onChange={handleSearchChange}
+                    readOnly={patientIsPresent}
                     placeholder="Search by name or phone number…"
-                    className="w-full pl-9 pr-9 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors"
+                    className={`w-full pl-9 pr-9 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors${patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : ''}`}
                     autoComplete="off"
                   />
                   {isSearching && (
@@ -392,6 +427,10 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                       setValue('name', ''); setValue('phoneNumber', '');
                       setValue('gender', ''); setValue('birthDate', '');
                       setValue('address', '');
+                      setValue('weight', null);
+                      setValue('bloodPressure', '');
+                      setValue('pulseRate', null);
+                      setValue('bloodSugarLevel', null);
                     }}
                     className="ml-auto text-xs text-green-600 hover:underline"
                   >
@@ -481,6 +520,73 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                   className={inputCls('address') + (patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : '')}
                 />
                 <FieldError field="address" />
+              </div>
+
+              <div className="border-t border-slate-200 pt-1">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Patient Vital Signs</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Weight (kg)
+                  </label>
+                  <input
+                    {...register('weight', {
+                      setValueAs: (value) => value === '' ? null : Number(value),
+                    })}
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="e.g. 68.5"
+                    className={inputCls('weight')}
+                  />
+                  <FieldError field="weight" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Blood Pressure (mmHg)
+                  </label>
+                  <BloodPressureInput
+                    value={bloodPressureValue}
+                    onChange={(value) => setValue('bloodPressure', value, { shouldValidate: true })}
+                    placeholder="e.g. 120/80"
+                    className={inputCls('bloodPressure')}
+                  />
+                  <FieldError field="bloodPressure" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Pulse Rate (bpm)
+                  </label>
+                  <input
+                    {...register('pulseRate', {
+                      setValueAs: (value) => value === '' ? null : Number(value),
+                    })}
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="e.g. 72"
+                    className={inputCls('pulseRate')}
+                  />
+                  <FieldError field="pulseRate" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Blood Sugar Level (mg/dL)
+                  </label>
+                  <input
+                    {...register('bloodSugarLevel', {
+                      setValueAs: (value) => value === '' ? null : Number(value),
+                    })}
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="e.g. 110"
+                    className={inputCls('bloodSugarLevel')}
+                  />
+                  <FieldError field="bloodSugarLevel" />
+                </div>
               </div>
 
               {/* ── Appointment details ── */}

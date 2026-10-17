@@ -22,6 +22,7 @@ import {
   FiDroplet,
   FiHeart,
 } from 'react-icons/fi';
+import { FaWeightScale } from 'react-icons/fa6';
 
 const calculateAge = (birthDate) => {
   if (!birthDate) return null;
@@ -183,10 +184,21 @@ export default function PatientInfo() {
                 </div>
 
                 {/* Vitals */}
-                {(patientData.bloodPressure ||
+                {(patientData.weight !== null && patientData.weight !== undefined && patientData.weight !== '' ||
+                  patientData.bloodPressure ||
                   patientData.pulseRate ||
                   patientData.bloodSugarLevel) && (
                   <div className="mt-3 flex flex-wrap gap-2">
+
+                    {patientData.weight !== null && patientData.weight !== undefined && patientData.weight !== '' && (
+                      <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
+                        <FaWeightScale size={11} className="text-slate-400" />
+                        <span className="font-medium text-slate-400">Weight</span>
+                        <span className="font-mono font-semibold">
+                          {patientData.weight} kg
+                        </span>
+                      </div>
+                    )}
 
                     {patientData.bloodPressure && (
                       <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
