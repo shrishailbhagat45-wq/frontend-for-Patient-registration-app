@@ -1,60 +1,67 @@
-import { useState } from 'react'
-import { login } from '../API/user';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { login } from "../API/user";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router";
+import { Link } from "react-router-dom";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
-  const navigate=useNavigate()
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res=await login(form.username,form.password)
+      const res = await login(form.username, form.password);
       if (res) {
-        localStorage.setItem("token",res.token)
-        localStorage.setItem("refreshToken",res.refreshToken)
-        if (res.role==="Receptionist") {
-          localStorage.setItem("doctorId",res.doctorId)
-          localStorage.setItem("clinicId",res.clinicId)
-          localStorage.setItem("Id",res.id)
-          localStorage.setItem("role",res.role)
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("refreshToken", res.refreshToken);
+        if (res.role === "Receptionist") {
+          localStorage.setItem("doctorId", res.doctorId);
+          localStorage.setItem("clinicId", res.clinicId);
+          localStorage.setItem("Id", res.id);
+          localStorage.setItem("role", res.role);
         } else {
-          localStorage.setItem("doctorId",res.id)
-          localStorage.setItem("clinicId",res.clinicId)
-          localStorage.setItem("Id",res.id)
-          localStorage.setItem("role",res.role)
+          localStorage.setItem("doctorId", res.id);
+          localStorage.setItem("clinicId", res.clinicId);
+          localStorage.setItem("Id", res.id);
+          localStorage.setItem("role", res.role);
         }
         toast.success("Login successful");
-        navigate('/home')
+        navigate("/home");
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Invalid credentials. Please try again.";
+      const errorMsg =
+        error.response?.data?.message ||
+        "Invalid credentials. Please try again.";
       toast.error(errorMsg);
     }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="w-full max-w-md px-6">        {/* Brand Header */}
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-md px-6">
+        {" "}
+        {/* Brand Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500 mb-2">
             HealSync360
           </h1>
           <p className="text-sm text-slate-500">Clinical Management System</p>
         </div>
-
         {/* Login Card */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-lg shadow-sm border border-slate-200"
         >
           <h2 className="text-xl font-semibold text-slate-800 mb-5">Sign In</h2>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Email
@@ -70,7 +77,7 @@ export default function Login() {
               required
             />
           </div>
-          
+
           <div className="mb-5">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Password
@@ -86,16 +93,15 @@ export default function Login() {
               required
             />
           </div>
-            <button
+          <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
           >
             Sign In
           </button>
         </form>
-
         <p className="text-center text-sm text-slate-500 mt-4">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <Link to="/createClinic" className="text-blue-600 hover:underline">
             Create Clinic
           </Link>

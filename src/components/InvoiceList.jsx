@@ -1,27 +1,39 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getInvoicesByPatient } from '../API/billing';
-import { FiFileText, FiCalendar, FiDollarSign, FiAlertCircle, FiEdit } from 'react-icons/fi';
-import LoadingList from './LoadingList';
-import Pagination from './Pagination';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteInvoice, getInvoicesByPatient } from "../API/billing";
+import {
+  FiFileText,
+  FiCalendar,
+  FiDollarSign,
+  FiAlertCircle,
+  FiEdit,
+  FiTrash2,
+} from "react-icons/fi";
+import { toast } from "react-toastify";
+import LoadingList from "./LoadingList";
+import Pagination from "./Pagination";
 
 /**
  * Display invoices for a patient with pagination support
  */
 const InvoiceList = ({ patientId }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 3;
 
   // Fetch invoices with pagination
   const {
-    data: invoiceData = { invoices: [], pagination: { page: 1, limit: 3, total: 0 } },
+    data: invoiceData = {
+      invoices: [],
+      pagination: { page: 1, limit: 3, total: 0 },
+    },
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ['invoices', patientId, currentPage],
+    queryKey: ["invoices", patientId, currentPage],
     queryFn: async () => {
       const result = await getInvoicesByPatient(patientId, currentPage, limit);
       return result;
@@ -30,20 +42,39 @@ const InvoiceList = ({ patientId }) => {
   });
 
   const { invoices = [], pagination = {} } = invoiceData;
-  const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / limit);
+  const totalPages =
+    pagination.totalPages || Math.ceil((pagination.total || 0) / limit);
   const totalCount = pagination.total || 0;
+
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: deleteInvoice,
+    onSuccess: async () => {
+      toast.success("Invoice deleted successfully");
+      if (invoices.length === 1 && currentPage > 1) {
+        setCurrentPage((page) => page - 1);
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["invoices", patientId],
+      });
+    },
+    onError: (deleteError) => {
+      toast.error(
+        deleteError?.response?.data?.message || "Failed to delete invoice",
+      );
+    },
+  });
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return date.toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatCurrency = (amount) => {
-    return `₹${parseFloat(amount || 0).toLocaleString('en-IN', {
+    return `₹${parseFloat(amount || 0).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -64,7 +95,9 @@ const InvoiceList = ({ patientId }) => {
   if (isError) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-red-200 bg-red-50 px-6 py-14 text-center">
-        <p className="text-sm text-red-600">Error loading invoices: {error?.message}</p>
+        <p className="text-sm text-red-600">
+          Error loading invoices: {error?.message}
+        </p>
       </div>
     );
   }
@@ -106,27 +139,65 @@ const InvoiceList = ({ patientId }) => {
                 </p>
               </div>
 
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                invoice.paymentStatus === 'paid' || (invoice.amountRemaining === 0 && invoice.totalAmount > 0)
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : invoice.paymentStatus === 'partial' || invoice.paymentStatus === 'partially_paid' || (invoice.amountPaid > 0 && invoice.amountRemaining > 0)
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-rose-100 text-rose-700'
-              }`}>
-                {invoice.paymentStatus === 'paid' || (invoice.amountRemaining === 0 && invoice.totalAmount > 0)
-                  ? 'Paid'
-                  : invoice.paymentStatus === 'partial' || invoice.paymentStatus === 'partially_paid' || (invoice.amountPaid > 0 && invoice.amountRemaining > 0)
-                    ? 'Partial'
-                    : 'Unpaid'}
-              </span>
-              <button
-                onClick={() => navigate(`/invoice/${patientId}/${invoice._id || invoice.id}`)}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 transition"
-                title="Edit invoice"
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                  invoice.paymentStatus === "paid" ||
+                  (invoice.amountRemaining === 0 && invoice.totalAmount > 0)
+                    ? "bg-emerald-100 text-emerald-700"
+                    : invoice.paymentStatus === "partial" ||
+                        invoice.paymentStatus === "partially_paid" ||
+                        (invoice.amountPaid > 0 && invoice.amountRemaining > 0)
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-rose-100 text-rose-700"
+                }`}
               >
-                <FiEdit size={14} />
-                Edit
-              </button>
+                {invoice.paymentStatus === "paid" ||
+                (invoice.amountRemaining === 0 && invoice.totalAmount > 0)
+                  ? "Paid"
+                  : invoice.paymentStatus === "partial" ||
+                      invoice.paymentStatus === "partially_paid" ||
+                      (invoice.amountPaid > 0 && invoice.amountRemaining > 0)
+                    ? "Partial"
+                    : "Unpaid"}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/invoice/${patientId}/${invoice._id || invoice.id}`,
+                    )
+                  }
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100"
+                  title="Edit invoice"
+                >
+                  <FiEdit size={14} />
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const invoiceId = invoice._id || invoice.id;
+                    if (!invoiceId) return;
+                    if (
+                      !window.confirm(
+                        `Delete invoice #${invoiceId.substring(0, 8)}?`,
+                      )
+                    )
+                      return;
+                    deleteInvoiceMutation.mutate(invoiceId);
+                  }}
+                  disabled={
+                    deleteInvoiceMutation.isPending ||
+                    !(invoice._id || invoice.id)
+                  }
+                  aria-label={`Delete invoice ${invoice._id || invoice.id}`}
+                  title="Delete invoice"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <FiTrash2 size={14} />
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-3 text-sm text-slate-600">
@@ -139,7 +210,9 @@ const InvoiceList = ({ patientId }) => {
                 <FiDollarSign size={14} className="text-slate-400" />
                 <div>
                   <p className="text-xs text-slate-400">Total</p>
-                  <p className="font-semibold text-slate-900">{formatCurrency(invoice.totalAmount)}</p>
+                  <p className="font-semibold text-slate-900">
+                    {formatCurrency(invoice.totalAmount)}
+                  </p>
                 </div>
               </div>
 
@@ -149,7 +222,8 @@ const InvoiceList = ({ patientId }) => {
                   <p className="text-xs text-slate-400">Due</p>
                   <p className="font-semibold text-slate-900">
                     {formatCurrency(
-                      invoice.amountRemaining ?? (invoice.totalAmount || 0) - (invoice.amountPaid || 0)
+                      invoice.amountRemaining ??
+                        (invoice.totalAmount || 0) - (invoice.amountPaid || 0),
                     )}
                   </p>
                 </div>
@@ -165,11 +239,15 @@ const InvoiceList = ({ patientId }) => {
             <div className="border-t border-slate-100 pt-3 text-xs text-slate-600">
               <div className="flex justify-between mb-1">
                 <span>Subtotal:</span>
-                <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
+                <span className="font-medium">
+                  {formatCurrency(invoice.subtotal)}
+                </span>
               </div>
               <div className="flex justify-between mb-1">
                 <span>Tax:</span>
-                <span className="font-medium">{formatCurrency(invoice.totalTax || invoice.taxAmount)}</span>
+                <span className="font-medium">
+                  {formatCurrency(invoice.totalTax || invoice.taxAmount)}
+                </span>
               </div>
               <div className="flex justify-between text-slate-900 font-semibold mb-3">
                 <span>Total:</span>
@@ -182,14 +260,22 @@ const InvoiceList = ({ patientId }) => {
                   <p className="font-semibold text-slate-700 mb-2">Items:</p>
                   <div className="space-y-1">
                     {invoice.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-xs text-slate-600">
+                      <div
+                        key={idx}
+                        className="flex justify-between text-xs text-slate-600"
+                      >
                         <div className="flex-1">
-                          <span className="font-medium text-slate-700">{item.itemName}</span>
+                          <span className="font-medium text-slate-700">
+                            {item.itemName}
+                          </span>
                           <span className="text-slate-500 ml-1">
-                            ({item.quantity}x {formatCurrency(item.sellingPrice)})
+                            ({item.quantity}x{" "}
+                            {formatCurrency(item.sellingPrice)})
                           </span>
                         </div>
-                        <span className="text-slate-700 font-medium">{formatCurrency(item.subtotal)}</span>
+                        <span className="text-slate-700 font-medium">
+                          {formatCurrency(item.subtotal)}
+                        </span>
                       </div>
                     ))}
                   </div>

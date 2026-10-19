@@ -11,16 +11,22 @@ const calculateAge = (birthDate) => {
   const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate()))
+    age--;
   return age;
 };
 
-export default function PrescriptionComponent({ patientData, prescriptionData }) {
+export default function PrescriptionComponent({
+  patientData,
+  prescriptionData,
+}) {
   const navigate = useNavigate();
 
   const formattedDate = prescriptionData.createdAt
     ? new Date(prescriptionData.createdAt).toLocaleDateString("en-IN", {
-        year: "numeric", month: "long", day: "numeric",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       })
     : "";
 
@@ -42,28 +48,61 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
   });
 
   const doctorName =
-    doctorData?.name || doctorData?.fullName || doctorData?.doctorName || "Unknown Doctor";
+    doctorData?.name ||
+    doctorData?.fullName ||
+    doctorData?.doctorName ||
+    "Unknown Doctor";
   const specialization =
-    doctorData?.specialization || doctorData?.speciality || doctorData?.department || "General Physician";
+    doctorData?.specialization ||
+    doctorData?.speciality ||
+    doctorData?.department ||
+    "General Physician";
   const qualification =
-    doctorData?.qualification || doctorData?.qualifications || doctorData?.degree || "MBBS, MD";
+    doctorData?.qualification ||
+    doctorData?.qualifications ||
+    doctorData?.degree ||
+    "MBBS, MD";
 
   const clinicName = doctorData.clinicId?.name || "HealSync Clinic";
   const clinicAddress =
-    doctorData.clinicId?.address || "Kolhapur Road, Ichalkaranji, Maharashtra 416115";
+    doctorData.clinicId?.address ||
+    "Kolhapur Road, Ichalkaranji, Maharashtra 416115";
   const clinicPhone = doctorData.clinicId?.phoneNumber || "+91 234 567 8900";
   const clinicEmail = doctorData.clinicId?.email || "info@healsyncclinic.com";
 
   const vitals = [
-    { label: "BP", value: patientData.bloodPressure },
-    { label: "PR", value: patientData.pulseRate },
-    { label: "BS", value: patientData.bloodSugarLevel },
+    {
+      label: "Weight",
+      value: prescriptionData.weight ? `${prescriptionData.weight} kg` : "—",
+    },
+    {
+      label: "BP",
+      value: prescriptionData.bloodPressure
+        ? prescriptionData.bloodPressure
+        : "—",
+    },
+    {
+      label: "PR",
+      value: prescriptionData.pulseRate
+        ? `${prescriptionData.pulseRate} bpm`
+        : "—",
+    },
+    {
+      label: "BS",
+      value: prescriptionData.bloodSugarLevel
+        ? `${prescriptionData.bloodSugarLevel} mg/dL`
+        : "—",
+    },
   ];
 
   const demographics = [
-    { label: "Age", val: patientData.birthday ? `${calculateAge(patientData.birthday)} yrs` : "—" },
+    {
+      label: "Age",
+      val: patientData.birthday
+        ? `${calculateAge(patientData.birthday)} yrs`
+        : "—",
+    },
     { label: "Gender", val: patientData.gender || "—" },
-    { label: "Weight", val: patientData.weight ? `${patientData.weight} kg` : "—" },
   ];
 
   const handleGoBack = () => {
@@ -203,11 +242,12 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
       `}</style>
 
       <div className="bg-slate-100 min-h-screen">
-        <div className="no-print"><Navbar /></div>
+        <div className="no-print">
+          <Navbar />
+        </div>
 
         {/* ── Page wrapper ── */}
         <div className="rx-print-wrapper pt-20 pb-10 px-2 sm:px-4 md:px-6">
-
           {/* Actions stay above the card so they never cover the clinic identity. */}
           <div className="no-print max-w-3xl mx-auto mb-3 flex items-center justify-between gap-3">
             <button
@@ -223,7 +263,6 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
 
           {/* ── Card ── */}
           <div className="rx-card w-full max-w-3xl mx-auto bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col">
-
             {/* HEADER */}
             <div className="rx-header bg-[#1e3a5f] px-4 py-4 md:px-7 md:py-5 flex-shrink-0">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
@@ -262,18 +301,29 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
             {/* Rx META */}
             <div className="rx-meta px-4 md:px-7 py-2 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-[18px] text-slate-300 leading-none" style={{ fontFamily: "Georgia, serif" }}>℞</span>
-                <span className="rx-label text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">Prescription</span>
+                <span
+                  className="text-[18px] text-slate-300 leading-none"
+                  style={{ fontFamily: "Georgia, serif" }}
+                >
+                  ℞
+                </span>
+                <span className="rx-label text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
+                  Prescription
+                </span>
               </div>
               <p className="rx-label text-[10px] text-slate-400">
                 Issued&nbsp;
-                <span className="rx-value text-slate-600 font-medium text-[12px] md:text-[13px]">{formattedDate}</span>
+                <span className="rx-value text-slate-600 font-medium text-[12px] md:text-[13px]">
+                  {formattedDate}
+                </span>
               </p>
             </div>
 
             {/* PATIENT */}
             <div className="rx-patient px-4 md:px-7 py-4 border-b border-slate-100 flex-shrink-0">
-              <p className="rx-label text-[9px] tracking-[0.16em] uppercase text-slate-400 font-semibold">Patient</p>
+              <p className="rx-label text-[9px] tracking-[0.16em] uppercase text-slate-400 font-semibold">
+                Patient
+              </p>
               <h2 className="rx-patient-name text-[20px] md:text-[24px] font-medium text-slate-900 tracking-tight mt-0.5 leading-tight">
                 {patientData.name || "—"}
               </h2>
@@ -282,16 +332,27 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
                 <div className="flex flex-wrap gap-x-5 gap-y-2">
                   {demographics.map(({ label, val }) => (
                     <div key={label}>
-                      <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">{label}</p>
-                      <p className="rx-value text-[12px] md:text-[13px] font-medium text-slate-800 mt-0.5 capitalize">{val}</p>
+                      <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
+                        {label}
+                      </p>
+                      <p className="rx-value text-[12px] md:text-[13px] font-medium text-slate-800 mt-0.5 capitalize">
+                        {val}
+                      </p>
                     </div>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {vitals.map(({ label, value }) => (
-                    <div key={label} className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5">
-                      <span className="rx-label text-[9px] tracking-[0.12em] uppercase text-slate-400 font-bold">{label}</span>
-                      <span className="rx-value text-[12px] font-semibold text-slate-700">{value || "—"}</span>
+                    <div
+                      key={label}
+                      className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5"
+                    >
+                      <span className="rx-label text-[9px] tracking-[0.12em] uppercase text-slate-400 font-bold">
+                        {label}
+                      </span>
+                      <span className="rx-value text-[12px] font-semibold text-slate-700">
+                        {value || "—"}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -301,15 +362,22 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
             {/* REMARKS */}
             {prescriptionData.Diagnosis && (
               <div className="rx-remarks-box px-4 md:px-7 py-3 bg-amber-50 border-b border-amber-100 flex-shrink-0">
-                <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-amber-600 font-semibold mb-1">Clinical Notes</p>
-                <p className="text-[12px] text-amber-900 leading-relaxed">{prescriptionData.Diagnosis}</p>
+                <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-amber-600 font-semibold mb-1">
+                  Clinical Notes
+                </p>
+                <p className="text-[12px] text-amber-900 leading-relaxed">
+                  {prescriptionData.Diagnosis}
+                </p>
               </div>
             )}
 
             {/* MEDICATIONS */}
             <div className="rx-meds px-4 md:px-7 py-4 relative flex-1">
               {/* Watermark */}
-              <div className="rx-watermark absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+              <div
+                className="rx-watermark absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+                style={{ zIndex: 0 }}
+              >
                 <img
                   src="/clinic logo.png"
                   alt=""
@@ -319,24 +387,44 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
               </div>
 
               {/* Column headers */}
-              <div className="flex items-center pb-2 border-b border-slate-200" style={{ position: "relative", zIndex: 1 }}>
-                <span className="rx-label flex-1 text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">Medication</span>
-                <span className="rx-label w-10 text-center text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">Qty</span>
-                <span className="rx-label w-16 text-center text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">Freq</span>
-                <span className="rx-notes-col rx-label hidden md:block w-24 text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold pl-2">Notes</span>
+              <div
+                className="flex items-center pb-2 border-b border-slate-200"
+                style={{ position: "relative", zIndex: 1 }}
+              >
+                <span className="rx-label flex-1 text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
+                  Medication
+                </span>
+                <span className="rx-label w-10 text-center text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
+                  Qty
+                </span>
+                <span className="rx-label w-16 text-center text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
+                  Freq
+                </span>
+                <span className="rx-notes-col rx-label hidden md:block w-24 text-[9px] tracking-[0.14em] uppercase text-slate-400 font-semibold pl-2">
+                  Notes
+                </span>
               </div>
 
               {/* Drug rows */}
               <div style={{ position: "relative", zIndex: 1 }}>
                 {prescriptionData.drug?.map((drug, idx) => (
-                  <div key={idx} className="flex items-start py-2.5 border-b border-slate-50 last:border-b-0">
+                  <div
+                    key={idx}
+                    className="flex items-start py-2.5 border-b border-slate-50 last:border-b-0"
+                  >
                     <div className="flex-1 min-w-0 pr-2">
-                      <p className="rx-drug-name text-[13px] font-medium text-slate-900 leading-snug">{drug.name}</p>
+                      <p className="rx-drug-name text-[13px] font-medium text-slate-900 leading-snug">
+                        {drug.name}
+                      </p>
                       {drug.content && (
-                        <p className="rx-drug-str text-[11px] text-slate-400 mt-0.5">{drug.content}</p>
+                        <p className="rx-drug-str text-[11px] text-slate-400 mt-0.5">
+                          {drug.content}
+                        </p>
                       )}
                       {drug.remarks && (
-                        <p className="md:hidden text-[11px] text-slate-400 italic mt-0.5">{drug.remarks}</p>
+                        <p className="md:hidden text-[11px] text-slate-400 italic mt-0.5">
+                          {drug.remarks}
+                        </p>
                       )}
                     </div>
                     <span className="w-10 text-center text-[13px] font-semibold text-slate-700 pt-0.5 flex-shrink-0">
@@ -345,7 +433,11 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
                     <div className="w-16 flex justify-center pt-0.5 flex-shrink-0">
                       <span
                         className="rx-freq inline-flex items-center justify-center bg-[#1e3a5f] text-slate-300 text-[10px] font-medium rounded"
-                        style={{ padding: "3px 5px", letterSpacing: "0.04em", minWidth: "46px" }}
+                        style={{
+                          padding: "3px 5px",
+                          letterSpacing: "0.04em",
+                          minWidth: "46px",
+                        }}
                       >
                         {drug.frequency}
                       </span>
@@ -357,8 +449,13 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
                 ))}
 
                 {/* Empty rows */}
-                {Array.from({ length: Math.max(0, 7 - (prescriptionData.drug?.length || 0)) }).map((_, i) => (
-                  <div key={`e-${i}`} className="py-4 border-b border-slate-50 last:border-b-0" />
+                {Array.from({
+                  length: Math.max(0, 7 - (prescriptionData.drug?.length || 0)),
+                }).map((_, i) => (
+                  <div
+                    key={`e-${i}`}
+                    className="py-4 border-b border-slate-50 last:border-b-0"
+                  />
                 ))}
               </div>
             </div>
@@ -368,13 +465,13 @@ export default function PrescriptionComponent({ patientData, prescriptionData })
               <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-2 md:gap-0">
                 <div className="rx-footer-text text-[10px] text-slate-400 leading-relaxed space-y-0.5">
                   <p>{clinicAddress}</p>
-                  <p>{clinicPhone} · {clinicEmail}</p>
+                  <p>
+                    {clinicPhone} · {clinicEmail}
+                  </p>
                 </div>
-                <div className="flex-shrink-0">
-                </div>
+                <div className="flex-shrink-0"></div>
               </div>
             </div>
-
           </div>
         </div>
       </div>

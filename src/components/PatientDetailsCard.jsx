@@ -1,21 +1,21 @@
-import React from 'react';
-import { FiUser, FiPhone, FiMail } from 'react-icons/fi';
+import React from "react";
+import { FiUser, FiPhone, FiMail } from "react-icons/fi";
 
 /**
  * Calculate age from birthday
  */
 const calculateAge = (birthDate) => {
   if (!birthDate) return null;
-  
+
   const today = new Date();
   const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
-  
+
   const monthDiff = today.getMonth() - birth.getMonth();
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
-  
+
   return age;
 };
 
@@ -41,25 +41,33 @@ const PatientDetailsCard = ({ patient }) => {
             <FiUser className="text-indigo-600 text-lg" />
             <div>
               <p className="text-xs text-gray-500 uppercase">Patient Name</p>
-              <p className="font-semibold text-gray-800">{patient.name || 'N/A'}</p>
+              <p className="font-semibold text-gray-800">
+                {patient.name || "N/A"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <FiPhone className="text-indigo-600 text-lg" />
             <div>
               <p className="text-xs text-gray-500 uppercase">Contact</p>
-              <p className="font-semibold text-gray-800">{patient.phone || patient.phoneNumber || 'N/A'}</p>
+              <p className="font-semibold text-gray-800">
+                {patient.phone || patient.phoneNumber || "N/A"}
+              </p>
             </div>
           </div>
         </div>
         <div className="space-y-3">
           <div>
             <p className="text-xs text-gray-500 uppercase">Patient ID</p>
-            <p className="font-mono text-sm text-gray-800">{patient.id || patient._id || 'N/A'}</p>
+            <p className="font-mono text-sm text-gray-800">
+              {patient.id || patient.uhid || "N/A"}
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-500 uppercase">Age</p>
-            <p className="font-semibold text-gray-800">{age ? `${age} years` : 'N/A'}</p>
+            <p className="font-semibold text-gray-800">
+              {age ? `${age} years` : "N/A"}
+            </p>
           </div>
         </div>
       </div>

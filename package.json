@@ -2,12 +2,14 @@
   "name": "patient-registration-app",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "yarn@1.22.22",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -39,6 +41,16 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "16.2.6",
+    "prettier": "^3.9.10",
     "vite": "^7.0.4"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "yarn prettier --write",
+      "yarn eslint --max-warnings=0"
+    ],
+    "*.{css,json,md,yml,yaml}": "yarn prettier --write"
   }
 }

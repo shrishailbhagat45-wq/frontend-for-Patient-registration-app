@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { getPaymentMethodsAnalytics, getDoctorPerformanceAnalytics } from '../API/Analytics';
-import ChartComponent from './ChartComponent';
+import React, { useState, useEffect } from "react";
+import {
+  getPaymentMethodsAnalytics,
+  getDoctorPerformanceAnalytics,
+} from "../API/Analytics";
+import ChartComponent from "./ChartComponent";
 import {
   transformPaymentMethodsData,
   formatAnalyticsMetrics,
-} from '../utils/chartDataHelpers';
-import { handleError } from '../utils/errorHandler';
-import ErrorDisplay from './ErrorDisplay';
+} from "../utils/chartDataHelpers";
+import { handleError } from "../utils/errorHandler";
+import ErrorDisplay from "./ErrorDisplay";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,8 +18,8 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -24,22 +27,22 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 const PERIODS = [
-  { value: 'today', label: 'Today' },
-  { value: 'month', label: 'This Month' },
-  { value: 'year', label: 'This Year' },
+  { value: "today", label: "Today" },
+  { value: "month", label: "This Month" },
+  { value: "year", label: "This Year" },
 ];
 
 export default function Analytics() {
-  const [selectedPeriod, setSelectedPeriod] = useState('today');
+  const [selectedPeriod, setSelectedPeriod] = useState("today");
   const [analyticsData, setAnalyticsData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [metrics, setMetrics] = useState(null);
-  
+
   // Doctor performance state
   const [doctorData, setDoctorData] = useState(null);
   const [doctorLoading, setDoctorLoading] = useState(false);
@@ -57,8 +60,8 @@ export default function Analytics() {
         setMetrics(formatAnalyticsMetrics(data));
       } catch (err) {
         const errorDetails = handleError(err, {
-          context: 'Payment Analytics',
-          customMessage: 'Failed to load payment analytics data',
+          context: "Payment Analytics",
+          customMessage: "Failed to load payment analytics data",
           showToast: true,
         });
         setError(errorDetails.message);
@@ -81,8 +84,8 @@ export default function Analytics() {
         setDoctorData(data);
       } catch (err) {
         const errorDetails = handleError(err, {
-          context: 'Doctor Performance Analytics',
-          customMessage: 'Failed to load doctor performance data',
+          context: "Doctor Performance Analytics",
+          customMessage: "Failed to load doctor performance data",
           showToast: true,
         });
         setDoctorError(errorDetails.message);
@@ -104,24 +107,24 @@ export default function Analytics() {
         labels: doctorData.doctors.map((d) => d.doctorName),
         datasets: [
           {
-            label: 'Total Revenue (₹)',
+            label: "Total Revenue (₹)",
             data: doctorData.doctors.map((d) => d.totalRevenue),
-            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: "rgba(59, 130, 246, 0.7)",
+            borderColor: "rgba(59, 130, 246, 1)",
             borderWidth: 1,
           },
           {
-            label: 'Total Profit (₹)',
+            label: "Total Profit (₹)",
             data: doctorData.doctors.map((d) => d.totalProfit),
-            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-            borderColor: 'rgba(34, 197, 94, 1)',
+            backgroundColor: "rgba(34, 197, 94, 0.7)",
+            borderColor: "rgba(34, 197, 94, 1)",
             borderWidth: 1,
           },
           {
-            label: 'Total Expense (₹)',
+            label: "Total Expense (₹)",
             data: doctorData.doctors.map((d) => d.totalExpense),
-            backgroundColor: 'rgba(239, 68, 68, 0.7)',
-            borderColor: 'rgba(239, 68, 68, 1)',
+            backgroundColor: "rgba(239, 68, 68, 0.7)",
+            borderColor: "rgba(239, 68, 68, 1)",
             borderWidth: 1,
           },
         ],
@@ -133,14 +136,14 @@ export default function Analytics() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
       },
       title: {
         display: true,
-        text: 'Doctor Performance Overview',
+        text: "Doctor Performance Overview",
         font: {
           size: 16,
-          weight: 'bold',
+          weight: "bold",
         },
       },
       tooltip: {
@@ -156,7 +159,7 @@ export default function Analytics() {
         beginAtZero: true,
         ticks: {
           callback: function (value) {
-            return '₹' + value;
+            return "₹" + value;
           },
         },
       },
@@ -171,20 +174,24 @@ export default function Analytics() {
   // Find top performing doctors
   const topDoctor = doctorData?.doctors?.reduce(
     (max, doctor) => (doctor.totalRevenue > max.totalRevenue ? doctor : max),
-    doctorData?.doctors?.[0] || {}
+    doctorData?.doctors?.[0] || {},
   );
 
   const topProfitDoctor = doctorData?.doctors?.reduce(
     (max, doctor) => (doctor.totalProfit > max.totalProfit ? doctor : max),
-    doctorData?.doctors?.[0] || {}
+    doctorData?.doctors?.[0] || {},
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="py-5">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-600 text-sm">Payment & revenue insights</p>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Payment & revenue insights
+        </h2>
+        <p className="text-gray-600 text-sm">
+          Revenue by payment method and doctor performance
+        </p>
       </div>
 
       {/* Period Selection */}
@@ -195,8 +202,8 @@ export default function Analytics() {
             onClick={() => setSelectedPeriod(period.value)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
               selectedPeriod === period.value
-                ? 'bg-blue-500 text-white shadow-md scale-105'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                ? "bg-blue-500 text-white shadow-md scale-105"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
             }`}
           >
             {period.label}
@@ -229,7 +236,9 @@ export default function Analytics() {
               </p>
               <div className="mt-2 flex justify-between text-xs text-gray-600">
                 <span>{data.count}x</span>
-                <span className="font-semibold text-purple-700">{data.percentage}%</span>
+                <span className="font-semibold text-purple-700">
+                  {data.percentage}%
+                </span>
               </div>
             </div>
           ))}
@@ -282,7 +291,10 @@ export default function Analytics() {
                       ₹{method.totalAmount?.toFixed(2)}
                     </p>
                     <div className="mt-3 space-y-1 text-xs text-gray-600">
-                      <p>{method.count} transaction{method.count !== 1 ? 's' : ''}</p>
+                      <p>
+                        {method.count} transaction
+                        {method.count !== 1 ? "s" : ""}
+                      </p>
                       <p>Avg: ₹{method.avgAmount?.toFixed(2)}</p>
                     </div>
                   </div>
@@ -299,8 +311,12 @@ export default function Analytics() {
 
       {/* Doctor Performance Section */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Doctor Performance</h1>
-        <p className="text-gray-600 text-sm mb-4">Revenue and profit analysis by doctor</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Doctor Performance
+        </h1>
+        <p className="text-gray-600 text-sm mb-4">
+          Revenue and profit analysis by doctor
+        </p>
 
         {/* Doctor Summary Cards */}
         {!doctorLoading && doctorData && (
@@ -314,7 +330,8 @@ export default function Analytics() {
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg shadow-sm border border-green-200">
               <p className="text-gray-600 text-xs font-medium">Total Revenue</p>
               <p className="text-xl font-bold text-green-600 mt-1">
-                ₹{doctorData.doctors
+                ₹
+                {doctorData.doctors
                   .reduce((sum, d) => sum + d.totalRevenue, 0)
                   .toFixed(2)}
               </p>
@@ -322,13 +339,16 @@ export default function Analytics() {
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg shadow-sm border border-purple-200">
               <p className="text-gray-600 text-xs font-medium">Total Profit</p>
               <p className="text-xl font-bold text-purple-600 mt-1">
-                ₹{doctorData.doctors
+                ₹
+                {doctorData.doctors
                   .reduce((sum, d) => sum + d.totalProfit, 0)
                   .toFixed(2)}
               </p>
             </div>
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg shadow-sm border border-orange-200">
-              <p className="text-gray-600 text-xs font-medium">Total Invoices</p>
+              <p className="text-gray-600 text-xs font-medium">
+                Total Invoices
+              </p>
               <p className="text-xl font-bold text-orange-600 mt-1">
                 {doctorData.doctors.reduce((sum, d) => sum + d.invoiceCount, 0)}
               </p>
@@ -363,19 +383,24 @@ export default function Analytics() {
 
           {/* Doctor Analysis Cards */}
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-bold text-gray-900 mb-3">Performance Analysis</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-3">
+              Performance Analysis
+            </h2>
             <div className="bg-white p-4 rounded-lg shadow-md mb-4">
               <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
                 <span className="text-green-500">💰</span> Top Revenue Generator
               </h3>
               {topDoctor && topDoctor.doctorName && (
                 <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="font-bold text-green-700">{topDoctor.doctorName}</p>
+                  <p className="font-bold text-green-700">
+                    {topDoctor.doctorName}
+                  </p>
                   <p className="text-sm text-gray-600 mt-1">
                     Revenue: ₹{topDoctor.totalRevenue?.toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {topDoctor.invoiceCount} invoice(s) | Avg: ₹{topDoctor.avgInvoiceAmount?.toFixed(2)}
+                    {topDoctor.invoiceCount} invoice(s) | Avg: ₹
+                    {topDoctor.avgInvoiceAmount?.toFixed(2)}
                   </p>
                 </div>
               )}
@@ -387,7 +412,9 @@ export default function Analytics() {
               </h3>
               {topProfitDoctor && topProfitDoctor.doctorName && (
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="font-bold text-blue-700">{topProfitDoctor.doctorName}</p>
+                  <p className="font-bold text-blue-700">
+                    {topProfitDoctor.doctorName}
+                  </p>
                   <p className="text-sm text-gray-600 mt-1">
                     Profit: ₹{topProfitDoctor.totalProfit?.toFixed(2)}
                   </p>
@@ -399,14 +426,18 @@ export default function Analytics() {
             </div>
 
             {/* Individual Doctor Cards */}
-            <h2 className="text-lg font-bold text-gray-900 mb-3">Doctor Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-3">
+              Doctor Details
+            </h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {doctorData?.doctors?.map((doctor) => (
                 <div
                   key={doctor.doctorId}
                   className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
                 >
-                  <p className="font-semibold text-gray-900">{doctor.doctorName}</p>
+                  <p className="font-semibold text-gray-900">
+                    {doctor.doctorName}
+                  </p>
                   <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-gray-500">Revenue:</span>
@@ -435,7 +466,8 @@ export default function Analytics() {
                     <div className="col-span-2">
                       <span className="text-gray-500">Invoices:</span>
                       <span className="ml-1 font-semibold text-orange-600">
-                        {doctor.invoiceCount} (Avg: ₹{doctor.avgInvoiceAmount?.toFixed(2)})
+                        {doctor.invoiceCount} (Avg: ₹
+                        {doctor.avgInvoiceAmount?.toFixed(2)})
                       </span>
                     </div>
                   </div>

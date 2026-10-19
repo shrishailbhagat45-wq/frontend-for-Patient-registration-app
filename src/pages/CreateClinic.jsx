@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClinic } from "../API/user";
+import ThemeToggle from "../components/ThemeToggle";
 
 /* =========================
    ZOD SCHEMA
@@ -22,14 +23,7 @@ const clinicSchema = z.object({
 /* =========================
    FLOATING INPUT (FINAL FIX)
 ========================= */
-function FloatingInput({
-  label,
-  register,
-  name,
-  error,
-  type = "text",
-  watch,
-}) {
+function FloatingInput({ label, register, name, error, type = "text", watch }) {
   const [isFocused, setIsFocused] = useState(false);
 
   const value = watch(name); // ✅ RHF controls value
@@ -65,9 +59,7 @@ function FloatingInput({
         </label>
       </div>
 
-      {error && (
-        <p className="text-red-500 text-xs mt-1">{error.message}</p>
-      )}
+      {error && <p className="text-red-500 text-xs mt-1">{error.message}</p>}
     </div>
   );
 }
@@ -104,7 +96,9 @@ export default function CreateClinic() {
 
       const result = await createClinic({
         name: data.clinicName,
-        address: [data.address, data.city, data.state].filter(Boolean).join(", "),
+        address: [data.address, data.city, data.state]
+          .filter(Boolean)
+          .join(", "),
         phoneNumber: data.phone,
         email: data.email,
         adminName: [data.firstName, data.lastName].filter(Boolean).join(" "),
@@ -112,18 +106,21 @@ export default function CreateClinic() {
       });
 
       alert(result.message || "Clinic created successfully!");
-
     } catch (err) {
-      alert(err.response?.data?.message || err.message || "Something went wrong");
+      alert(
+        err.response?.data?.message || err.message || "Something went wrong",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-100">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-100">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md px-6">
-
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
@@ -139,9 +136,7 @@ export default function CreateClinic() {
           onSubmit={handleSubmit(onSubmit)}
           className="bg-white p-8 rounded-2xl shadow-lg border border-slate-100"
         >
-          <h2 className="text-lg font-semibold mb-6">
-            Create your clinic
-          </h2>
+          <h2 className="text-lg font-semibold mb-6">Create your clinic</h2>
 
           <div className="mb-4">
             <FloatingInput

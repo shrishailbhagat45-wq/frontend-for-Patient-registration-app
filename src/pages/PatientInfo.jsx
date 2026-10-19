@@ -1,15 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getPatientById } from '../API/Patient';
-import { getPrescriptionsByPatientId } from '../API/Prescriptions';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { createElement, useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPatientById } from "../API/Patient";
+import {
+  deletePrescription as deletePrescriptionAPI,
+  getPrescriptionsByPatientId,
+} from "../API/Prescriptions";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
-import LoadingList from '../components/LoadingList';
-import ListPrescription from '../components/ListPrescription';
-import CreatePrescription from '../components/CreatePrescription';
-import InvoiceList from '../components/InvoiceList';
-import Navbar from '../components/Navbar';
-import Pagination from '../components/Pagination';
+import LoadingList from "../components/LoadingList";
+import ListPrescription from "../components/ListPrescription";
+import CreatePrescription from "../components/CreatePrescription";
+import InvoiceList from "../components/InvoiceList";
+import Navbar from "../components/Navbar";
+import Pagination from "../components/Pagination";
+import { toast } from "react-toastify";
 
 import {
   FiUser,
@@ -21,8 +25,8 @@ import {
   FiActivity,
   FiDroplet,
   FiHeart,
-} from 'react-icons/fi';
-import { FaWeightScale } from 'react-icons/fa6';
+} from "react-icons/fi";
+import { FaWeightScale } from "react-icons/fa6";
 
 const calculateAge = (birthDate) => {
   if (!birthDate) return null;
@@ -34,27 +38,20 @@ const calculateAge = (birthDate) => {
 
   const monthDiff = today.getMonth() - birth.getMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birth.getDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
 
   return age;
 };
 
-const VitalBadge = ({ icon: Icon, label, value }) => (
+const VitalBadge = ({ icon, label, value }) => (
   <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
-    <Icon size={13} className="text-slate-400" />
+    {createElement(icon, { size: 13, className: "text-slate-400" })}
 
-    <span className="text-xs font-medium text-slate-400">
-      {label}
-    </span>
+    <span className="text-xs font-medium text-slate-400">{label}</span>
 
-    <span className="text-xs font-semibold text-slate-700">
-      {value}
-    </span>
+    <span className="text-xs font-semibold text-slate-700">{value}</span>
   </div>
 );
 
@@ -66,9 +63,10 @@ export default function PatientInfo() {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: patientData = {} } = useQuery({
-    queryKey: ['patient', id],
+    queryKey: ["patient", id],
 
     queryFn: async () => {
       const patient = await getPatientById(id);
@@ -80,28 +78,49 @@ export default function PatientInfo() {
 
   // Fetch prescriptions with pagination
   const {
-    data: prescriptionData = { prescriptions: [], pagination: { page: 1, limit, total: 0 } },
+    data: prescriptionData = {
+      prescriptions: [],
+      pagination: { page: 1, limit, total: 0 },
+    },
     isLoading: isPrescriptionsLoading,
   } = useQuery({
-    queryKey: ['prescriptions', id, currentPage, showModal],
+    queryKey: ["prescriptions", id, currentPage, showModal],
     queryFn: async () => {
       const result = await getPrescriptionsByPatientId(id, currentPage, limit);
-      console.log('Prescription data received:', result);
+      console.log("Prescription data received:", result);
       return result;
     },
     enabled: !!id,
   });
 
-  const { prescriptions: listOfPrescriptions = [], pagination = {} } = prescriptionData;
-  const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / limit);
+  const { prescriptions: listOfPrescriptions = [], pagination = {} } =
+    prescriptionData;
+  const totalPages =
+    pagination.totalPages || Math.ceil((pagination.total || 0) / limit);
   const totalCount = pagination.total || 0;
-  
-  console.log('Prescriptions pagination:', { 
-    listOfPrescriptions: listOfPrescriptions.length, 
-    pagination, 
-    totalPages, 
+
+  const deletePrescriptionMutation = useMutation({
+    mutationFn: deletePrescriptionAPI,
+    onSuccess: async () => {
+      toast.success("Prescription deleted successfully");
+      if (listOfPrescriptions.length === 1 && currentPage > 1) {
+        setCurrentPage((page) => page - 1);
+      }
+      await queryClient.invalidateQueries({ queryKey: ["prescriptions", id] });
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete prescription",
+      );
+    },
+  });
+
+  console.log("Prescriptions pagination:", {
+    listOfPrescriptions: listOfPrescriptions.length,
+    pagination,
+    totalPages,
     totalCount,
-    currentPage 
+    currentPage,
   });
 
   useEffect(() => {
@@ -111,23 +130,22 @@ export default function PatientInfo() {
   }, [showModal]);
 
   const genderLabel =
-    patientData.gender === 'female'
-      ? 'Female'
-      : patientData.gender === 'male'
-      ? 'Male'
-      : patientData.gender
-      ? patientData.gender
-      : null;
+    patientData.gender === "female"
+      ? "Female"
+      : patientData.gender === "male"
+        ? "Male"
+        : patientData.gender
+          ? patientData.gender
+          : null;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
 
       <div className="mx-auto max-w-6xl px-6 pb-12 pt-20">
-        
         {/* Back Button */}
         <button
-          onClick={() => navigate('/home')}
+          onClick={() => navigate("/home")}
           className="mb-5 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
         >
           <FiArrowLeft size={14} />
@@ -137,24 +155,21 @@ export default function PatientInfo() {
         {/* Patient Card */}
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-7">
           <div className="flex flex-wrap items-start justify-between gap-5">
-            
             {/* Left Section */}
             <div className="flex items-center gap-4">
-              
               {/* Avatar */}
               <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-blue-700 text-2xl font-bold text-white">
-                {patientData.name?.charAt(0).toUpperCase() || 'P'}
+                {patientData.name?.charAt(0).toUpperCase() || "P"}
               </div>
 
               {/* Info */}
               <div>
                 <p className="text-2xl font-semibold tracking-tight text-slate-900">
-                  {patientData.name || 'Patient'}
+                  {patientData.name || "Patient"}
                 </p>
 
                 {/* Meta Info */}
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  
                   {patientData.birthday && (
                     <span className="text-sm font-medium text-slate-500">
                       {calculateAge(patientData.birthday)} yrs
@@ -184,32 +199,32 @@ export default function PatientInfo() {
                 </div>
 
                 {/* Vitals */}
-                {(patientData.weight !== null && patientData.weight !== undefined && patientData.weight !== '' ||
+                {((patientData.weight !== null &&
+                  patientData.weight !== undefined &&
+                  patientData.weight !== "") ||
                   patientData.bloodPressure ||
                   patientData.pulseRate ||
                   patientData.bloodSugarLevel) && (
                   <div className="mt-3 flex flex-wrap gap-2">
-
-                    {patientData.weight !== null && patientData.weight !== undefined && patientData.weight !== '' && (
-                      <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
-                        <FaWeightScale size={11} className="text-slate-400" />
-                        <span className="font-medium text-slate-400">Weight</span>
-                        <span className="font-mono font-semibold">
-                          {patientData.weight} kg
-                        </span>
-                      </div>
-                    )}
+                    {patientData.weight !== null &&
+                      patientData.weight !== undefined &&
+                      patientData.weight !== "" && (
+                        <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
+                          <FaWeightScale size={11} className="text-slate-400" />
+                          <span className="font-medium text-slate-400">
+                            Weight
+                          </span>
+                          <span className="font-mono font-semibold">
+                            {patientData.weight} kg
+                          </span>
+                        </div>
+                      )}
 
                     {patientData.bloodPressure && (
                       <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
-                        <FiActivity
-                          size={11}
-                          className="text-slate-400"
-                        />
+                        <FiActivity size={11} className="text-slate-400" />
 
-                        <span className="font-medium text-slate-400">
-                          BP
-                        </span>
+                        <span className="font-medium text-slate-400">BP</span>
 
                         <span className="font-mono font-semibold">
                           {patientData.bloodPressure}
@@ -219,14 +234,9 @@ export default function PatientInfo() {
 
                     {patientData.pulseRate && (
                       <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
-                        <FiHeart
-                          size={11}
-                          className="text-slate-400"
-                        />
+                        <FiHeart size={11} className="text-slate-400" />
 
-                        <span className="font-medium text-slate-400">
-                          PR
-                        </span>
+                        <span className="font-medium text-slate-400">PR</span>
 
                         <span className="font-mono font-semibold">
                           {patientData.pulseRate}
@@ -236,14 +246,9 @@ export default function PatientInfo() {
 
                     {patientData.bloodSugarLevel && (
                       <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700">
-                        <FiDroplet
-                          size={11}
-                          className="text-slate-400"
-                        />
+                        <FiDroplet size={11} className="text-slate-400" />
 
-                        <span className="font-medium text-slate-400">
-                          BS
-                        </span>
+                        <span className="font-medium text-slate-400">BS</span>
 
                         <span className="font-mono font-semibold">
                           {patientData.bloodSugarLevel}
@@ -257,14 +262,10 @@ export default function PatientInfo() {
 
             {/* Right Actions */}
             <div className="flex flex-wrap items-center gap-3">
-
-              <Link
-                to={`/patient-profile/${id}`}
-                className="no-underline"
-              >
+              <Link to={`/patient-profile/${id}`} className="no-underline">
                 <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-md hover:shadow-lg">
                   <FiUser size={14} />
-                  Edit Info
+                  Info
                 </button>
               </Link>
 
@@ -296,7 +297,6 @@ export default function PatientInfo() {
 
             <h2 className="mt-1 text-lg font-semibold text-slate-900">
               Prescriptions
-
               <span className="ml-2 text-sm font-medium text-slate-400">
                 ({totalCount})
               </span>
@@ -306,16 +306,14 @@ export default function PatientInfo() {
 
         {/* Loading */}
         {isPrescriptionsLoading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <LoadingList />
             <LoadingList />
             <LoadingList />
           </div>
         ) : listOfPrescriptions.length === 0 ? (
-
           /* Empty State */
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-14 text-center">
-            
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
               <FiFileText size={22} className="text-slate-400" />
             </div>
@@ -337,7 +335,6 @@ export default function PatientInfo() {
             </button>
           </div>
         ) : (
-
           /* Prescription Grid */
           <>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -345,11 +342,20 @@ export default function PatientInfo() {
                 <ListPrescription
                   key={prescription._id || idx}
                   prescription={prescription}
-                  idx={idx}
                   onEdit={(p) => {
                     setEditingPrescription(p);
                     setShowModal(true);
                   }}
+                  onDelete={(p) => {
+                    if (
+                      !window.confirm(
+                        `Delete the prescription for ${p.patientName || "this patient"}?`,
+                      )
+                    )
+                      return;
+                    deletePrescriptionMutation.mutate(p._id);
+                  }}
+                  isDeleting={deletePrescriptionMutation.isPending}
                 />
               ))}
             </div>
@@ -384,6 +390,7 @@ export default function PatientInfo() {
           showModal={showModal}
           setShowModal={setShowModal}
           initialPrescription={editingPrescription}
+          patientId={id}
           patientData={patientData}
         />
       )}

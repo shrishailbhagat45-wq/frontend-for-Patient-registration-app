@@ -4,8 +4,7 @@ import axiosRetry from "axios-retry";
 // ==========================
 // BASE URL
 // ==========================
-const url =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const url = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 // ==========================
 // AXIOS INSTANCE
@@ -38,7 +37,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // ==========================
@@ -48,21 +47,13 @@ export async function getBillingItems() {
   try {
     const doctorId = localStorage.getItem("doctorId");
 
-    const response = await api.get(
-      `/billing/${doctorId}`
-    );
+    const response = await api.get(`/billing/${doctorId}`);
 
-    console.log(
-      "Billing items response:",
-      response.data
-    );
+    console.log("Billing items response:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error fetching billing items:",
-      error
-    );
+    console.error("Error fetching billing items:", error);
     throw error;
   }
 }
@@ -74,17 +65,11 @@ export async function addItem(item) {
   try {
     const doctorId = localStorage.getItem("doctorId");
 
-    const response = await api.post(
-      `/billing/${doctorId}`,
-      item
-    );
+    const response = await api.post(`/billing/${doctorId}`, item);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error adding billing item:",
-      error
-    );
+    console.error("Error adding billing item:", error);
     throw error;
   }
 }
@@ -94,17 +79,11 @@ export async function addItem(item) {
 // ==========================
 export async function updateItem(id, item) {
   try {
-    const response = await api.put(
-      `/billing/${id}`,
-      item
-    );
+    const response = await api.put(`/billing/${id}`, item);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error updating billing item:",
-      error
-    );
+    console.error("Error updating billing item:", error);
     throw error;
   }
 }
@@ -114,16 +93,11 @@ export async function updateItem(id, item) {
 // ==========================
 export async function deleteItem(id) {
   try {
-    const response = await api.delete(
-      `/billing/${id}`
-    );
+    const response = await api.delete(`/billing/${id}`);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error deleting billing item:",
-      error
-    );
+    console.error("Error deleting billing item:", error);
     throw error;
   }
 }
@@ -133,17 +107,11 @@ export async function deleteItem(id) {
 // ==========================
 export async function createBill(billData) {
   try {
-    const response = await api.post(
-      "/patient-bills",
-      billData
-    );
+    const response = await api.post("/patient-bills", billData);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error creating bill:",
-      error
-    );
+    console.error("Error creating bill:", error);
     throw error;
   }
 }
@@ -151,11 +119,7 @@ export async function createBill(billData) {
 // ==========================
 // GET PATIENT BILLS
 // ==========================
-export async function getPatientBills({
-  doctorId,
-  date,
-  month,
-}) {
+export async function getPatientBills({ doctorId, date, month }) {
   try {
     const params = {};
 
@@ -163,22 +127,13 @@ export async function getPatientBills({
     if (date) params.date = date;
     if (month) params.month = month;
 
-    const response = await api.get(
-      "/patient-bills",
-      { params }
-    );
+    const response = await api.get("/patient-bills", { params });
 
-    console.log(
-      "Fetched patient bills:",
-      response.data
-    );
+    console.log("Fetched patient bills:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error fetching patient bills:",
-      error
-    );
+    console.error("Error fetching patient bills:", error);
     throw error;
   }
 }
@@ -192,17 +147,11 @@ export async function addService(serviceData) {
   };
   console.log("Adding service with data:", data);
   try {
-    const response = await api.post(
-      "/services-billing",
-      data
-    );
+    const response = await api.post("/services-billing", data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error adding service:",
-      error
-    );
+    console.error("Error adding service:", error);
     throw error;
   }
 }
@@ -212,20 +161,15 @@ export async function addService(serviceData) {
 export async function getServices() {
   try {
     const clinicId = localStorage.getItem("clinicId");
-    const response = await api.get(
-      `/services-billing/${clinicId}`
-    );
-    
+    const response = await api.get(`/services-billing/${clinicId}`);
+
     console.log("Services API Response:", response.data);
-    
+
     // Handle both array and object responses
     const data = response.data;
     return Array.isArray(data) ? data : data.services || data.data || [];
   } catch (error) {
-    console.error(
-      "Error fetching services:",
-      error
-    );
+    console.error("Error fetching services:", error);
     throw error;
   }
 }
@@ -236,14 +180,11 @@ export async function updateService(serviceId, serviceData) {
   try {
     const response = await api.put(
       `/services-billing/${serviceId}`,
-      serviceData
+      serviceData,
     );
     return response.data;
   } catch (error) {
-    console.error(
-      "Error updating service:",
-      error
-    );
+    console.error("Error updating service:", error);
     throw error;
   }
 }
@@ -252,15 +193,10 @@ export async function updateService(serviceId, serviceData) {
 // DELETE SERVICE
 export async function deleteService(serviceId) {
   try {
-    const response = await api.delete(
-      `/services-billing/${serviceId}`
-    );
+    const response = await api.delete(`/services-billing/${serviceId}`);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error deleting service:",
-      error
-    );
+    console.error("Error deleting service:", error);
     throw error;
   }
 }
@@ -274,17 +210,11 @@ export async function addLabTest(testData) {
   };
   console.log("Adding lab test with data:", data);
   try {
-    const response = await api.post(
-      "/lab-test-billing",
-      data
-    );
+    const response = await api.post("/lab-test-billing", data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error adding lab test:",
-      error
-    );
+    console.error("Error adding lab test:", error);
     throw error;
   }
 }
@@ -294,20 +224,15 @@ export async function addLabTest(testData) {
 export async function getLabTests() {
   try {
     const clinicId = localStorage.getItem("clinicId");
-    const response = await api.get(
-      `/lab-test-billing/${clinicId}`
-    );
-    
+    const response = await api.get(`/lab-test-billing/${clinicId}`);
+
     console.log("Lab Tests API Response:", response.data);
-    
+
     // Handle both array and object responses
     const data = response.data;
     return Array.isArray(data) ? data : data.labTests || data.data || [];
   } catch (error) {
-    console.error(
-      "Error fetching lab tests:",
-      error
-    );
+    console.error("Error fetching lab tests:", error);
     throw error;
   }
 }
@@ -316,16 +241,10 @@ export async function getLabTests() {
 // UPDATE LAB TEST
 export async function updateLabTest(testId, testData) {
   try {
-    const response = await api.put(
-      `/lab-test-billing/${testId}`,
-      testData
-    );
+    const response = await api.put(`/lab-test-billing/${testId}`, testData);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error updating lab test:",
-      error
-    );
+    console.error("Error updating lab test:", error);
     throw error;
   }
 }
@@ -334,15 +253,10 @@ export async function updateLabTest(testId, testData) {
 // DELETE LAB TEST
 export async function deleteLabTest(testId) {
   try {
-    const response = await api.delete(
-      `/lab-test-billing/${testId}`
-    );
+    const response = await api.delete(`/lab-test-billing/${testId}`);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error deleting lab test:",
-      error
-    );
+    console.error("Error deleting lab test:", error);
     throw error;
   }
 }
@@ -356,17 +270,11 @@ export async function addMedicine(medicineData) {
   };
   console.log("Adding medicine with data:", data);
   try {
-    const response = await api.post(
-      "/medicines-billing",
-      data
-    );
+    const response = await api.post("/medicines-billing", data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error adding medicine:",
-      error
-    );
+    console.error("Error adding medicine:", error);
     throw error;
   }
 }
@@ -375,20 +283,15 @@ export async function addMedicine(medicineData) {
 // GET MEDICINES
 export async function getMedicines(clinicId) {
   try {
-    const response = await api.get(
-      `/medicines-billing/${clinicId}`
-    );
-    
+    const response = await api.get(`/medicines-billing/${clinicId}`);
+
     console.log("Medicines API Response:", response.data);
-    
+
     // Handle both array and object responses
     const data = response.data;
     return Array.isArray(data) ? data : data.medicines || data.data || [];
   } catch (error) {
-    console.error(
-      "Error fetching medicines:",
-      error
-    );
+    console.error("Error fetching medicines:", error);
     throw error;
   }
 }
@@ -399,14 +302,11 @@ export async function updateMedicine(medicineId, medicineData) {
   try {
     const response = await api.put(
       `/medicines-billing/${medicineId}`,
-      medicineData
+      medicineData,
     );
     return response.data;
   } catch (error) {
-    console.error(
-      "Error updating medicine:",
-      error
-    );
+    console.error("Error updating medicine:", error);
     throw error;
   }
 }
@@ -415,15 +315,10 @@ export async function updateMedicine(medicineId, medicineData) {
 // DELETE MEDICINE
 export async function deleteMedicine(medicineId) {
   try {
-    const response = await api.delete(
-      `/medicines-billing /${medicineId}`
-    );
+    const response = await api.delete(`/medicines-billing /${medicineId}`);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error deleting medicine:",
-      error
-    );
+    console.error("Error deleting medicine:", error);
     throw error;
   }
 }
@@ -437,10 +332,7 @@ export async function deleteMedicine(medicineId) {
  */
 export async function createInvoice(invoiceData) {
   try {
-    const response = await api.post(
-      "/invoices",
-      invoiceData
-    );
+    const response = await api.post("/invoices", invoiceData);
     console.log("Invoice created:", response.data);
     return response.data;
   } catch (error) {
@@ -454,9 +346,7 @@ export async function createInvoice(invoiceData) {
  */
 export async function getInvoice(invoiceId) {
   try {
-    const response = await api.get(
-      `/invoices/${invoiceId}`
-    );
+    const response = await api.get(`/invoices/${invoiceId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching invoice:", error);
@@ -470,12 +360,12 @@ export async function getInvoice(invoiceId) {
 export async function getInvoicesByPatient(patientId, page = 1, limit = 10) {
   try {
     const response = await api.get(
-      `/invoices/patient/${patientId}?page=${page}&limit=${limit}`
+      `/invoices/patient/${patientId}?page=${page}&limit=${limit}`,
     );
-    
+
     const data = response.data;
-    console.log('getInvoicesByPatient response:', data);
-    
+    console.log("getInvoicesByPatient response:", data);
+
     // Handle paginated response { data: [...], pagination: {...} }
     if (data.data && data.pagination) {
       return {
@@ -493,7 +383,11 @@ export async function getInvoicesByPatient(patientId, page = 1, limit = 10) {
     // Handle simple array response
     return {
       invoices: Array.isArray(data) ? data : [],
-      pagination: { page: 1, limit: 10, total: (Array.isArray(data) ? data : []).length },
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: (Array.isArray(data) ? data : []).length,
+      },
     };
   } catch (error) {
     console.error("Error fetching patient invoices:", error);
@@ -506,10 +400,8 @@ export async function getInvoicesByPatient(patientId, page = 1, limit = 10) {
  */
 export async function getInvoicesByClinic(clinicId) {
   try {
-    const response = await api.get(
-      `/invoices/clinic/${clinicId}`
-    );
-    
+    const response = await api.get(`/invoices/clinic/${clinicId}`);
+
     const data = response.data;
     return Array.isArray(data) ? data : data.invoices || [];
   } catch (error) {
@@ -519,14 +411,57 @@ export async function getInvoicesByClinic(clinicId) {
 }
 
 /**
+ * Fetch every invoice for a clinic by following the API's pagination.
+ */
+export async function getAllInvoicesByClinic(clinicId) {
+  if (!clinicId) {
+    throw new Error("Clinic ID is required to fetch invoices");
+  }
+
+  const limit = 100;
+  const invoices = [];
+  let page = 1;
+  let totalPages = 1;
+
+  try {
+    do {
+      const response = await api.get(
+        `/invoices/clinic/${clinicId}?page=${page}&limit=${limit}`,
+      );
+      const payload = response.data;
+      const pageInvoices = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload.data)
+          ? payload.data
+          : Array.isArray(payload.invoices)
+            ? payload.invoices
+            : [];
+
+      invoices.push(...pageInvoices);
+
+      const pagination = payload.pagination;
+      if (pagination) {
+        totalPages = Number(pagination.totalPages ?? pagination.pages ?? 1);
+      } else {
+        totalPages = pageInvoices.length === limit ? page + 1 : page;
+      }
+      page += 1;
+    } while (page <= totalPages);
+
+    return invoices;
+  } catch (error) {
+    console.error("Error fetching all clinic invoices:", error);
+    throw error;
+  }
+}
+
+/**
  * Get invoices by doctor
  */
 export async function getInvoicesByDoctor(doctorId) {
   try {
-    const response = await api.get(
-      `/invoices/doctor/${doctorId}`
-    );
-    
+    const response = await api.get(`/invoices/doctor/${doctorId}`);
+
     const data = response.data;
     return Array.isArray(data) ? data : data.invoices || [];
   } catch (error) {
@@ -540,10 +475,7 @@ export async function getInvoicesByDoctor(doctorId) {
  */
 export async function updateInvoice(invoiceId, invoiceData) {
   try {
-    const response = await api.put(
-      `/invoices/${invoiceId}`,
-      invoiceData
-    );
+    const response = await api.put(`/invoices/${invoiceId}`, invoiceData);
     return response.data;
   } catch (error) {
     console.error("Error updating invoice:", error);
@@ -556,9 +488,7 @@ export async function updateInvoice(invoiceId, invoiceData) {
  */
 export async function deleteInvoice(invoiceId) {
   try {
-    const response = await api.delete(
-      `/invoices/${invoiceId}`
-    );
+    const response = await api.delete(`/invoices/${invoiceId}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting invoice:", error);
@@ -571,13 +501,11 @@ export async function deleteInvoice(invoiceId) {
  */
 export async function getLatestInvoiceByPatient(patientId) {
   try {
-    const response = await api.get(
-      `/invoices/patient/${patientId}/latest`
-    );
-    
+    const response = await api.get(`/invoices/patient/${patientId}/latest`);
+
     const data = response.data;
-    console.log('getLatestInvoiceByPatient response:', data);
-    
+    console.log("getLatestInvoiceByPatient response:", data);
+
     return data;
   } catch (error) {
     console.error("Error fetching latest patient invoice:", error);
@@ -590,10 +518,9 @@ export async function getLatestInvoiceByPatient(patientId) {
  */
 export async function generateInvoicePDF(invoiceId) {
   try {
-    const response = await api.get(
-      `/invoices/${invoiceId}/pdf`,
-      { responseType: 'blob' }
-    );
+    const response = await api.get(`/invoices/${invoiceId}/pdf`, {
+      responseType: "blob",
+    });
     return response.data;
   } catch (error) {
     console.error("Error generating invoice PDF:", error);

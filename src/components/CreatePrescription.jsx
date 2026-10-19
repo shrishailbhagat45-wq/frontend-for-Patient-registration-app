@@ -4,7 +4,7 @@ import {
   getDrugSuggestions,
   updatePrescription,
 } from "../API/Prescriptions";
-import { updatePatientVitals } from "../API/Patient";
+import { getPatientById, updatePatientVitals } from "../API/Patient";
 import { toast } from "react-toastify";
 import BloodPressureInput from "./BloodPressureInput";
 
@@ -12,19 +12,30 @@ export default function CreatePrescription({
   showModal,
   setShowModal,
   initialPrescription,
+  patientId,
   patientData: currentPatientData = {},
 }) {
+  const targetPatientId = patientId || currentPatientData._id;
   const [drugs, setDrugs] = useState([
-    { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
+    {
+      name: "",
+      content: "",
+      company: "",
+      quantity: "",
+      frequency: "",
+      remarks: "",
+    },
   ]);
   const [Diagnosis, setDiagnosis] = useState("");
-  const [remarks, setRemarks] = useState("");
   const [suggestions, setSuggestions] = useState({});
   const [highlight, setHighlight] = useState({});
   const [weight, setWeight] = useState("");
   const [bloodPressure, setBloodPressure] = useState("");
   const [pulseRate, setPulseRate] = useState("");
   const [bloodSugarLevel, setBloodSugarLevel] = useState("");
+  const [isLoadingPatientVitals, setIsLoadingPatientVitals] = useState(false);
+  const [patientVitalsLoadError, setPatientVitalsLoadError] = useState(false);
+  const [patientVitalsLoadAttempt, setPatientVitalsLoadAttempt] = useState(0);
   const timersRef = useRef({});
   const lastQueryRef = useRef({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +49,14 @@ export default function CreatePrescription({
   const addNewDrug = () => {
     setDrugs((prev) => [
       ...prev,
-      { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
+      {
+        name: "",
+        content: "",
+        company: "",
+        quantity: "",
+        frequency: "",
+        remarks: "",
+      },
     ]);
   };
 
@@ -54,10 +72,16 @@ export default function CreatePrescription({
   const handleClose = () => {
     setShowModal(false);
     setDrugs([
-      { name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" },
+      {
+        name: "",
+        content: "",
+        company: "",
+        quantity: "",
+        frequency: "",
+        remarks: "",
+      },
     ]);
     setDiagnosis("");
-    setRemarks("");
     setSuggestions({});
     setHighlight({});
     setWeight("");
@@ -71,24 +95,104 @@ export default function CreatePrescription({
     if (initialPrescription && showModal) {
       const presetDrugs =
         Array.isArray(initialPrescription.drug) &&
-          initialPrescription.drug.length
+        initialPrescription.drug.length
           ? initialPrescription.drug.map((d) => ({
-            name: d.name || "",
-            content: d.content || "",
-            company: d.company || "",
-            quantity: d.quantity || "",
-            frequency: d.frequency || "",
-            remarks: d.remarks || "",
-          }))
-          : [{ name: "", content: "", company: "", quantity: "", frequency: "", remarks: "" }];
+              name: d.name || "",
+              content: d.content || "",
+              company: d.company || "",
+              quantity: d.quantity || "",
+              frequency: d.frequency || "",
+              remarks: d.remarks || "",
+            }))
+          : [
+              {
+                name: "",
+                content: "",
+                company: "",
+                quantity: "",
+                frequency: "",
+                remarks: "",
+              },
+            ];
       setDrugs(presetDrugs);
       setDiagnosis(initialPrescription.Diagnosis || "");
       setWeight(initialPrescription.drug?.[0]?.weight?.toString() || "");
       setBloodPressure(initialPrescription.drug?.[0]?.bloodPressure || "");
       setPulseRate(initialPrescription.drug?.[0]?.pulseRate?.toString() || "");
-      setBloodSugarLevel(initialPrescription.drug?.[0]?.bloodSugarLevel?.toString() || "");
+      setBloodSugarLevel(
+        initialPrescription.drug?.[0]?.bloodSugarLevel?.toString() || "",
+      );
     }
   }, [initialPrescription, showModal]);
+
+  useEffect(() => {
+    if (!showModal) return;
+    if (initialPrescription) {
+      setIsLoadingPatientVitals(false);
+      setPatientVitalsLoadError(false);
+      return;
+    }
+
+    let isCurrent = true;
+    if (!targetPatientId) {
+      setIsLoadingPatientVitals(false);
+      setPatientVitalsLoadError(true);
+      return () => {
+        isCurrent = false;
+      };
+    }
+
+    setIsLoadingPatientVitals(true);
+    setPatientVitalsLoadError(false);
+
+    const loadPatientVitals = async () => {
+      try {
+        const response = await getPatientById(targetPatientId);
+        const patient = response?.data;
+        if (!patient) {
+          throw new Error("Patient details were not returned by the server");
+        }
+
+        if (isCurrent) {
+          setWeight(
+            patient.weight === null || patient.weight === undefined
+              ? ""
+              : String(patient.weight),
+          );
+          setBloodPressure(patient.bloodPressure || "");
+          setPulseRate(
+            patient.pulseRate === null || patient.pulseRate === undefined
+              ? ""
+              : String(patient.pulseRate),
+          );
+          setBloodSugarLevel(
+            patient.bloodSugarLevel === null ||
+              patient.bloodSugarLevel === undefined
+              ? ""
+              : String(patient.bloodSugarLevel),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load patient vitals:", error);
+        if (isCurrent) {
+          setPatientVitalsLoadError(true);
+          toast.error("Failed to load patient vitals. Please try again.");
+        }
+      } finally {
+        if (isCurrent) setIsLoadingPatientVitals(false);
+      }
+    };
+
+    loadPatientVitals();
+    return () => {
+      isCurrent = false;
+    };
+  }, [
+    initialPrescription,
+    patientVitalsLoadAttempt,
+    showModal,
+    targetPatientId,
+  ]);
 
   // Suggestions
   const fetchSuggestions = (idx, query) => {
@@ -120,24 +224,23 @@ export default function CreatePrescription({
   const handleDrugNameInput = (idx, value) => {
     setDrugs((prev) =>
       prev.map((d, i) =>
-        i === idx
-          ? { ...d, name: value, content: "", company: "" }
-          : d
-      )
+        i === idx ? { ...d, name: value, content: "", company: "" } : d,
+      ),
     );
     fetchSuggestions(idx, value);
   };
 
   // 🔥 UPDATED: store full object
   const selectSuggestion = (idx, suggestion) => {
-    const name = typeof suggestion === "string" ? suggestion : suggestion.name ?? "";
-    const content = typeof suggestion === "object" ? suggestion.content ?? "" : "";
-    const company = typeof suggestion === "object" ? suggestion.company ?? "" : "";
+    const name =
+      typeof suggestion === "string" ? suggestion : (suggestion.name ?? "");
+    const content =
+      typeof suggestion === "object" ? (suggestion.content ?? "") : "";
+    const company =
+      typeof suggestion === "object" ? (suggestion.company ?? "") : "";
 
     setDrugs((prev) =>
-      prev.map((d, i) =>
-        i === idx ? { ...d, name, content, company } : d
-      )
+      prev.map((d, i) => (i === idx ? { ...d, name, content, company } : d)),
     );
 
     setSuggestions((s) => ({ ...s, [idx]: [] }));
@@ -149,7 +252,10 @@ export default function CreatePrescription({
     const curr = highlight[idx] ?? 0;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setHighlight((h) => ({ ...h, [idx]: Math.min(curr + 1, list.length - 1) }));
+      setHighlight((h) => ({
+        ...h,
+        [idx]: Math.min(curr + 1, list.length - 1),
+      }));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlight((h) => ({ ...h, [idx]: Math.max(curr - 1, 0) }));
@@ -179,11 +285,7 @@ export default function CreatePrescription({
     }
 
     const prescriptionData = {
-      drug: drugs.map((drug) => ({
-        ...drug,
-        weight: parsedWeight,
-        ...prescriptionVitals,
-      })),
+      drug: drugs,
       weight: parsedWeight,
       ...prescriptionVitals,
       Diagnosis,
@@ -193,54 +295,69 @@ export default function CreatePrescription({
         await updatePrescription(initialPrescription._id, prescriptionData);
         const updateData = {};
 
-        if (weight !== undefined && weight !== null && weight !== '') {
+        if (weight !== undefined && weight !== null && weight !== "") {
           updateData.weight = parseFloat(weight);
         }
 
-        if (bloodPressure !== undefined && bloodPressure !== null && bloodPressure !== '') {
+        if (
+          bloodPressure !== undefined &&
+          bloodPressure !== null &&
+          bloodPressure !== ""
+        ) {
           updateData.bloodPressure = bloodPressure;
         }
 
-        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== '') {
+        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== "") {
           updateData.pulseRate = parseInt(pulseRate);
         }
 
-        if (bloodSugarLevel !== undefined && bloodSugarLevel !== null && bloodSugarLevel !== '') {
+        if (
+          bloodSugarLevel !== undefined &&
+          bloodSugarLevel !== null &&
+          bloodSugarLevel !== ""
+        ) {
           updateData.bloodSugarLevel = parseFloat(bloodSugarLevel);
         }
 
         // Skip API call if nothing exists
         if (Object.keys(updateData).length > 0) {
-          updatePatientVitals(currentPatientData._id, updateData);
+          await updatePatientVitals(targetPatientId, updateData);
         }
 
         toast.success("Prescription updated");
         handleClose();
       } else {
-        const id = window.location.pathname.split("/").pop();
         const updateData = {};
 
-        if (weight !== undefined && weight !== null && weight !== '') {
+        if (weight !== undefined && weight !== null && weight !== "") {
           updateData.weight = parseFloat(weight);
         }
 
-        if (bloodPressure !== undefined && bloodPressure !== null && bloodPressure !== '') {
+        if (
+          bloodPressure !== undefined &&
+          bloodPressure !== null &&
+          bloodPressure !== ""
+        ) {
           updateData.bloodPressure = bloodPressure;
         }
 
-        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== '') {
+        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== "") {
           updateData.pulseRate = parseInt(pulseRate);
         }
 
-        if (bloodSugarLevel !== undefined && bloodSugarLevel !== null && bloodSugarLevel !== '') {
+        if (
+          bloodSugarLevel !== undefined &&
+          bloodSugarLevel !== null &&
+          bloodSugarLevel !== ""
+        ) {
           updateData.bloodSugarLevel = parseFloat(bloodSugarLevel);
         }
 
         // Skip API call if nothing exists
         if (Object.keys(updateData).length > 0) {
-          updatePatientVitals(currentPatientData._id, updateData);
+          await updatePatientVitals(targetPatientId, updateData);
         }
-        await createPrescription(id, prescriptionData);
+        await createPrescription(targetPatientId, prescriptionData);
         toast.success("Prescription saved");
         handleClose();
       }
@@ -267,233 +384,371 @@ export default function CreatePrescription({
           </div>
           <button
             onClick={handleClose}
+            disabled={isSubmitting}
             className="text-slate-400 hover:text-slate-600 transition-colors"
             aria-label="Close"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div className="p-6 space-y-4">
-          {drugs.map((drug, idx) => (
+          {isLoadingPatientVitals || isSubmitting ? (
             <div
-              key={idx}
-              className="bg-slate-50 rounded-lg p-4 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end relative"
+              className="flex min-h-72 flex-col items-center justify-center gap-3 text-slate-600"
+              role="status"
             >
-              <div className="sm:col-span-4">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Drug Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={drug.name}
-                  onChange={(e) => handleDrugNameInput(idx, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, idx)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="e.g. Paracetamol"
+              <svg
+                className="h-9 w-9 animate-spin text-blue-600"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
                 />
-                {suggestions[idx] && suggestions[idx].length > 0 && (
-                  <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-xl rounded-lg mt-1 z-30 max-h-64 overflow-y-auto divide-y divide-slate-100">
-                    {suggestions[idx].map((sug, sidx) => {
-                      const name = typeof sug === "string" ? sug : (sug.name ?? "");
-                      const company = typeof sug === "object" ? (sug.company ?? "") : "";
-                      const content = typeof sug === "object" ? (sug.content ?? "") : "";
-                      const isActive = (highlight[idx] ?? 0) === sidx;
-                      return (
-                        <li
-                          key={sidx}
-                          onMouseDown={(ev) => {
-                            ev.preventDefault();
-                            selectSuggestion(idx, sug);
-                          }}
-                          className={
-                            "px-3 py-2.5 cursor-pointer transition-colors " +
-                            (isActive ? "bg-blue-600" : "hover:bg-slate-50")
-                          }
-                        >
-                          <p className={"text-sm font-semibold leading-tight " + (isActive ? "text-white" : "text-slate-900")}>
-                            {name}
-                          </p>
-                          {content && (
-                            <p className={"text-xs mt-0.5 leading-snug " + (isActive ? "text-blue-100" : "text-slate-500")}>
-                              {content}
-                            </p>
-                          )}
-                          {company && (
-                            <p className={"text-[10px] mt-1 font-medium uppercase tracking-wide " + (isActive ? "text-blue-200" : "text-slate-400")}>
-                              {company}
-                            </p>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Quantity <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={drug.quantity}
-                  onChange={(e) => handleDrugChange(idx, "quantity", e.target.value)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="1"
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Frequency <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={drug.frequency}
-                  onChange={(e) => handleDrugChange(idx, "frequency", e.target.value)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white cursor-pointer"
+              </svg>
+              <p className="text-sm font-medium">
+                {isSubmitting
+                  ? "Saving prescription and patient vitals…"
+                  : "Loading patient vital signs…"}
+              </p>
+            </div>
+          ) : patientVitalsLoadError ? (
+            <div
+              className="flex min-h-72 flex-col items-center justify-center gap-3 text-center"
+              role="alert"
+            >
+              <p className="text-sm text-red-600">
+                Unable to load patient vital signs.
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setPatientVitalsLoadAttempt((attempt) => attempt + 1)
+                }
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <>
+              {drugs.map((drug, idx) => (
+                <div
+                  key={idx}
+                  className="bg-slate-50 rounded-lg p-4 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end relative"
                 >
-                  <option value="">Select</option>
-                  <option value="1-1-1">1-1-1</option>
-                  <option value="1-0-1">1-0-1</option>
-                  <option value="1-0-0">1-0-0</option>
-                  <option value="0-0-1">0-0-1</option>
-                  <option value="0-1-0">0-1-0</option>
-                </select>
-              </div>
+                  <div className="sm:col-span-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Drug Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={drug.name}
+                      onChange={(e) => handleDrugNameInput(idx, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, idx)}
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="e.g. Paracetamol"
+                    />
+                    {suggestions[idx] && suggestions[idx].length > 0 && (
+                      <ul className="absolute left-4 right-4 bg-white border border-slate-200 shadow-xl rounded-lg mt-1 z-30 max-h-64 overflow-y-auto divide-y divide-slate-100">
+                        {suggestions[idx].map((sug, sidx) => {
+                          const name =
+                            typeof sug === "string" ? sug : (sug.name ?? "");
+                          const company =
+                            typeof sug === "object" ? (sug.company ?? "") : "";
+                          const content =
+                            typeof sug === "object" ? (sug.content ?? "") : "";
+                          const isActive = (highlight[idx] ?? 0) === sidx;
+                          return (
+                            <li
+                              key={sidx}
+                              onMouseDown={(ev) => {
+                                ev.preventDefault();
+                                selectSuggestion(idx, sug);
+                              }}
+                              className={
+                                "px-3 py-2.5 cursor-pointer transition-colors " +
+                                (isActive ? "bg-blue-600" : "hover:bg-slate-50")
+                              }
+                            >
+                              <p
+                                className={
+                                  "text-sm font-semibold leading-tight " +
+                                  (isActive ? "text-white" : "text-slate-900")
+                                }
+                              >
+                                {name}
+                              </p>
+                              {content && (
+                                <p
+                                  className={
+                                    "text-xs mt-0.5 leading-snug " +
+                                    (isActive
+                                      ? "text-blue-100"
+                                      : "text-slate-500")
+                                  }
+                                >
+                                  {content}
+                                </p>
+                              )}
+                              {company && (
+                                <p
+                                  className={
+                                    "text-[10px] mt-1 font-medium uppercase tracking-wide " +
+                                    (isActive
+                                      ? "text-blue-200"
+                                      : "text-slate-400")
+                                  }
+                                >
+                                  {company}
+                                </p>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
 
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Remarks
-                </label>
-                <input
-                  type="text"
-                  value={drug.remarks || ""}
-                  onChange={(e) => handleDrugChange(idx, "remarks", e.target.value)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="Optional notes"
-                />
-              </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={drug.quantity}
+                      onChange={(e) =>
+                        handleDrugChange(idx, "quantity", e.target.value)
+                      }
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="1"
+                    />
+                  </div>
 
-              <div className="sm:col-span-1 flex justify-end">
-                {drugs.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeDrug(idx)}
-                    className="text-red-600 hover:bg-red-50 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-                    aria-label={`Remove drug ${idx + 1}`}
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Frequency <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={drug.frequency}
+                      onChange={(e) =>
+                        handleDrugChange(idx, "frequency", e.target.value)
+                      }
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white cursor-pointer"
+                    >
+                      <option value="">Select</option>
+                      <option value="1-1-1">1-1-1</option>
+                      <option value="1-0-1">1-0-1</option>
+                      <option value="1-0-0">1-0-0</option>
+                      <option value="0-0-1">0-0-1</option>
+                      <option value="0-1-0">0-1-0</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-3">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Remarks
+                    </label>
+                    <input
+                      type="text"
+                      value={drug.remarks || ""}
+                      onChange={(e) =>
+                        handleDrugChange(idx, "remarks", e.target.value)
+                      }
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="Optional notes"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-1 flex justify-end">
+                    {drugs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeDrug(idx)}
+                        className="text-red-600 hover:bg-red-50 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                        aria-label={`Remove drug ${idx + 1}`}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={addNewDrug}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-100 sm:w-auto"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
-                    Remove
-                  </button>
-                )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add Another Drug
+                </button>
               </div>
-            </div>
-          ))}
 
-          {/* Vital Signs Section */}
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h3 className="text-sm font-semibold text-slate-800 mb-3">Patient Vital Signs</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Vital Signs Section */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                  Patient Vital Signs
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Weight (kg) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="e.g. 70.5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Blood Pressure (mmHg)
+                    </label>
+                    <BloodPressureInput
+                      value={bloodPressure}
+                      onChange={(formatted) => setBloodPressure(formatted)}
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="e.g. 120/80"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Pulse Rate (bpm)
+                    </label>
+                    <input
+                      type="number"
+                      value={pulseRate}
+                      onChange={(e) => setPulseRate(e.target.value)}
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="e.g. 72"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Blood Sugar Level (mg/dL)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={bloodSugarLevel}
+                      onChange={(e) => setBloodSugarLevel(e.target.value)}
+                      className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                      placeholder="e.g. 100"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 mt-2">
+                  These vital signs will be saved to patient information and
+                  attached to the prescription
+                </p>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Weight (kg) <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="e.g. 70.5"
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Diagnosis / Remarks
+                </label>
+                <textarea
+                  value={Diagnosis}
+                  onChange={(e) => setDiagnosis(e.target.value)}
+                  rows={4}
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white resize-none"
+                  placeholder="Enter diagnosis, symptoms, or additional remarks..."
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Blood Pressure (mmHg)</label>
-                <BloodPressureInput
-                  value={bloodPressure}
-                  onChange={(formatted) => setBloodPressure(formatted)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="e.g. 120/80"
-                />
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
+                <div className="flex-1" />
+
+                <button
+                  onClick={handleClose}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 border border-slate-200 rounded-md hover:bg-slate-200 transition-colors font-medium text-sm"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleSavePreview}
+                  disabled={isSubmitting}
+                  className={
+                    "w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 rounded-md shadow-sm transition-colors font-medium text-sm " +
+                    (isSubmitting
+                      ? "bg-blue-400 text-white cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700")
+                  }
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                  {initialPrescription && initialPrescription._id
+                    ? isSubmitting
+                      ? "Updating..."
+                      : "Update"
+                    : isSubmitting
+                      ? "Saving..."
+                      : "Save & Preview"}
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Pulse Rate (bpm)</label>
-                <input
-                  type="number"
-                  value={pulseRate}
-                  onChange={(e) => setPulseRate(e.target.value)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="e.g. 72"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Blood Sugar Level (mg/dL)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={bloodSugarLevel}
-                  onChange={(e) => setBloodSugarLevel(e.target.value)}
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                  placeholder="e.g. 100"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-slate-600 mt-2">
-              These vital signs will be saved to patient information and attached to the prescription
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Diagnosis / Remarks
-            </label>
-            <textarea
-              value={Diagnosis}
-              onChange={(e) => setDiagnosis(e.target.value)}
-              rows={4}
-              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white resize-none"
-              placeholder="Enter diagnosis, symptoms, or additional remarks..."
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200">
-            <button
-              onClick={addNewDrug}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md shadow-sm hover:bg-slate-50 transition-colors font-medium text-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Another Drug
-            </button>
-
-            <div className="flex-1" />
-
-            <button
-              onClick={handleClose}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 border border-slate-200 rounded-md hover:bg-slate-200 transition-colors font-medium text-sm"
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={handleSavePreview}
-              disabled={isSubmitting}
-              className={
-                "w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 rounded-md shadow-sm transition-colors font-medium text-sm " +
-                (isSubmitting
-                  ? "bg-blue-400 text-white cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700")
-              }
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              {initialPrescription && initialPrescription._id ? (isSubmitting ? "Updating..." : "Update") : (isSubmitting ? "Saving..." : "Save & Preview")}
-            </button>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

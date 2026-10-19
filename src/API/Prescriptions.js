@@ -4,8 +4,7 @@ import axiosRetry from "axios-retry";
 // ==========================
 // BASE URL
 // ==========================
-const url =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const url = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 // ==========================
 // AXIOS INSTANCE
@@ -38,7 +37,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // ==========================
@@ -47,12 +46,12 @@ api.interceptors.request.use(
 export async function getPrescriptionsByPatientId(id, page = 1, limit = 3) {
   try {
     const response = await api.get(
-      `/prescriptions/patient/${id}?page=${page}&limit=${limit}`
+      `/prescriptions/patient/${id}?page=${page}&limit=${limit}`,
     );
 
     const data = response.data;
-    console.log('getPrescriptionsByPatientId response:', data);
-    
+    console.log("getPrescriptionsByPatientId response:", data);
+
     // Handle paginated response { data: [...], pagination: {...} }
     if (data.data && data.pagination) {
       return {
@@ -70,13 +69,14 @@ export async function getPrescriptionsByPatientId(id, page = 1, limit = 3) {
     // Handle simple array response (backward compatibility)
     return {
       prescriptions: Array.isArray(data) ? data : [],
-      pagination: { page: 1, limit, total: (Array.isArray(data) ? data : []).length },
+      pagination: {
+        page: 1,
+        limit,
+        total: (Array.isArray(data) ? data : []).length,
+      },
     };
   } catch (error) {
-    console.error(
-      "Error fetching prescriptions:",
-      error
-    );
+    console.error("Error fetching prescriptions:", error);
     throw error;
   }
 }
@@ -84,32 +84,20 @@ export async function getPrescriptionsByPatientId(id, page = 1, limit = 3) {
 // ==========================
 // CREATE PRESCRIPTION
 // ==========================
-export async function createPrescription(
-  id,
-  prescriptionData
-) {
+export async function createPrescription(id, prescriptionData) {
   try {
-    console.log(
-      "Creating prescription with data:",
-      prescriptionData
-    );
+    console.log("Creating prescription with data:", prescriptionData);
 
     const response = await api.post(
       `/prescriptions/add/${id}`,
-      prescriptionData
+      prescriptionData,
     );
 
-    console.log(
-      "Prescription created:",
-      response.data
-    );
+    console.log("Prescription created:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error creating prescription:",
-      error
-    );
+    console.error("Error creating prescription:", error);
     throw error;
   }
 }
@@ -117,28 +105,28 @@ export async function createPrescription(
 // ==========================
 // UPDATE PRESCRIPTION
 // ==========================
-export async function updatePrescription(
-  id,
-  prescriptionData
-) {
+export async function updatePrescription(id, prescriptionData) {
   try {
-    console.log(
-      "Updating prescription:",
-      id,
-      prescriptionData
-    );
+    console.log("Updating prescription:", id, prescriptionData);
 
-    const response = await api.put(
-      `/prescriptions/${id}`,
-      prescriptionData
-    );
+    const response = await api.put(`/prescriptions/${id}`, prescriptionData);
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error updating prescription:",
-      error
-    );
+    console.error("Error updating prescription:", error);
+    throw error;
+  }
+}
+
+// ==========================
+// DELETE PRESCRIPTION
+// ==========================
+export async function deletePrescription(id) {
+  try {
+    const response = await api.delete(`/prescriptions/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting prescription:", error);
     throw error;
   }
 }
@@ -148,17 +136,11 @@ export async function updatePrescription(
 // ==========================
 export async function getDrugSuggestions(name) {
   try {
-    const response = await api.post(
-      "/drugs",
-      { name }
-    );
+    const response = await api.post("/drugs", { name });
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Error fetching drug suggestions:",
-      error
-    );
+    console.error("Error fetching drug suggestions:", error);
     throw error;
   }
 }
