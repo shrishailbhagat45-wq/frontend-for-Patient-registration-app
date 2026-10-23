@@ -1,23 +1,37 @@
 import { useState } from "react";
-import { addReceptionist, getReceptionist, deleteUser, updateUserById } from "../API/user";
-import { FiUserPlus, FiMail, FiLock, FiShield, FiUsers, FiTrash2, FiRefreshCw, FiEdit2, FiX } from "react-icons/fi";
-import { IoArrowBack } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
+import {
+  addReceptionist,
+  getReceptionist,
+  deleteUser,
+  updateUserById,
+} from "../API/user";
+import {
+  FiUserPlus,
+  FiMail,
+  FiLock,
+  FiShield,
+  FiUsers,
+  FiTrash2,
+  FiRefreshCw,
+  FiEdit2,
+  FiX,
+} from "react-icons/fi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 export default function RegisterReceptionist() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "Receptionist" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "Receptionist",
+  });
   const [editingId, setEditingId] = useState(null);
 
   // Fetch receptionists using useQuery
-  const { 
-    data: receptionists = [], 
-    refetch,
-  } = useQuery({
-    queryKey: ['receptionists'],
+  const { data: receptionists = [], refetch } = useQuery({
+    queryKey: ["receptionists"],
     queryFn: async () => {
       const res = await getReceptionist();
       const data = res?.data ?? res ?? [];
@@ -33,14 +47,14 @@ export default function RegisterReceptionist() {
       return await addReceptionist(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['receptionists'] });
+      queryClient.invalidateQueries({ queryKey: ["receptionists"] });
       setForm({ name: "", email: "", password: "", role: "Receptionist" });
       toast.success("Receptionist added successfully!");
     },
     onError: (err) => {
       console.error("Failed to add receptionist", err);
       toast.error(err?.response?.data?.message || "Failed to add receptionist");
-    }
+    },
   });
 
   // Update receptionist mutation
@@ -49,38 +63,47 @@ export default function RegisterReceptionist() {
       return await updateUserById(id, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['receptionists'] });
+      queryClient.invalidateQueries({ queryKey: ["receptionists"] });
       setForm({ name: "", email: "", password: "", role: "Receptionist" });
       setEditingId(null);
       toast.success("Receptionist updated successfully!");
     },
     onError: (err) => {
       console.error("Failed to update receptionist", err);
-      toast.error(err?.response?.data?.message || "Failed to update receptionist");
-    }
+      toast.error(
+        err?.response?.data?.message || "Failed to update receptionist",
+      );
+    },
   });
 
   // Delete receptionist mutation
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteUser(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['receptionists'] });
-      toast.success('Receptionist deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["receptionists"] });
+      toast.success("Receptionist deleted successfully");
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || 'Failed to delete receptionist');
+      toast.error(
+        err?.response?.data?.message || "Failed to delete receptionist",
+      );
     },
   });
 
-  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const validate = () => {
     if (!form.name.trim()) return "Name is required.";
     if (!form.email.trim()) return "Email is required.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Email is invalid.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      return "Email is invalid.";
     // Password is only required when adding new receptionist
     if (!editingId && !form.password) return "Password is required.";
-    if (form.password && !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(form.password)) {
+    if (
+      form.password &&
+      !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(form.password)
+    ) {
       return "Password must contain an uppercase letter, a number, and a special character.";
     }
     return null;
@@ -125,7 +148,7 @@ export default function RegisterReceptionist() {
     });
     setEditingId(receptionist._id);
     // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -141,20 +164,17 @@ export default function RegisterReceptionist() {
     <div className="max-w-4xl mx-auto px-4 md:px-8">
       {/* Header */}
       <div className="mb-6">
-        <button
-          onClick={() => navigate("/home")}
-          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-4 text-sm"
-        >
-          <IoArrowBack className="text-lg" />
-          <span>Back to Home</span>
-        </button>
         <div className="flex items-center gap-3">
           <div className="p-3 bg-blue-100 rounded-lg">
             <FiUsers className="text-blue-600 text-2xl" />
           </div>
           <div>
-            <h2 className="text-2xl font-semibold text-slate-800">Staff Management</h2>
-            <p className="text-sm text-slate-500 mt-1">Register and manage reception staff</p>
+            <h2 className="text-2xl font-semibold text-slate-800">
+              Staff Management
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Register and manage reception staff
+            </p>
           </div>
         </div>
       </div>
@@ -183,12 +203,16 @@ export default function RegisterReceptionist() {
         {editingId && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <strong>Editing mode:</strong> Password changes are not available from this form.
+              <strong>Editing mode:</strong> Password changes are not available
+              from this form.
             </p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+        >
           <label className="flex flex-col">
             <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
               <FiUserPlus className="text-slate-500 text-sm" />
@@ -203,7 +227,6 @@ export default function RegisterReceptionist() {
               className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </label>
-
           <label className="flex flex-col">
             <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
               <FiMail className="text-slate-500 text-sm" />
@@ -219,7 +242,6 @@ export default function RegisterReceptionist() {
               className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
           </label>
-
           {!editingId && (
             <label className="flex flex-col">
               <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
@@ -237,7 +259,6 @@ export default function RegisterReceptionist() {
               />
             </label>
           )}
-
           <label className="flex flex-col">
             <span className="text-sm font-medium text-slate-700 mb-1.5 flex items-center gap-1.5">
               <FiShield className="text-slate-500 text-sm" />
@@ -251,7 +272,8 @@ export default function RegisterReceptionist() {
             >
               <option>Receptionist</option>
             </select>
-          </label>          <div className="sm:col-span-2 flex justify-end gap-3">
+          </label>{" "}
+          <div className="sm:col-span-2 flex justify-end gap-3">
             {editingId && (
               <button
                 type="button"
@@ -266,11 +288,18 @@ export default function RegisterReceptionist() {
               disabled={addMutation.isPending || updateMutation.isPending}
               className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {editingId ? <FiEdit2 className="text-base" /> : <FiUserPlus className="text-base" />}
-              {editingId 
-                ? (updateMutation.isPending ? "Updating..." : "Update Receptionist")
-                : (addMutation.isPending ? "Adding..." : "Add Receptionist")
-              }
+              {editingId ? (
+                <FiEdit2 className="text-base" />
+              ) : (
+                <FiUserPlus className="text-base" />
+              )}
+              {editingId
+                ? updateMutation.isPending
+                  ? "Updating..."
+                  : "Update Receptionist"
+                : addMutation.isPending
+                  ? "Adding..."
+                  : "Add Receptionist"}
             </button>
           </div>
         </form>
@@ -284,7 +313,10 @@ export default function RegisterReceptionist() {
               <FiUsers className="text-blue-600" />
               Registered Staff
             </h3>
-            <p className="text-sm text-slate-500 mt-0.5">{receptionists.length} {receptionists.length === 1 ? 'member' : 'members'}</p>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {receptionists.length}{" "}
+              {receptionists.length === 1 ? "member" : "members"}
+            </p>
           </div>
           <button
             type="button"
@@ -296,60 +328,76 @@ export default function RegisterReceptionist() {
           </button>
         </div>
 
-        <ul className="divide-y divide-slate-100">
-          {receptionists.length === 0 ? (
-            <li className="px-6 py-8 text-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="p-4 bg-slate-100 rounded-full">
-                  <FiUsers className="text-slate-400 text-3xl" />
-                </div>
-                <p className="text-slate-600 font-medium text-sm">No receptionists registered</p>
-                <p className="text-xs text-slate-400">Add your first staff member above</p>
-              </div>
-            </li>
-          ) : (
-            receptionists.map((r) => (
-              <li key={r._id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-sm">
-                      {r.name.charAt(0).toUpperCase()}
-                    </span>
+        <div
+          className="overflow-x-auto overscroll-x-contain"
+          role="region"
+          aria-label="Registered staff list"
+          tabIndex={0}
+        >
+          <ul className="min-w-[520px] divide-y divide-slate-100 sm:min-w-0">
+            {receptionists.length === 0 ? (
+              <li className="px-6 py-8 text-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-4 bg-slate-100 rounded-full">
+                    <FiUsers className="text-slate-400 text-3xl" />
                   </div>
-                  <div>
-                    <div className="font-medium text-slate-800 text-sm">{r.name}</div>
-                    <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                      <FiMail className="text-slate-400" />
-                      {r.email}
-                      <span className="text-slate-300">•</span>
-                      <FiShield className="text-slate-400" />
-                      <span className="italic">{r.role}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(r)}
-                    className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm flex items-center gap-1.5 text-sm"
-                    aria-label={`Edit ${r.name}`}
-                  >
-                    <FiEdit2 className="text-xs" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(r._id)}
-                    disabled={deleteMutation.isPending}
-                    className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm flex items-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label={`Delete ${r.name}`}
-                  >
-                    <FiTrash2 className="text-xs" />
-                    {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-                  </button>
+                  <p className="text-slate-600 font-medium text-sm">
+                    No receptionists registered
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Add your first staff member above
+                  </p>
                 </div>
               </li>
-            ))
-          )}
-        </ul>
+            ) : (
+              receptionists.map((r) => (
+                <li
+                  key={r._id}
+                  className="flex items-center justify-between gap-4 px-6 py-4 transition hover:bg-slate-50"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                      <span className="text-blue-600 font-semibold text-sm">
+                        {r.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-slate-800 text-sm">
+                        {r.name}
+                      </div>
+                      <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5 whitespace-nowrap">
+                        <FiMail className="flex-shrink-0 text-slate-400" />
+                        {r.email}
+                        <span className="text-slate-300">•</span>
+                        <FiShield className="flex-shrink-0 text-slate-400" />
+                        <span className="italic">{r.role}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-shrink-0 gap-2">
+                    <button
+                      onClick={() => handleEdit(r)}
+                      className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm flex items-center gap-1.5 text-sm"
+                      aria-label={`Edit ${r.name}`}
+                    >
+                      <FiEdit2 className="text-xs" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(r._id)}
+                      disabled={deleteMutation.isPending}
+                      className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm flex items-center gap-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label={`Delete ${r.name}`}
+                    >
+                      <FiTrash2 className="text-xs" />
+                      {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
       </section>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   FiX,
 } from "react-icons/fi";
 import { MdOutlineMedicalServices } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,17 +39,20 @@ const doctorSchema = z.object({
     .email("Email is invalid")
     .trim(),
 
-  password: z.string().refine(
-    (password) =>
-      password === "" ||
-      (password.length >= 8 && /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)),
-    "Password must be at least 8 characters and include an uppercase letter, a number, and a special character"
-  ),
+  password: z
+    .string()
+    .refine(
+      (password) =>
+        password === "" ||
+        (password.length >= 8 &&
+          /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)),
+      "Password must be at least 8 characters and include an uppercase letter, a number, and a special character",
+    ),
 
   phoneNumber: z
     .string()
     .min(1, "Phone number is required")
-    .regex(/^\+?[\d\s\-]{7,15}$/, "Phone number is invalid")
+    .regex(/^\+?[\d\s-]{7,15}$/, "Phone number is invalid")
     .trim(),
 
   specialization: z.string().min(1, "Specialization is required"),
@@ -59,7 +61,6 @@ const doctorSchema = z.object({
 });
 
 export default function RegisterDoctor() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [searchSpecializations, setSearchSpecializations] = useState([]);
@@ -182,7 +183,7 @@ export default function RegisterDoctor() {
     setValue("role", "Doctor");
     setEditingId(doctor._id);
     // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -195,16 +196,16 @@ export default function RegisterDoctor() {
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteUser(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doctors'] });
-      toast.success('Doctor deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Doctor deleted successfully");
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || 'Failed to delete doctor');
+      toast.error(err?.response?.data?.message || "Failed to delete doctor");
     },
   });
 
   const handleDelete = (id) => {
-    if (!window.confirm('Delete this doctor?')) return;
+    if (!window.confirm("Delete this doctor?")) return;
     deleteMutation.mutate(id);
   };
 
@@ -223,7 +224,7 @@ export default function RegisterDoctor() {
     setSearchOn(true);
 
     const results = SPECIALIZATIONS.filter((spec) =>
-      spec.toLowerCase().includes(value.toLowerCase())
+      spec.toLowerCase().includes(value.toLowerCase()),
     );
 
     setSearchSpecializations(results);
@@ -283,7 +284,8 @@ export default function RegisterDoctor() {
         {editingId && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <strong>Editing mode:</strong> Leave password blank to keep the current password
+              <strong>Editing mode:</strong> Leave password blank to keep the
+              current password
             </p>
           </div>
         )}
@@ -307,9 +309,7 @@ export default function RegisterDoctor() {
             />
 
             {errors.name && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.name.message}
-              </p>
+              <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
             )}
           </label>
 
@@ -337,7 +337,9 @@ export default function RegisterDoctor() {
 
           {!editingId ? (
             <label className="flex flex-col">
-              <span className="text-sm font-medium text-slate-700 mb-1.5">Password *</span>
+              <span className="text-sm font-medium text-slate-700 mb-1.5">
+                Password *
+              </span>
               <input
                 {...register("password")}
                 type="password"
@@ -347,7 +349,9 @@ export default function RegisterDoctor() {
                 }`}
               />
               {errors.password && (
-                <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </label>
           ) : (
@@ -367,9 +371,7 @@ export default function RegisterDoctor() {
               type="tel"
               placeholder="+91 98765 43210"
               className={`border rounded-md px-3 py-2 text-sm ${
-                errors.phoneNumber
-                  ? "border-red-400"
-                  : "border-slate-300"
+                errors.phoneNumber ? "border-red-400" : "border-slate-300"
               }`}
             />
 
@@ -392,9 +394,7 @@ export default function RegisterDoctor() {
               onChange={handleSearch}
               placeholder="Search specialization"
               className={`border rounded-md px-3 py-2 text-sm ${
-                errors.specialization
-                  ? "border-red-400"
-                  : "border-slate-300"
+                errors.specialization ? "border-red-400" : "border-slate-300"
               }`}
             />
 
@@ -405,9 +405,7 @@ export default function RegisterDoctor() {
                   searchSpecializations.map((item) => (
                     <div
                       key={item}
-                      onClick={() =>
-                        handleSelectSpecialization(item)
-                      }
+                      onClick={() => handleSelectSpecialization(item)}
                       className="px-3 py-2 text-sm hover:bg-slate-100 cursor-pointer"
                     >
                       {item}
@@ -459,9 +457,12 @@ export default function RegisterDoctor() {
             >
               {editingId ? <FiEdit2 /> : <FiUserPlus />}
               {editingId
-                ? (updateMutation.isPending ? "Updating..." : "Update Doctor")
-                : (addMutation.isPending ? "Adding..." : "Add Doctor")
-              }
+                ? updateMutation.isPending
+                  ? "Updating..."
+                  : "Update Doctor"
+                : addMutation.isPending
+                  ? "Adding..."
+                  : "Add Doctor"}
             </button>
           </div>
         </form>
@@ -489,53 +490,57 @@ export default function RegisterDoctor() {
           </button>
         </div>
 
-        <ul className="divide-y divide-slate-100">
-          {loading ? (
-            <li className="px-6 py-8 text-center text-sm text-slate-400">
-              Loading...
-            </li>
-          ) : doctors.length === 0 ? (
-            <li className="px-6 py-8 text-center text-sm text-slate-400">
-              No doctors registered
-            </li>
-          ) : (
-            doctors.map((d) => (
-              <li
-                key={d._id}
-                className="px-6 py-4 flex items-center justify-between hover:bg-slate-50"
-              >
-                <div>
-                  <div className="font-medium text-slate-800">
-                    {d.name}
-                  </div>
-
-                  <div className="text-sm text-slate-500 mt-1">
-                    {d.email} • {d.phoneNumber} •{" "}
-                    {d.specialization}
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(d)}
-                    className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm flex items-center gap-1 transition-colors"
-                  >
-                    <FiEdit2 />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(d._id)}
-                    disabled={deleteMutation.isPending}
-                    className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiTrash2 />
-                    {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
+        <div
+          className="overflow-x-auto overscroll-x-contain"
+          role="region"
+          aria-label="Registered doctors list"
+          tabIndex={0}
+        >
+          <ul className="min-w-[600px] divide-y divide-slate-100 sm:min-w-0">
+            {loading ? (
+              <li className="px-6 py-8 text-center text-sm text-slate-400">
+                Loading...
               </li>
-            ))
-          )}
-        </ul>
+            ) : doctors.length === 0 ? (
+              <li className="px-6 py-8 text-center text-sm text-slate-400">
+                No doctors registered
+              </li>
+            ) : (
+              doctors.map((d) => (
+                <li
+                  key={d._id}
+                  className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-slate-50"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-slate-800">{d.name}</div>
+
+                    <div className="mt-1 whitespace-nowrap text-sm text-slate-500">
+                      {d.email} • {d.phoneNumber} • {d.specialization}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-shrink-0 gap-2">
+                    <button
+                      onClick={() => handleEdit(d)}
+                      className="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm flex items-center gap-1 transition-colors"
+                    >
+                      <FiEdit2 />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(d._id)}
+                      disabled={deleteMutation.isPending}
+                      className="px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <FiTrash2 />
+                      {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
       </section>
     </div>
   );
