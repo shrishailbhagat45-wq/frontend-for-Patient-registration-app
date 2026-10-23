@@ -19,7 +19,7 @@ import Create from "./pages/Create.jsx";
 import CreateClinic from "./pages/CreateClinic.jsx";
 import Invoice from "./pages/Invoice.jsx";
 import InsightsDashboard from "./pages/InsightsDashboard.jsx";
-import RequireAuth from "./RequireAuth.jsx";
+import RequireAuth, { RequireAdmin } from "./RequireAuth.jsx";
 
 if (localStorage.getItem("theme") === "dark") {
   document.documentElement.classList.add("dark");
@@ -43,7 +43,12 @@ const router = createBrowserRouter([
       },
       { path: "/print-prescription", element: <PrintPrescription /> },
       { path: "/billing-dashboard", element: <BillingDashBoard /> },
-      { path: "/Insights-Dashboard", element: <InsightsDashboard /> },
+      {
+        element: <RequireAdmin />,
+        children: [
+          { path: "/Insights-Dashboard", element: <InsightsDashboard /> },
+        ],
+      },
       { path: "/billing/:patientId", element: <Billing /> },
       { path: "/management-dashboard", element: <ManagementDashboard /> },
       { path: "/profile", element: <Profile /> },

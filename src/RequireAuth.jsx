@@ -7,3 +7,8 @@ export default function RequireAuth() {
   }
   return <Outlet />;
 }
+
+export function RequireAdmin() {
+  const role = localStorage.getItem("role");
+  return role === "Admin" ? <Outlet /> : <Navigate to="/home" replace />;
+}

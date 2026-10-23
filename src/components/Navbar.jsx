@@ -143,15 +143,17 @@ export default function Navbar() {
                   <span>Billing Dashboard</span>
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/Insights-Dashboard"
-                  className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base"
-                >
-                  <FiBarChart2 className="text-xl" />
-                  <span>Insights Dashboard</span>
-                </Link>
-              </li>
+              {role === "Admin" ? (
+                <li>
+                  <Link
+                    to="/Insights-Dashboard"
+                    className="text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-base"
+                  >
+                    <FiBarChart2 className="text-xl" />
+                    <span>Insights Dashboard</span>
+                  </Link>
+                </li>
+              ) : null}
               {role !== "Receptionist" ? (
                 <li>
                   <Link
