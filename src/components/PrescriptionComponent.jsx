@@ -170,6 +170,14 @@ export default function PrescriptionComponent({
             padding: 10px 14px !important;
             border-top: none !important;
           }
+          .rx-header-content {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+            gap: 12px !important;
+          }
           .rx-header-left {
             display: flex !important;
             flex-direction: row !important;
@@ -179,6 +187,7 @@ export default function PrescriptionComponent({
             padding-top: 0 !important;
           }
           .rx-header-right {
+            margin-left: auto !important;
             text-align: right !important;
             border-top: none !important;
             padding-top: 0 !important;
@@ -198,7 +207,11 @@ export default function PrescriptionComponent({
           /* All inner sections: tighter padding for A5 */
           .rx-meta   { padding: 5px 14px !important; }
           .rx-patient{ padding: 8px 14px !important; }
-          .rx-remarks-box { padding: 6px 14px !important; background-color: #fffbeb !important; }
+          .rx-remarks-box {
+            padding: 6px 14px !important;
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+          }
           .rx-meds   { padding: 6px 14px !important; flex: 1 !important; }
           .rx-footer {
             padding: 8px 14px !important;
@@ -225,6 +238,7 @@ export default function PrescriptionComponent({
 
           /* Notes column visible on print */
           .rx-notes-col { display: block !important; }
+          .rx-mobile-notes { display: none !important; }
 
           /* Watermark smaller on A5 */
           .rx-watermark img {
@@ -265,8 +279,8 @@ export default function PrescriptionComponent({
           <div className="rx-card w-full max-w-3xl mx-auto bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col">
             {/* HEADER */}
             <div className="rx-header bg-[#1e3a5f] px-4 py-4 md:px-7 md:py-5 flex-shrink-0">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
-                <div className="rx-header-left flex items-center gap-3 w-full min-w-0">
+              <div className="rx-header-content flex flex-row items-center justify-between gap-3">
+                <div className="rx-header-left flex flex-1 items-center gap-3 min-w-0">
                   <img
                     src="/clinic logo.png"
                     alt=""
@@ -281,7 +295,7 @@ export default function PrescriptionComponent({
                     </p>
                   </div>
                 </div>
-                <div className="rx-header-right w-full border-t border-white/10 pt-3 md:w-auto md:border-0 md:pt-0 md:text-right flex-shrink-0">
+                <div className="rx-header-right ml-auto w-auto border-0 pt-0 text-right flex-shrink-0">
                   <p className="text-slate-200 text-sm md:text-[15px] font-medium">
                     {isDoctorLoading ? "…" : `Dr. ${doctorName}`}
                   </p>
@@ -361,11 +375,11 @@ export default function PrescriptionComponent({
 
             {/* REMARKS */}
             {prescriptionData.Diagnosis && (
-              <div className="rx-remarks-box px-4 md:px-7 py-3 bg-amber-50 border-b border-amber-100 flex-shrink-0">
-                <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-amber-600 font-semibold mb-1">
-                  Clinical Notes
+              <div className="rx-remarks-box px-4 md:px-7 py-3 bg-white border-b border-slate-100 flex-shrink-0">
+                <p className="rx-label text-[9px] tracking-[0.14em] uppercase text-slate-500 font-semibold mb-1">
+                  Diagnosis
                 </p>
-                <p className="text-[12px] text-amber-900 leading-relaxed">
+                <p className="text-[12px] text-slate-900 leading-relaxed">
                   {prescriptionData.Diagnosis}
                 </p>
               </div>
@@ -422,7 +436,7 @@ export default function PrescriptionComponent({
                         </p>
                       )}
                       {drug.remarks && (
-                        <p className="md:hidden text-[11px] text-slate-400 italic mt-0.5">
+                        <p className="rx-mobile-notes md:hidden text-[11px] text-slate-400 italic mt-0.5">
                           {drug.remarks}
                         </p>
                       )}

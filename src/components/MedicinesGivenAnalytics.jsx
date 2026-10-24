@@ -1,231 +1,287 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FiPackage } from "react-icons/fi";
-import { getAllInvoicesByClinic } from "../API/billing";
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Tooltip,
+} from "chart.js";
+import { Bar, Pie } from "react-chartjs-2";
+import { getCompanyPrescriptionAnalytics } from "../API/Analytics";
 
-const PERIODS = [
-  { value: "today", label: "Today" },
-  { value: "month", label: "This Month" },
-  { value: "year", label: "This Year" },
+ChartJS.register(
+  ArcElement,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+);
+
+const COMPANY_PAGE_SIZE = 20;
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-function isWithinPeriod(dateValue, period) {
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return false;
-
-  const now = new Date();
-  if (period === "today") {
-    return date.toDateString() === now.toDateString();
-  }
-  if (period === "month") {
-    return (
-      date.getFullYear() === now.getFullYear() &&
-      date.getMonth() === now.getMonth()
-    );
-  }
-  return date.getFullYear() === now.getFullYear();
-}
-
-function formatCurrency(amount) {
-  return `₹${amount.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 export default function MedicinesGivenAnalytics() {
-  const [selectedPeriod, setSelectedPeriod] = useState("today");
-  const clinicId = localStorage.getItem("clinicId");
+  const [companyPage, setCompanyPage] = useState(1);
+  const [companyYear, setCompanyYear] = useState("");
+  const [companyMonth, setCompanyMonth] = useState("");
+
   const {
-    data: invoices = [],
+    data: companyAnalytics,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["medicine-given-analytics", clinicId],
-    queryFn: () => getAllInvoicesByClinic(clinicId),
-    enabled: !!clinicId,
+    queryKey: [
+      "prescription-company-analytics",
+      companyPage,
+      companyYear,
+      companyMonth,
+    ],
+    queryFn: () =>
+      getCompanyPrescriptionAnalytics({
+        page: companyPage,
+        limit: COMPANY_PAGE_SIZE,
+        ...(companyYear ? { year: Number(companyYear) } : {}),
+        ...(companyMonth ? { month: Number(companyMonth) } : {}),
+      }),
   });
 
-  const { medicines, totalUnits, totalRevenue } = useMemo(() => {
-    const medicineMap = new Map();
-    let units = 0;
-    let revenue = 0;
-
-    invoices
-      .filter(
-        (invoice) =>
-          String(invoice.status || "").toLowerCase() !== "draft" &&
-          isWithinPeriod(invoice.createdAt, selectedPeriod),
-      )
-      .forEach((invoice) => {
-        const invoiceId = invoice._id || invoice.id;
-        (invoice.items || [])
-          .filter((item) =>
-            ["medicine", "medicines"].includes(String(item.type).toLowerCase()),
-          )
-          .forEach((item) => {
-            const name = item.itemName || "Unnamed medicine";
-            const quantity = Number(item.quantity) || 0;
-            const itemRevenue =
-              Number(item.totalPrice) ||
-              (Number(item.unitPrice) || 0) * quantity;
-            const medicine = medicineMap.get(name) || {
-              name,
-              quantity: 0,
-              revenue: 0,
-              invoiceIds: new Set(),
-            };
-
-            medicine.quantity += quantity;
-            medicine.revenue += itemRevenue;
-            if (invoiceId) medicine.invoiceIds.add(invoiceId);
-            medicineMap.set(name, medicine);
-            units += quantity;
-            revenue += itemRevenue;
-          });
-      });
+  const companyChartData = useMemo(() => {
+    const companies = companyAnalytics?.data ?? [];
+    if (companies.length === 0) return null;
 
     return {
-      medicines: [...medicineMap.values()]
-        .map(({ invoiceIds, ...medicine }) => ({
-          ...medicine,
-          invoiceCount: invoiceIds.size,
-        }))
-        .sort((a, b) => b.quantity - a.quantity),
-      totalUnits: units,
-      totalRevenue: revenue,
+      labels: companies.map((company) => company.company),
+      datasets: [
+        {
+          label: "Prescribed drug entries",
+          data: companies.map((company) => company.prescribedDrugCount),
+          backgroundColor: "rgba(37, 99, 235, 0.75)",
+          borderColor: "rgb(37, 99, 235)",
+          borderWidth: 1,
+        },
+      ],
     };
-  }, [invoices, selectedPeriod]);
+  }, [companyAnalytics]);
+
+  const companyChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { position: "top" },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { autoSkip: true, maxRotation: 45, minRotation: 0 },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0 },
+      },
+    },
+  };
+
+  const companyPieData = useMemo(() => {
+    const companies = companyAnalytics?.data ?? [];
+    if (companies.length === 0) return null;
+
+    return {
+      labels: companies.map((company) => company.company),
+      datasets: [
+        {
+          label: "Share of prescribed medicines",
+          data: companies.map((company) => company.prescribedDrugCount),
+          backgroundColor: [
+            "#2563eb",
+            "#10b981",
+            "#f59e0b",
+            "#8b5cf6",
+            "#ef4444",
+            "#06b6d4",
+            "#f97316",
+            "#84cc16",
+            "#ec4899",
+            "#64748b",
+          ],
+          borderColor: "#ffffff",
+          borderWidth: 2,
+        },
+      ],
+    };
+  }, [companyAnalytics]);
+
+  const companyPieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "right",
+      },
+      tooltip: {
+        callbacks: {
+          label(context) {
+            const values = context.dataset.data;
+            const total = values.reduce((sum, value) => sum + value, 0);
+            const percentage = total
+              ? ((context.parsed / total) * 100).toFixed(1)
+              : "0.0";
+            return `${context.label}: ${percentage}%`;
+          },
+        },
+      },
+    },
+  };
+
+  const pagination = companyAnalytics?.pagination;
 
   return (
     <section className="py-5">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">
-            Medicines Given
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Dispensed medicines from completed invoices
-          </p>
-        </div>
-        <div className="flex gap-2" aria-label="Report period">
-          {PERIODS.map((period) => (
-            <button
-              key={period.value}
-              type="button"
-              aria-pressed={selectedPeriod === period.value}
-              onClick={() => setSelectedPeriod(period.value)}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-                selectedPeriod === period.value
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {period.label}
-            </button>
-          ))}
-        </div>
+      <div className="mb-5">
+        <h2 className="text-xl font-semibold text-slate-900">
+          Medicines prescribed by company
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Compare prescribed drug entries by company to support medicine
+          purchasing discussions.
+        </p>
       </div>
 
-      {!clinicId ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-          Clinic information is unavailable. Please sign in again and retry.
-        </div>
-      ) : isLoading ? (
-        <div className="flex min-h-48 items-center justify-center rounded-xl border border-slate-200 bg-white">
-          <div
-            className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"
-            role="status"
-            aria-label="Loading medicine report"
-          />
-        </div>
-      ) : isError ? (
-        <div
-          className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"
-          role="alert"
-        >
-          Could not load the medicine report. Please try again later.
-        </div>
-      ) : (
-        <>
-          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Medicine units given</p>
-              <p className="mt-1 text-2xl font-semibold text-blue-700">
-                {totalUnits}
-              </p>
-            </div>
-            <div className="rounded-xl border border-violet-100 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Medicine types</p>
-              <p className="mt-1 text-2xl font-semibold text-violet-700">
-                {medicines.length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm">
-              <p className="text-sm text-slate-500">Medicine sales</p>
-              <p className="mt-1 text-2xl font-semibold text-emerald-700">
-                {formatCurrency(totalRevenue)}
-              </p>
-            </div>
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <p className="text-sm text-slate-500">
+            Showing up to {COMPANY_PAGE_SIZE} companies per page.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <label className="text-sm text-slate-600">
+              Year
+              <select
+                value={companyYear}
+                onChange={(event) => {
+                  setCompanyYear(event.target.value);
+                  setCompanyMonth("");
+                  setCompanyPage(1);
+                }}
+                className="ml-2 rounded-md border border-slate-300 bg-white px-2 py-2"
+              >
+                <option value="">All time</option>
+                {Array.from({ length: 6 }, (_, index) => {
+                  const year = new Date().getFullYear() - index;
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+            <label className="text-sm text-slate-600">
+              Month
+              <select
+                value={companyMonth}
+                onChange={(event) => {
+                  setCompanyMonth(event.target.value);
+                  setCompanyPage(1);
+                }}
+                disabled={!companyYear}
+                className="ml-2 rounded-md border border-slate-300 bg-white px-2 py-2 disabled:bg-slate-100"
+              >
+                <option value="">All months</option>
+                {MONTHS.map((month, index) => (
+                  <option key={month} value={index + 1}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+        </div>
 
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            {medicines.length === 0 ? (
-              <div className="flex min-h-52 flex-col items-center justify-center px-4 text-center">
-                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <FiPackage size={22} />
-                </span>
-                <p className="font-medium text-slate-700">
-                  No medicines given for this period
-                </p>
-                <p className="mt-1 text-sm text-slate-500">
-                  Medicine items from completed invoices will appear here.
-                </p>
+        {isLoading ? (
+          <div
+            className="flex min-h-64 items-center justify-center"
+            role="status"
+            aria-label="Loading company analytics"
+          >
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+          </div>
+        ) : isError ? (
+          <div
+            className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+            role="alert"
+          >
+            Could not load company prescription analytics. Please try again
+            later.
+          </div>
+        ) : companyChartData ? (
+          <>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                  Prescribed drug entries by company
+                </h3>
+                <div className="h-80">
+                  <Bar data={companyChartData} options={companyChartOptions} />
+                </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Medicine</th>
-                      <th className="px-4 py-3 text-right font-semibold">
-                        Units given
-                      </th>
-                      <th className="px-4 py-3 text-right font-semibold">
-                        Invoices
-                      </th>
-                      <th className="px-4 py-3 text-right font-semibold">
-                        Sales
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {medicines.map((medicine) => (
-                      <tr
-                        key={medicine.name}
-                        className="text-sm text-slate-700"
-                      >
-                        <td className="px-4 py-3 font-medium text-slate-900">
-                          {medicine.name}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {medicine.quantity}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {medicine.invoiceCount}
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium">
-                          {formatCurrency(medicine.revenue)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                  Percentage share by company
+                </h3>
+                <div className="h-80">
+                  <Pie data={companyPieData} options={companyPieOptions} />
+                </div>
+              </div>
+            </div>
+            {pagination?.totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-center gap-3 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setCompanyPage((page) => page - 1)}
+                  disabled={companyPage <= 1}
+                  className="rounded-md border border-slate-300 px-3 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-slate-600">
+                  Page {companyPage} of {pagination.totalPages} (
+                  {pagination.total} companies)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCompanyPage((page) => page + 1)}
+                  disabled={companyPage >= pagination.totalPages}
+                  className="rounded-md border border-slate-300 px-3 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
               </div>
             )}
+          </>
+        ) : (
+          <div className="flex min-h-48 items-center justify-center text-sm text-slate-500">
+            No company prescription data found for this period.
           </div>
-        </>
-      )}
+        )}
+      </section>
     </section>
   );
 }
