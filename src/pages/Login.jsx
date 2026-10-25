@@ -21,11 +21,13 @@ export default function Login() {
         localStorage.setItem("token", res.token);
         localStorage.setItem("refreshToken", res.refreshToken);
         if (res.role === "Receptionist") {
-          localStorage.setItem("doctorId", res.doctorId);
+          localStorage.removeItem("doctorId");
+          localStorage.removeItem("activeDoctorId");
           localStorage.setItem("clinicId", res.clinicId);
           localStorage.setItem("Id", res.id);
           localStorage.setItem("role", res.role);
         } else {
+          localStorage.removeItem("activeDoctorId");
           localStorage.setItem("doctorId", res.id);
           localStorage.setItem("clinicId", res.clinicId);
           localStorage.setItem("Id", res.id);

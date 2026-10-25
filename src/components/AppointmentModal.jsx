@@ -1,40 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
-import { FiX, FiSearch, FiLoader } from 'react-icons/fi';
-import { toast } from 'react-toastify';
-import { getPatients, createPatient, updatePatientVitals } from '../API/Patient';
-import { createAppointment } from '../API/Appointment';
-import BloodPressureInput from './BloodPressureInput';
+import { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { FiX, FiSearch, FiLoader } from "react-icons/fi";
+import { toast } from "react-toastify";
+import {
+  getPatients,
+  createPatient,
+  updatePatientVitals,
+} from "../API/Patient";
+import { createAppointment } from "../API/Appointment";
+import { extractErrorMessage } from "../utils/errorHandler";
+import BloodPressureInput from "./BloodPressureInput";
 
 // ─── Validation schema ────────────────────────────────────────────────────────
 // Only the appointment-level fields are required unconditionally.
 // Patient fields (name, phoneNumber, gender) are required only when registering
 // a new patient — enforced in handleSave after checking patientIsPresent.
-const schema = z.object({
-  name:              z.string().optional(),
-  phoneNumber:       z.string().optional(),
-  gender:            z.string().optional(),
-  birthDate:         z.string().optional(),
-  address:           z.string().optional(),
-  weight:            z.number().nullable().optional(),
-  bloodPressure:     z.string().optional(),
-  pulseRate:         z.number().nullable().optional(),
-  bloodSugarLevel:   z.number().nullable().optional(),
-  date:              z.string().min(1, 'Date is required'),
-  timeFrom:          z.string().min(1, 'Time From is required'),
-  timeTo:            z.string().min(1, 'Time To is required'),
-}).refine(
-  (d) => !d.timeFrom || !d.timeTo || d.timeTo > d.timeFrom,
-  { message: 'Time To must be after Time From', path: ['timeTo'] }
-);
+const schema = z
+  .object({
+    name: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    gender: z.string().optional(),
+    birthDate: z.string().optional(),
+    address: z.string().optional(),
+    weight: z.number().nullable().optional(),
+    bloodPressure: z.string().optional(),
+    pulseRate: z.number().nullable().optional(),
+    bloodSugarLevel: z.number().nullable().optional(),
+    date: z.string().min(1, "Date is required"),
+    timeFrom: z.string().min(1, "Time From is required"),
+    timeTo: z.string().min(1, "Time To is required"),
+  })
+  .refine((d) => !d.timeFrom || !d.timeTo || d.timeTo > d.timeFrom, {
+    message: "Time To must be after Time From",
+    path: ["timeTo"],
+  });
 
 // ─── AppointmentModal ─────────────────────────────────────────────────────────
-export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
-  const todayISO = new Date().toISOString().split('T')[0];
+export default function AppointmentModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  doctorId,
+  doctors = [],
+  onDoctorChange,
+}) {
+  const todayISO = new Date().toISOString().split("T")[0];
 
   // The patient selected from the search dropdown.
   // patientIsPresent = true  → skip createPatient, go straight to addPatientToQueue
@@ -43,11 +57,14 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
   const patientIsPresent = selectedPatient !== null;
 
   // Search input value (controlled separately from RHF — it's not a form field)
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   // debouncedQuery is what actually triggers the API call — updates 350ms after typing stops
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [appointmentDoctorId, setAppointmentDoctorId] = useState(
+    doctorId || "",
+  );
   const searchContainerRef = useRef(null);
   const debounceTimer = useRef(null);
 
@@ -63,13 +80,22 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: '', phoneNumber: '', gender: '', birthDate: '', address: '',
-      weight: null, bloodPressure: '', pulseRate: null, bloodSugarLevel: null,
-      date: todayISO, timeFrom: '', timeTo: '',
+      name: "",
+      phoneNumber: "",
+      gender: "",
+      birthDate: "",
+      address: "",
+      weight: null,
+      bloodPressure: "",
+      pulseRate: null,
+      bloodSugarLevel: null,
+      date: todayISO,
+      timeFrom: "",
+      timeTo: "",
     },
   });
 
-  const bloodPressureValue = watch('bloodPressure') || '';
+  const bloodPressureValue = watch("bloodPressure") || "";
 
   // ─── Patient search via useQuery ────────────────────────────────────────────
   // Uses the existing getPatients endpoint. Enabled only when debouncedQuery ≥ 2 chars.
@@ -79,11 +105,11 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
     isError: isSearchError,
     refetch: retrySearch,
   } = useQuery({
-    queryKey: ['patientSearch', debouncedQuery],
+    queryKey: ["patientSearch", debouncedQuery],
     queryFn: () => getPatients(debouncedQuery),
     enabled: debouncedQuery.length >= 2,
     select: (data) => {
-      const list = Array.isArray(data) ? data : data?.data ?? [];
+      const list = Array.isArray(data) ? data : (data?.data ?? []);
       return list.slice(0, 10);
     },
     staleTime: 30_000,
@@ -98,62 +124,99 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       reset({
-        name: '', phoneNumber: '', gender: '', birthDate: '', address: '',
-        weight: null, bloodPressure: '', pulseRate: null, bloodSugarLevel: null,
-        date: new Date().toISOString().split('T')[0],
-        timeFrom: '', timeTo: '',
+        name: "",
+        phoneNumber: "",
+        gender: "",
+        birthDate: "",
+        address: "",
+        weight: null,
+        bloodPressure: "",
+        pulseRate: null,
+        bloodSugarLevel: null,
+        date: new Date().toISOString().split("T")[0],
+        timeFrom: "",
+        timeTo: "",
       });
       setSelectedPatient(null);
-      setSearchQuery('');
-      setDebouncedQuery('');
+      setSearchQuery("");
+      setDebouncedQuery("");
       setShowDropdown(false);
       setIsSaving(false);
     }
   }, [isOpen, reset]);
 
+  useEffect(() => {
+    if (isOpen) setAppointmentDoctorId(doctorId || "");
+  }, [isOpen, doctorId]);
+
   // ─── Escape key ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
   // ─── Body scroll lock ───────────────────────────────────────────────────────
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   // ─── Close dropdown on outside click ────────────────────────────────────────
   useEffect(() => {
     const onOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target)
+      ) {
         setShowDropdown(false);
       }
     };
-    document.addEventListener('mousedown', onOutside);
-    return () => document.removeEventListener('mousedown', onOutside);
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
   }, []);
 
   // ─── Patient selection from dropdown ────────────────────────────────────────
   const handleSelectPatient = (patient) => {
     setSelectedPatient(patient);
     setShowDropdown(false);
-    setSearchQuery(patient.name || '');
+    setSearchQuery(patient.name || "");
 
     // Pre-fill patient fields (read-only display)
-    setValue('name', patient.name || '');
-    setValue('phoneNumber', patient.phoneNumber || '');
-    setValue('gender', patient.gender || '');
-    setValue('birthDate', patient.birthday
-      ? new Date(patient.birthday).toISOString().split('T')[0]
-      : '');
-    setValue('address', patient.address || '');
-    setValue('weight', patient.weight !== null && patient.weight !== undefined ? Number(patient.weight) : null);
-    setValue('bloodPressure', patient.bloodPressure || '');
-    setValue('pulseRate', patient.pulseRate !== null && patient.pulseRate !== undefined ? Number(patient.pulseRate) : null);
-    setValue('bloodSugarLevel', patient.bloodSugarLevel !== null && patient.bloodSugarLevel !== undefined ? Number(patient.bloodSugarLevel) : null);
+    setValue("name", patient.name || "");
+    setValue("phoneNumber", patient.phoneNumber || "");
+    setValue("gender", patient.gender || "");
+    setValue(
+      "birthDate",
+      patient.birthday
+        ? new Date(patient.birthday).toISOString().split("T")[0]
+        : "",
+    );
+    setValue("address", patient.address || "");
+    setValue(
+      "weight",
+      patient.weight !== null && patient.weight !== undefined
+        ? Number(patient.weight)
+        : null,
+    );
+    setValue("bloodPressure", patient.bloodPressure || "");
+    setValue(
+      "pulseRate",
+      patient.pulseRate !== null && patient.pulseRate !== undefined
+        ? Number(patient.pulseRate)
+        : null,
+    );
+    setValue(
+      "bloodSugarLevel",
+      patient.bloodSugarLevel !== null && patient.bloodSugarLevel !== undefined
+        ? Number(patient.bloodSugarLevel)
+        : null,
+    );
   };
 
   // ─── Clear patient selection when search is cleared ─────────────────────────
@@ -166,148 +229,157 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
     if (value.length >= 2) {
       debounceTimer.current = setTimeout(() => setDebouncedQuery(value), 350);
     } else {
-      setDebouncedQuery('');
+      setDebouncedQuery("");
       setShowDropdown(false);
     }
 
     if (!value) {
       setSelectedPatient(null);
-      setValue('name', '');
-      setValue('phoneNumber', '');
-      setValue('gender', '');
-      setValue('birthDate', '');
-      setValue('address', '');
-      setValue('weight', null);
-      setValue('bloodPressure', '');
-      setValue('pulseRate', null);
-      setValue('bloodSugarLevel', null);
+      setValue("name", "");
+      setValue("phoneNumber", "");
+      setValue("gender", "");
+      setValue("birthDate", "");
+      setValue("address", "");
+      setValue("weight", null);
+      setValue("bloodPressure", "");
+      setValue("pulseRate", null);
+      setValue("bloodSugarLevel", null);
     }
   };
 
   // ─── Save: register new patient (if needed) then create appointment ────────
   const onSubmit = async (data) => {
+    const selectedDoctorId =
+      localStorage.getItem("role") === "Receptionist"
+        ? appointmentDoctorId
+        : doctorId || localStorage.getItem("doctorId");
 
-  if (!patientIsPresent) {
-
-    let hasError = false;
-
-    if (!data.name?.trim()) {
-      setError('name', { message: 'Name is required' });
-      hasError = true;
+    if (!selectedDoctorId) {
+      toast.error("Select a doctor before booking the appointment.");
+      return;
     }
 
-    if (!/^\d{10}$/.test(data.phoneNumber || '')) {
-      setError('phoneNumber', {
-        message: 'Enter a valid 10-digit phone number'
-      });
-      hasError = true;
-    }
+    if (!patientIsPresent) {
+      let hasError = false;
 
-    if (!data.gender) {
-      setError('gender', { message: 'Gender is required' });
-      hasError = true;
-    }
-
-    if (hasError) return;
-  }
-
-  setIsSaving(true);
-
-  try {
-
-    let patientId;
-
-    /**
-     * EXISTING PATIENT
-     */
-    if (patientIsPresent) {
-
-      patientId = selectedPatient._id;
-
-      try {
-        await updatePatientVitals(patientId, {
-          weight: data.weight,
-          bloodPressure: data.bloodPressure || null,
-          pulseRate: data.pulseRate,
-          bloodSugarLevel: data.bloodSugarLevel,
-        });
-      } catch (error) {
-        console.error('Failed to update patient vitals:', error);
-        toast.error('Failed to update patient vitals. Please try again.');
-        return;
+      if (!data.name?.trim()) {
+        setError("name", { message: "Name is required" });
+        hasError = true;
       }
 
-    } else {
+      if (!/^\d{10}$/.test(data.phoneNumber || "")) {
+        setError("phoneNumber", {
+          message: "Enter a valid 10-digit phone number",
+        });
+        hasError = true;
+      }
+
+      if (!data.gender) {
+        setError("gender", { message: "Gender is required" });
+        hasError = true;
+      }
+
+      if (hasError) return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      let patientId;
 
       /**
-       * CREATE NEW PATIENT
+       * EXISTING PATIENT
        */
-      try {
+      if (patientIsPresent) {
+        patientId = selectedPatient._id;
 
-        const created = await createPatient({
-          name: data.name,
-          gender: data.gender,
-          birthDate: data.birthDate || null,
-          phoneNumber: data.phoneNumber,
-          weight: data.weight,
-          bloodPressure: data.bloodPressure || null,
-          pulseRate: data.pulseRate,
-          bloodSugarLevel: data.bloodSugarLevel,
-        });
-
-        patientId = created?.data?._id;
-
-        if (!patientId) {
-          toast.error('Failed to get patient ID');
+        try {
+          await updatePatientVitals(patientId, {
+            weight: data.weight,
+            bloodPressure: data.bloodPressure || null,
+            pulseRate: data.pulseRate,
+            bloodSugarLevel: data.bloodSugarLevel,
+          });
+        } catch (error) {
+          console.error("Failed to update patient vitals:", error);
+          toast.error("Failed to update patient vitals. Please try again.");
           return;
         }
+      } else {
+        /**
+         * CREATE NEW PATIENT
+         */
+        try {
+          const created = await createPatient({
+            name: data.name,
+            gender: data.gender,
+            birthDate: data.birthDate || null,
+            phoneNumber: data.phoneNumber,
+            weight: data.weight,
+            bloodPressure: data.bloodPressure || null,
+            pulseRate: data.pulseRate,
+            bloodSugarLevel: data.bloodSugarLevel,
+          });
 
+          patientId = created?.data?._id;
+
+          if (!patientId) {
+            const responseMessage =
+              created?.message ||
+              created?.error ||
+              created?.data?.message ||
+              created?.data?.error;
+            const message = Array.isArray(responseMessage)
+              ? responseMessage.join(", ")
+              : responseMessage;
+            toast.error(message || "Failed to get patient ID");
+            return;
+          }
+        } catch (error) {
+          console.error(error);
+
+          toast.error(
+            extractErrorMessage(error) ||
+              "Failed to register patient. Please try again.",
+          );
+          return;
+        }
+      }
+
+      /**
+       * CREATE APPOINTMENT
+       */
+      try {
+        await createAppointment({
+          patientId,
+          clinicId: localStorage.getItem("clinicId"),
+          doctorId: selectedDoctorId,
+          date: data.date,
+          timeFrom: data.timeFrom,
+          timeTo: data.timeTo,
+        });
+
+        toast.success("Appointment booked successfully!");
+
+        onDoctorChange?.(selectedDoctorId);
+
+        onSuccess();
       } catch (error) {
-
         console.error(error);
 
-        toast.error('Failed to register patient. Please try again.');
-        return;
+        toast.error("Failed to create appointment. Please try again.");
       }
+    } finally {
+      setIsSaving(false);
     }
-
-    /**
-     * CREATE APPOINTMENT
-     */
-    try {
-
-      await createAppointment({
-        patientId,
-        clinicId: localStorage.getItem('clinicId'),
-        doctorId: localStorage.getItem('doctorId'),
-        date: data.date,
-        timeFrom: data.timeFrom,
-        timeTo: data.timeTo,
-      });
-
-      toast.success('Appointment booked successfully!');
-
-      onSuccess();
-
-    } catch (error) {
-
-      console.error(error);
-
-      toast.error('Failed to create appointment. Please try again.');
-    }
-
-  } finally {
-
-    setIsSaving(false);
-  }
-};
+  };
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
   const inputCls = (field) =>
     `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-slate-800 transition-colors ${
       errors[field]
-        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-        : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
+        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+        : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
     }`;
 
   const FieldError = ({ field }) =>
@@ -320,7 +392,11 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
   const modal = (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} aria-hidden="true" />
+      <div
+        className="fixed inset-0 bg-black/50 z-50"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Panel */}
       <div
@@ -336,13 +412,16 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 sticky top-0 bg-white rounded-t-lg z-10">
             <div>
-              <h2 id="appt-modal-title" className="text-lg font-semibold text-slate-800">
+              <h2
+                id="appt-modal-title"
+                className="text-lg font-semibold text-slate-800"
+              >
                 New Appointment
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 {patientIsPresent
                   ? `Patient: ${selectedPatient.name} — booking appointment`
-                  : 'Search for an existing patient or fill in details to register a new one'}
+                  : "Search for an existing patient or fill in details to register a new one"}
               </p>
             </div>
             <button
@@ -357,7 +436,6 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="px-6 py-6 space-y-5">
-
               {/* ── Patient search ── */}
               <div ref={searchContainerRef} className="relative">
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -373,7 +451,7 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     onChange={handleSearchChange}
                     readOnly={patientIsPresent}
                     placeholder="Search by name or phone number…"
-                    className={`w-full pl-9 pr-9 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors${patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : ''}`}
+                    className={`w-full pl-9 pr-9 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 transition-colors${patientIsPresent ? " bg-slate-50 cursor-not-allowed" : ""}`}
                     autoComplete="off"
                   />
                   {isSearching && (
@@ -386,7 +464,11 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                 {isSearchError && (
                   <div className="mt-1.5 flex items-center gap-2">
                     <p className="text-xs text-red-600">Search failed.</p>
-                    <button type="button" onClick={() => retrySearch()} className="text-xs text-blue-600 hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => retrySearch()}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
                       Retry
                     </button>
                   </div>
@@ -396,7 +478,9 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                 {showDropdown && !isSearching && (
                   <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-56 overflow-y-auto">
                     {searchResults.length === 0 ? (
-                      <div className="px-4 py-3 text-sm text-slate-500">No patient found</div>
+                      <div className="px-4 py-3 text-sm text-slate-500">
+                        No patient found
+                      </div>
                     ) : (
                       searchResults.map((p) => (
                         <button
@@ -405,8 +489,12 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                           onClick={() => handleSelectPatient(p)}
                           className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
                         >
-                          <span className="text-sm font-medium text-slate-800">{p.name}</span>
-                          <span className="text-xs text-slate-500 ml-2">{p.phoneNumber}</span>
+                          <span className="text-sm font-medium text-slate-800">
+                            {p.name}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-2">
+                            {p.phoneNumber}
+                          </span>
                         </button>
                       ))
                     )}
@@ -423,14 +511,16 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     type="button"
                     onClick={() => {
                       setSelectedPatient(null);
-                      setSearchQuery('');
-                      setValue('name', ''); setValue('phoneNumber', '');
-                      setValue('gender', ''); setValue('birthDate', '');
-                      setValue('address', '');
-                      setValue('weight', null);
-                      setValue('bloodPressure', '');
-                      setValue('pulseRate', null);
-                      setValue('bloodSugarLevel', null);
+                      setSearchQuery("");
+                      setValue("name", "");
+                      setValue("phoneNumber", "");
+                      setValue("gender", "");
+                      setValue("birthDate", "");
+                      setValue("address", "");
+                      setValue("weight", null);
+                      setValue("bloodPressure", "");
+                      setValue("pulseRate", null);
+                      setValue("bloodSugarLevel", null);
                     }}
                     className="ml-auto text-xs text-green-600 hover:underline"
                   >
@@ -443,28 +533,44 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Full Name {!patientIsPresent && <span className="text-red-500">*</span>}
+                    Full Name{" "}
+                    {!patientIsPresent && (
+                      <span className="text-red-500">*</span>
+                    )}
                   </label>
                   <input
-                    {...register('name')}
+                    {...register("name")}
                     type="text"
                     readOnly={patientIsPresent}
                     placeholder="Patient's full name"
-                    className={inputCls('name') + (patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : '')}
+                    className={
+                      inputCls("name") +
+                      (patientIsPresent
+                        ? " bg-slate-50 cursor-not-allowed"
+                        : "")
+                    }
                   />
                   <FieldError field="name" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Phone Number {!patientIsPresent && <span className="text-red-500">*</span>}
+                    Phone Number{" "}
+                    {!patientIsPresent && (
+                      <span className="text-red-500">*</span>
+                    )}
                   </label>
                   <input
-                    {...register('phoneNumber')}
+                    {...register("phoneNumber")}
                     type="tel"
                     readOnly={patientIsPresent}
                     placeholder="10-digit number"
                     maxLength={10}
-                    className={inputCls('phoneNumber') + (patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : '')}
+                    className={
+                      inputCls("phoneNumber") +
+                      (patientIsPresent
+                        ? " bg-slate-50 cursor-not-allowed"
+                        : "")
+                    }
                   />
                   <FieldError field="phoneNumber" />
                 </div>
@@ -473,17 +579,25 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Gender {!patientIsPresent && <span className="text-red-500">*</span>}
+                    Gender{" "}
+                    {!patientIsPresent && (
+                      <span className="text-red-500">*</span>
+                    )}
                   </label>
                   {patientIsPresent ? (
                     <input
-                      {...register('gender')}
+                      {...register("gender")}
                       type="text"
                       readOnly
-                      className={inputCls('gender') + ' bg-slate-50 cursor-not-allowed'}
+                      className={
+                        inputCls("gender") + " bg-slate-50 cursor-not-allowed"
+                      }
                     />
                   ) : (
-                    <select {...register('gender')} className={inputCls('gender') + ' appearance-none'}>
+                    <select
+                      {...register("gender")}
+                      className={inputCls("gender") + " appearance-none"}
+                    >
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -497,11 +611,16 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     Date of Birth
                   </label>
                   <input
-                    {...register('birthDate')}
+                    {...register("birthDate")}
                     type="date"
                     readOnly={patientIsPresent}
                     max={todayISO}
-                    className={inputCls('birthDate') + (patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : '')}
+                    className={
+                      inputCls("birthDate") +
+                      (patientIsPresent
+                        ? " bg-slate-50 cursor-not-allowed"
+                        : "")
+                    }
                   />
                   <FieldError field="birthDate" />
                 </div>
@@ -513,17 +632,22 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                   Address
                 </label>
                 <input
-                  {...register('address')}
+                  {...register("address")}
                   type="text"
                   readOnly={patientIsPresent}
                   placeholder="Optional"
-                  className={inputCls('address') + (patientIsPresent ? ' bg-slate-50 cursor-not-allowed' : '')}
+                  className={
+                    inputCls("address") +
+                    (patientIsPresent ? " bg-slate-50 cursor-not-allowed" : "")
+                  }
                 />
                 <FieldError field="address" />
               </div>
 
               <div className="border-t border-slate-200 pt-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Patient Vital Signs</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Patient Vital Signs
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -532,14 +656,15 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     Weight (kg)
                   </label>
                   <input
-                    {...register('weight', {
-                      setValueAs: (value) => value === '' ? null : Number(value),
+                    {...register("weight", {
+                      setValueAs: (value) =>
+                        value === "" ? null : Number(value),
                     })}
                     type="number"
                     min="0"
                     step="0.1"
                     placeholder="e.g. 68.5"
-                    className={inputCls('weight')}
+                    className={inputCls("weight")}
                   />
                   <FieldError field="weight" />
                 </div>
@@ -549,9 +674,11 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                   </label>
                   <BloodPressureInput
                     value={bloodPressureValue}
-                    onChange={(value) => setValue('bloodPressure', value, { shouldValidate: true })}
+                    onChange={(value) =>
+                      setValue("bloodPressure", value, { shouldValidate: true })
+                    }
                     placeholder="e.g. 120/80"
-                    className={inputCls('bloodPressure')}
+                    className={inputCls("bloodPressure")}
                   />
                   <FieldError field="bloodPressure" />
                 </div>
@@ -560,14 +687,15 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     Pulse Rate (bpm)
                   </label>
                   <input
-                    {...register('pulseRate', {
-                      setValueAs: (value) => value === '' ? null : Number(value),
+                    {...register("pulseRate", {
+                      setValueAs: (value) =>
+                        value === "" ? null : Number(value),
                     })}
                     type="number"
                     min="0"
                     step="1"
                     placeholder="e.g. 72"
-                    className={inputCls('pulseRate')}
+                    className={inputCls("pulseRate")}
                   />
                   <FieldError field="pulseRate" />
                 </div>
@@ -576,47 +704,93 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     Blood Sugar Level (mg/dL)
                   </label>
                   <input
-                    {...register('bloodSugarLevel', {
-                      setValueAs: (value) => value === '' ? null : Number(value),
+                    {...register("bloodSugarLevel", {
+                      setValueAs: (value) =>
+                        value === "" ? null : Number(value),
                     })}
                     type="number"
                     min="0"
                     step="0.1"
                     placeholder="e.g. 110"
-                    className={inputCls('bloodSugarLevel')}
+                    className={inputCls("bloodSugarLevel")}
                   />
                   <FieldError field="bloodSugarLevel" />
                 </div>
               </div>
 
               {/* ── Appointment details ── */}
-              <div className="border-t border-slate-200 pt-1">                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Appointment Details</p>
+              <div className="border-t border-slate-200 pt-1">
+                {" "}
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Appointment Details
+                </p>
               </div>
+
+              {localStorage.getItem("role") === "Receptionist" && (
+                <div>
+                  <label
+                    htmlFor="appointment-doctor"
+                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                  >
+                    Doctor <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="appointment-doctor"
+                    value={appointmentDoctorId}
+                    onChange={(event) => {
+                      setAppointmentDoctorId(event.target.value);
+                    }}
+                    className={inputCls("doctorId") + " appearance-none"}
+                    required
+                  >
+                    <option value="">Select a doctor</option>
+                    {doctors.map((doctor) => (
+                      <option
+                        key={doctor._id || doctor.id}
+                        value={doctor._id || doctor.id}
+                      >
+                        {doctor.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     Date <span className="text-red-500">*</span>
                   </label>
-                  <input {...register('date')} type="date" className={inputCls('date')} />
+                  <input
+                    {...register("date")}
+                    type="date"
+                    className={inputCls("date")}
+                  />
                   <FieldError field="date" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     Time From <span className="text-red-500">*</span>
                   </label>
-                  <input {...register('timeFrom')} type="time" className={inputCls('timeFrom')} />
+                  <input
+                    {...register("timeFrom")}
+                    type="time"
+                    className={inputCls("timeFrom")}
+                  />
                   <FieldError field="timeFrom" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     Time To <span className="text-red-500">*</span>
                   </label>
-                  <input {...register('timeTo')} type="time" className={inputCls('timeTo')} />
+                  <input
+                    {...register("timeTo")}
+                    type="time"
+                    className={inputCls("timeTo")}
+                  />
                   <FieldError field="timeTo" />
                 </div>
               </div>
-
             </div>
 
             {/* Footer */}
@@ -639,7 +813,11 @@ export default function AppointmentModal({ isOpen, onClose, onSuccess }) {
                     <span>Saving…</span>
                   </>
                 ) : (
-                  <span>{patientIsPresent ? 'Book Appointment' : 'Register & Book Appointment'}</span>
+                  <span>
+                    {patientIsPresent
+                      ? "Book Appointment"
+                      : "Register & Book Appointment"}
+                  </span>
                 )}
               </button>
             </div>

@@ -263,7 +263,11 @@ function SkeletonRow() {
 // ─── AppointmentTable ─────────────────────────────────────────────────────────
 // Accepts optional onStatsChange(todayCount, waitingCount) so the parent
 // can update its stat cards without duplicating the query.
-export default function AppointmentTable({ onStatsChange }) {
+export default function AppointmentTable({
+  onStatsChange,
+  doctorId,
+  doctorName,
+}) {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statuses, setStatuses] = useState({});
@@ -275,8 +279,9 @@ export default function AppointmentTable({ onStatsChange }) {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["appointments"],
-    queryFn: getAppointments,
+    queryKey: ["appointments", doctorId],
+    queryFn: () => getAppointments(doctorId),
+    enabled: Boolean(doctorId),
     select: (res) =>
       Array.isArray(res) ? res : (res?.data ?? res?.appointments ?? []),
   });
@@ -315,7 +320,7 @@ export default function AppointmentTable({ onStatsChange }) {
   }, [appointments]);
 
   useEffect(() => {
-    if (!onStatsChange || appointments.length === 0) return;
+    if (!onStatsChange) return;
 
     const today = new Date().toDateString();
 
@@ -355,7 +360,9 @@ export default function AppointmentTable({ onStatsChange }) {
               Appointments
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
-              All doctor's appointments
+              {doctorName
+                ? `Appointments for ${doctorName}`
+                : "Doctor's appointments"}
             </p>
           </div>
           <button

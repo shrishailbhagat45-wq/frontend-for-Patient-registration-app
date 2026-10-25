@@ -22,10 +22,7 @@ export async function login(email, password) {
 // ==========================
 export async function addReceptionist(receptionistData) {
   try {
-    const response = await api.post(
-      "/user/addReceptionist",
-      receptionistData
-    );
+    const response = await api.post("/user/addReceptionist", receptionistData);
 
     return response.data;
   } catch (error) {
@@ -39,18 +36,7 @@ export async function addReceptionist(receptionistData) {
 // ==========================
 export async function getReceptionist() {
   try {
-    const role = localStorage.getItem("role");
-    const payload = {
-      role,
-    };
-
-    if (role === "Doctor") {
-      payload.doctorId = localStorage.getItem("doctorId");
-    } else {
-      payload.clinicId = localStorage.getItem("clinicId");
-    }
-
-    const response = await api.post("/user/receptionists", payload);
+    const response = await api.post("/user/receptionists");
     return response.data;
   } catch (error) {
     console.error("Error fetching receptionists:", error);
@@ -117,10 +103,7 @@ export async function updatePassword(passwordData) {
       newPassword: passwordData.newPassword,
     };
 
-    const response = await api.put(
-      `/user/password/${id}`,
-      data
-    );
+    const response = await api.put(`/user/password/${id}`, data);
 
     return response.data;
   } catch (error) {
@@ -129,19 +112,13 @@ export async function updatePassword(passwordData) {
   }
 }
 
-
 // ==========================
 // ADD DOCTOR
 // ==========================
 export async function addDoctor(doctorData) {
-  const data={...doctorData,
-    clinicId: localStorage.getItem('clinicId')
-  }
+  const data = { ...doctorData, clinicId: localStorage.getItem("clinicId") };
   try {
-    const response = await api.post(
-      "/user/addDoctor",
-      data
-    );
+    const response = await api.post("/user/addDoctor", data);
 
     return response.data;
   } catch (error) {
@@ -153,10 +130,9 @@ export async function addDoctor(doctorData) {
 // ==========================
 // GET DOCTOR
 // ==========================
-export async function getDoctor() {
-  const id=localStorage.getItem("clinicId")
+export async function getDoctor(clinicId = localStorage.getItem("clinicId")) {
   try {
-    const response = await api.get(`/user/doctors/${id}`);
+    const response = await api.get(`/user/doctors/${clinicId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching doctors:", error);
@@ -183,10 +159,7 @@ export async function getAllDoctors() {
 // ==========================
 export async function createClinic(data) {
   try {
-    const response = await api.post(
-      "/clinic/create",
-      data
-    );
+    const response = await api.post("/clinic/create", data);
 
     return response.data;
   } catch (error) {
@@ -195,12 +168,11 @@ export async function createClinic(data) {
   }
 }
 
-
 // ==========================
 // DELETE USERS
 // ==========================
 
-export async function deleteUser(id){
+export async function deleteUser(id) {
   try {
     const response = await api.delete(`/user/delete/${id}`);
     return response.data;

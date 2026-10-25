@@ -133,7 +133,6 @@ export default function RegisterReceptionist() {
       updateMutation.mutate({ id: editingId, data: payload });
     } else {
       // Add new receptionist
-      payload.doctorId = localStorage.getItem("doctorId");
       payload.clinicId = localStorage.getItem("clinicId");
       addMutation.mutate(payload);
     }

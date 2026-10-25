@@ -1,4 +1,5 @@
 import api from "../utils/axiosInstance";
+import { getActiveDoctorId } from "../utils/doctorContext";
 
 // ==========================
 // CREATE APPOINTMENT
@@ -26,11 +27,11 @@ export async function createAppointment(appointmentData) {
 // ==========================
 // GET APPOINTMENTS
 // ==========================
-export async function getAppointments() {
+export async function getAppointments(doctorId = getActiveDoctorId()) {
   try {
     const response = await api.get("/appointment/doctor", {
       headers: {
-        doctorId: localStorage.getItem("doctorId"),
+        doctorId,
       },
     });
 

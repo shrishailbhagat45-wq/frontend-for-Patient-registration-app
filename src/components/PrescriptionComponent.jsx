@@ -169,8 +169,7 @@ export default function PrescriptionComponent({
             justify-content: space-between !important;
             padding: 10px 14px !important;
             border-top: none !important;
-          }
-          .rx-header-content {
+              .rx-header-content {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;

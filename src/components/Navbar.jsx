@@ -52,6 +52,7 @@ export default function Navbar() {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("doctorId");
+    localStorage.removeItem("activeDoctorId");
     localStorage.removeItem("Id");
     navigate("/login", { replace: true });
   };

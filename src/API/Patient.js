@@ -1,4 +1,5 @@
 import api from "../utils/axiosInstance";
+import { getActiveDoctorId } from "../utils/doctorContext";
 
 // ==========================
 // CREATE PATIENT
@@ -87,7 +88,7 @@ export async function addPatientToQueue(patient) {
       name: patient.name,
       patientId: patient._id,
       clinicId: patient.clinicId,
-      doctorId: localStorage.getItem("doctorId"),
+      doctorId: getActiveDoctorId(),
       phoneNumber: patient.phoneNumber,
     };
 
@@ -107,7 +108,7 @@ export async function getQueuedPatients() {
   try {
     const response = await api.get("/patient-queue", {
       headers: {
-        doctorId: localStorage.getItem("doctorId"),
+        doctorId: getActiveDoctorId(),
       },
     });
 
@@ -137,10 +138,7 @@ export async function removeFromQueueById(id) {
 // ==========================
 export async function updatePatientVitals(patientId, vitalsData) {
   try {
-    const response = await api.put(
-      `/patient/${patientId}`,
-      vitalsData
-    );
+    const response = await api.put(`/patient/${patientId}`, vitalsData);
 
     return response.data;
   } catch (error) {
@@ -155,7 +153,6 @@ export async function updatePatientVitals(patientId, vitalsData) {
 
 export async function backendIsInitialized() {
   try {
-    
     const response = await api.get("/");
 
     return response.status;
