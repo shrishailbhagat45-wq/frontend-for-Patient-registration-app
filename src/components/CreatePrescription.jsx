@@ -8,6 +8,16 @@ import { getPatientById, updatePatientVitals } from "../API/Patient";
 import { toast } from "react-toastify";
 import BloodPressureInput from "./BloodPressureInput";
 
+const getPrescriptionVitalValue = (prescription, field) =>
+  prescription[field] ?? prescription.drug?.[0]?.[field] ?? "";
+
+const normalizeVitalValue = (field, value) => {
+  if (value === "" || value === null || value === undefined) return "";
+  if (field === "bloodPressure") return String(value).trim();
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : String(value);
+};
+
 export default function CreatePrescription({
   showModal,
   setShowModal,
@@ -116,11 +126,19 @@ export default function CreatePrescription({
             ];
       setDrugs(presetDrugs);
       setDiagnosis(initialPrescription.Diagnosis || "");
-      setWeight(initialPrescription.drug?.[0]?.weight?.toString() || "");
-      setBloodPressure(initialPrescription.drug?.[0]?.bloodPressure || "");
-      setPulseRate(initialPrescription.drug?.[0]?.pulseRate?.toString() || "");
+      setWeight(
+        String(getPrescriptionVitalValue(initialPrescription, "weight")),
+      );
+      setBloodPressure(
+        String(getPrescriptionVitalValue(initialPrescription, "bloodPressure")),
+      );
+      setPulseRate(
+        String(getPrescriptionVitalValue(initialPrescription, "pulseRate")),
+      );
       setBloodSugarLevel(
-        initialPrescription.drug?.[0]?.bloodSugarLevel?.toString() || "",
+        String(
+          getPrescriptionVitalValue(initialPrescription, "bloodSugarLevel"),
+        ),
       );
     }
   }, [initialPrescription, showModal]);
@@ -288,38 +306,45 @@ export default function CreatePrescription({
       drug: drugs,
       weight: parsedWeight,
       ...prescriptionVitals,
+      ...(initialPrescription?._id
+        ? {
+            bloodPressure: bloodPressure || null,
+            pulseRate: pulseRate === "" ? null : Number(pulseRate),
+            bloodSugarLevel:
+              bloodSugarLevel === "" ? null : Number(bloodSugarLevel),
+          }
+        : {}),
       Diagnosis,
     };
     try {
       if (initialPrescription && initialPrescription._id) {
         await updatePrescription(initialPrescription._id, prescriptionData);
         const updateData = {};
+        const currentVitals = {
+          weight,
+          bloodPressure,
+          pulseRate,
+          bloodSugarLevel,
+        };
 
-        if (weight !== undefined && weight !== null && weight !== "") {
-          updateData.weight = parseFloat(weight);
-        }
+        Object.entries(currentVitals).forEach(([field, value]) => {
+          const previousValue = getPrescriptionVitalValue(
+            initialPrescription,
+            field,
+          );
+          if (
+            normalizeVitalValue(field, value) !==
+            normalizeVitalValue(field, previousValue)
+          ) {
+            updateData[field] =
+              value === ""
+                ? null
+                : field === "bloodPressure"
+                  ? value
+                  : Number(value);
+          }
+        });
 
-        if (
-          bloodPressure !== undefined &&
-          bloodPressure !== null &&
-          bloodPressure !== ""
-        ) {
-          updateData.bloodPressure = bloodPressure;
-        }
-
-        if (pulseRate !== undefined && pulseRate !== null && pulseRate !== "") {
-          updateData.pulseRate = parseInt(pulseRate);
-        }
-
-        if (
-          bloodSugarLevel !== undefined &&
-          bloodSugarLevel !== null &&
-          bloodSugarLevel !== ""
-        ) {
-          updateData.bloodSugarLevel = parseFloat(bloodSugarLevel);
-        }
-
-        // Skip API call if nothing exists
         if (Object.keys(updateData).length > 0) {
           await updatePatientVitals(targetPatientId, updateData);
         }
